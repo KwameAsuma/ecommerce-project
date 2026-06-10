@@ -1,0 +1,9 @@
+# Security
+.env
+notes/
+
+# Database Storage
+pgdata/
+
+# OS Files
+.DS_Store
