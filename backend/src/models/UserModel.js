@@ -1,21 +1,28 @@
-const pool = require("../config/db");
+const prisma = require("../config/prisma");
 
 /**
- * UserModel.js - Raw SQL queries for User operations
- * All database operations for users are isolated here
+ * UserModel.js - Upgraded to Prisma ORM!
  */
 
 // CREATE USER
 exports.createUser = async (userData) => {
-  const { email, password, fullName } = userData;
-  const query = `
-    INSERT INTO users (email, password, full_name, created_at)
-    VALUES ($1, $2, $3, NOW())
-    RETURNING id, email, full_name, created_at;
-  `;
+  const { email, passwordHash, name, momoNumber } = userData;
   try {
-    const result = await pool.query(query, [email, password, fullName]);
-    return result.rows[0];
+    return await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        name,
+        momoNumber,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      }, // Like RETURNING in SQL
+    });
   } catch (error) {
     throw new Error(`Error creating user: ${error.message}`);
   }
@@ -23,14 +30,10 @@ exports.createUser = async (userData) => {
 
 // FIND USER BY EMAIL
 exports.findByEmail = async (email) => {
-  const query = `
-    SELECT id, email, password, full_name, created_at
-    FROM users
-    WHERE email = $1;
-  `;
   try {
-    const result = await pool.query(query, [email]);
-    return result.rows[0];
+    return await prisma.user.findUnique({
+      where: { email },
+    });
   } catch (error) {
     throw new Error(`Error finding user by email: ${error.message}`);
   }
@@ -38,14 +41,19 @@ exports.findByEmail = async (email) => {
 
 // FIND USER BY ID
 exports.findById = async (userId) => {
-  const query = `
-    SELECT id, email, full_name, created_at
-    FROM users
-    WHERE id = $1;
-  `;
   try {
-    const result = await pool.query(query, [userId]);
-    return result.rows[0];
+    return await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        momoNumber: true,
+        trustScore: true,
+        createdAt: true,
+      },
+    });
   } catch (error) {
     throw new Error(`Error finding user by ID: ${error.message}`);
   }
@@ -53,14 +61,19 @@ exports.findById = async (userId) => {
 
 // GET ALL USERS
 exports.getAllUsers = async () => {
-  const query = `
-    SELECT id, email, full_name, created_at
-    FROM users
-    ORDER BY created_at DESC;
-  `;
   try {
-    const result = await pool.query(query);
-    return result.rows;
+    return await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        momoNumber: true,
+        trustScore: true,
+        createdAt: true,
+      },
+    });
   } catch (error) {
     throw new Error(`Error fetching users: ${error.message}`);
   }
@@ -68,16 +81,24 @@ exports.getAllUsers = async () => {
 
 // UPDATE USER
 exports.updateUser = async (userId, updates) => {
-  const { email, fullName } = updates;
-  const query = `
-    UPDATE users
-    SET email = COALESCE($1, email), full_name = COALESCE($2, full_name)
-    WHERE id = $3
-    RETURNING id, email, full_name, created_at;
-  `;
+  const { email, name, momoNumber } = updates;
   try {
-    const result = await pool.query(query, [email, fullName, userId]);
-    return result.rows[0];
+    return await prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: {
+        ...(email && { email }),
+        ...(name && { name }),
+        ...(momoNumber && { momoNumber }),
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        momoNumber: true,
+        trustScore: true,
+      },
+    });
   } catch (error) {
     throw new Error(`Error updating user: ${error.message}`);
   }
@@ -85,14 +106,11 @@ exports.updateUser = async (userId, updates) => {
 
 // DELETE USER
 exports.deleteUser = async (userId) => {
-  const query = `
-    DELETE FROM users
-    WHERE id = $1
-    RETURNING id;
-  `;
   try {
-    const result = await pool.query(query, [userId]);
-    return result.rows[0];
+    return await prisma.user.delete({
+      where: { id: parseInt(userId) },
+      select: { id: true },
+    });
   } catch (error) {
     throw new Error(`Error deleting user: ${error.message}`);
   }

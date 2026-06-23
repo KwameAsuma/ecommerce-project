@@ -1,5 +1,7 @@
 FROM node:20-alpine
 
+RUN apk add --no-cache openssl
+
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -8,6 +10,10 @@ COPY package*.json ./
 
 # Install dependencies
 RUN npm install
+
+COPY prisma ./prisma/
+
+RUN npx prisma generate
 
 # Copy the rest of the application code
 COPY . .

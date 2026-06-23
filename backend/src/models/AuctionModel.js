@@ -7,18 +7,18 @@ const pool = require("../config/db");
 
 // CREATE AUCTION
 exports.createAuction = async (auctionData) => {
-  const { productId, startingBid, endTime, sellerId } = auctionData;
+  const { importerId, title, basePrice, endTime } = auctionData;
   const query = `
-    INSERT INTO auctions (product_id, starting_bid, current_bid, end_time, seller_id, status, created_at)
-    VALUES ($1, $2, $2, $3, $4, 'active', NOW())
-    RETURNING id, product_id, starting_bid, current_bid, end_time, seller_id, status, created_at;
+    INSERT INTO auctions (importer_id, title, base_price, current_highest_bid, status, end_time, created_at)
+    VALUES ($1, $2, $3, 0, 'active', $4, NOW())
+    RETURNING id, importer_id, title, base_price, current_highest_bid, status, end_time, created_at;
   `;
   try {
     const result = await pool.query(query, [
-      productId,
-      startingBid,
+      importerId,
+      title,
+      basePrice,
       endTime,
-      sellerId,
     ]);
     return result.rows[0];
   } catch (error) {
@@ -29,7 +29,7 @@ exports.createAuction = async (auctionData) => {
 // GET ACTIVE AUCTIONS
 exports.getActiveAuctions = async () => {
   const query = `
-    SELECT id, product_id, starting_bid, current_bid, end_time, seller_id, status, created_at
+    SELECT id, importer_id, title, base_price, current_highest_bid, status, end_time, created_at
     FROM auctions
     WHERE status = 'active' AND end_time > NOW()
     ORDER BY end_time ASC;
@@ -45,7 +45,7 @@ exports.getActiveAuctions = async () => {
 // GET AUCTION BY ID
 exports.getAuctionById = async (auctionId) => {
   const query = `
-    SELECT id, product_id, starting_bid, current_bid, end_time, seller_id, status, created_at
+    SELECT id, importer_id, title, base_price, current_highest_bid, status, end_time, created_at
     FROM auctions
     WHERE id = $1;
   `;
@@ -59,20 +59,19 @@ exports.getAuctionById = async (auctionId) => {
 
 // CREATE BID
 exports.createBid = async (bidData) => {
-  const { auctionId, bidderId, bidAmount } = bidData;
+  const { auctionId, userId, bidAmount } = bidData;
   const query = `
-    INSERT INTO bids (auction_id, bidder_id, bid_amount, created_at)
+    INSERT INTO bids (auction_id, user_id, bid_amount, timestamp)
     VALUES ($1, $2, $3, NOW())
-    RETURNING id, auction_id, bidder_id, bid_amount, created_at;
+    RETURNING id, auction_id, user_id, bid_amount, timestamp;
   `;
   try {
-    const result = await pool.query(query, [auctionId, bidderId, bidAmount]);
+    const result = await pool.query(query, [auctionId, userId, bidAmount]);
 
-    // Update current_bid in auctions table
-    await pool.query("UPDATE auctions SET current_bid = $1 WHERE id = $2", [
-      bidAmount,
-      auctionId,
-    ]);
+    await pool.query(
+      "UPDATE auctions SET current_highest_bid = $1 WHERE id = $2",
+      [bidAmount, auctionId],
+    );
 
     return result.rows[0];
   } catch (error) {
@@ -83,10 +82,10 @@ exports.createBid = async (bidData) => {
 // GET BIDS FOR AUCTION
 exports.getBidsForAuction = async (auctionId) => {
   const query = `
-    SELECT id, auction_id, bidder_id, bid_amount, created_at
+    SELECT id, auction_id, user_id, bid_amount, timestamp
     FROM bids
     WHERE auction_id = $1
-    ORDER BY bid_amount DESC, created_at DESC;
+    ORDER BY bid_amount DESC, timestamp DESC;
   `;
   try {
     const result = await pool.query(query, [auctionId]);
@@ -99,10 +98,10 @@ exports.getBidsForAuction = async (auctionId) => {
 // GET HIGHEST BID FOR AUCTION
 exports.getHighestBid = async (auctionId) => {
   const query = `
-    SELECT id, bidder_id, bid_amount, created_at
+    SELECT id, user_id, bid_amount, timestamp
     FROM bids
     WHERE auction_id = $1
-    ORDER BY bid_amount DESC
+    ORDER BY bid_amount DESC, timestamp DESC
     LIMIT 1;
   `;
   try {
@@ -116,10 +115,10 @@ exports.getHighestBid = async (auctionId) => {
 // GET USER'S BIDS
 exports.getUserBids = async (userId) => {
   const query = `
-    SELECT id, auction_id, bid_amount, created_at
+    SELECT id, auction_id, bid_amount, timestamp
     FROM bids
-    WHERE bidder_id = $1
-    ORDER BY created_at DESC;
+    WHERE user_id = $1
+    ORDER BY timestamp DESC;
   `;
   try {
     const result = await pool.query(query, [userId]);
@@ -135,7 +134,7 @@ exports.closeAuction = async (auctionId) => {
     UPDATE auctions
     SET status = 'closed'
     WHERE id = $1
-    RETURNING id, product_id, current_bid, status;
+    RETURNING id, importer_id, title, base_price, current_highest_bid, status, end_time;
   `;
   try {
     const result = await pool.query(query, [auctionId]);
@@ -148,7 +147,7 @@ exports.closeAuction = async (auctionId) => {
 // GET AUCTION HISTORY
 exports.getAuctionHistory = async () => {
   const query = `
-    SELECT id, product_id, starting_bid, current_bid, end_time, seller_id, status, created_at
+    SELECT id, importer_id, title, base_price, current_highest_bid, status, end_time, created_at
     FROM auctions
     WHERE status = 'closed'
     ORDER BY end_time DESC;

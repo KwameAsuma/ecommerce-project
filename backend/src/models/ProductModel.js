@@ -1,27 +1,27 @@
 const pool = require("../config/db");
 
 /**
- * ProductModel.js - Raw SQL queries for Product operations
- * All database operations for products are isolated here
+ * ProductModel.js - Raw SQL queries for native_products operations
+ * All database operations for the native store are isolated here
  */
 
 // CREATE PRODUCT
 exports.createProduct = async (productData) => {
-  const { name, description, price, category, imageUrl, sellerId } =
+  const { vendorId, title, description, price, stockCount, category } =
     productData;
   const query = `
-    INSERT INTO products (name, description, price, category, image_url, seller_id, created_at)
+    INSERT INTO native_products (vendor_id, title, description, price, stock_count, category, created_at)
     VALUES ($1, $2, $3, $4, $5, $6, NOW())
-    RETURNING id, name, description, price, category, image_url, seller_id, created_at;
+    RETURNING id, vendor_id, title, description, price, stock_count, category, created_at;
   `;
   try {
     const result = await pool.query(query, [
-      name,
-      description,
+      vendorId,
+      title,
+      description ?? null,
       price,
-      category,
-      imageUrl,
-      sellerId,
+      stockCount,
+      category ?? null,
     ]);
     return result.rows[0];
   } catch (error) {
@@ -29,12 +29,11 @@ exports.createProduct = async (productData) => {
   }
 };
 
-// GET ALL PRODUCTS (Native Store)
+// GET ALL NATIVE PRODUCTS
 exports.getAllNativeProducts = async () => {
   const query = `
-    SELECT id, name, description, price, category, image_url, seller_id, created_at
-    FROM products
-    WHERE category = 'native_store'
+    SELECT id, vendor_id, title, description, price, stock_count, category, created_at
+    FROM native_products
     ORDER BY created_at DESC;
   `;
   try {
@@ -48,8 +47,8 @@ exports.getAllNativeProducts = async () => {
 // GET PRODUCT BY ID
 exports.getProductById = async (productId) => {
   const query = `
-    SELECT id, name, description, price, category, image_url, seller_id, created_at
-    FROM products
+    SELECT id, vendor_id, title, description, price, stock_count, category, created_at
+    FROM native_products
     WHERE id = $1;
   `;
   try {
@@ -63,8 +62,8 @@ exports.getProductById = async (productId) => {
 // GET PRODUCTS BY CATEGORY
 exports.getProductsByCategory = async (category) => {
   const query = `
-    SELECT id, name, description, price, category, image_url, seller_id, created_at
-    FROM products
+    SELECT id, vendor_id, title, description, price, stock_count, category, created_at
+    FROM native_products
     WHERE category = $1
     ORDER BY created_at DESC;
   `;
@@ -76,42 +75,42 @@ exports.getProductsByCategory = async (category) => {
   }
 };
 
-// GET PRODUCTS BY SELLER
-exports.getProductsBySeller = async (sellerId) => {
+// GET PRODUCTS BY VENDOR
+exports.getProductsByVendor = async (vendorId) => {
   const query = `
-    SELECT id, name, description, price, category, image_url, seller_id, created_at
-    FROM products
-    WHERE seller_id = $1
+    SELECT id, vendor_id, title, description, price, stock_count, category, created_at
+    FROM native_products
+    WHERE vendor_id = $1
     ORDER BY created_at DESC;
   `;
   try {
-    const result = await pool.query(query, [sellerId]);
+    const result = await pool.query(query, [vendorId]);
     return result.rows;
   } catch (error) {
-    throw new Error(`Error fetching seller products: ${error.message}`);
+    throw new Error(`Error fetching vendor products: ${error.message}`);
   }
 };
 
 // UPDATE PRODUCT
 exports.updateProduct = async (productId, updates) => {
-  const { name, description, price, category, imageUrl } = updates;
+  const { title, description, price, stockCount, category } = updates;
   const query = `
-    UPDATE products
-    SET name = COALESCE($1, name),
+    UPDATE native_products
+    SET title = COALESCE($1, title),
         description = COALESCE($2, description),
         price = COALESCE($3, price),
-        category = COALESCE($4, category),
-        image_url = COALESCE($5, image_url)
+        stock_count = COALESCE($4, stock_count),
+        category = COALESCE($5, category)
     WHERE id = $6
-    RETURNING id, name, description, price, category, image_url, seller_id, created_at;
+    RETURNING id, vendor_id, title, description, price, stock_count, category, created_at;
   `;
   try {
     const result = await pool.query(query, [
-      name,
+      title,
       description,
       price,
+      stockCount,
       category,
-      imageUrl,
       productId,
     ]);
     return result.rows[0];
@@ -123,7 +122,7 @@ exports.updateProduct = async (productId, updates) => {
 // DELETE PRODUCT
 exports.deleteProduct = async (productId) => {
   const query = `
-    DELETE FROM products
+    DELETE FROM native_products
     WHERE id = $1
     RETURNING id;
   `;

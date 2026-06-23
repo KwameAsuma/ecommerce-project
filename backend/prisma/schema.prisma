@@ -1,0 +1,58 @@
+// This block tells Prisma to generate the JavaScript client
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"] // Ensures it works inside your Docker container
+}
+
+// This block tells Prisma how to connect to your database
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- YOUR DATABASE MODELS ---
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         String   @default("BUYER")
+  momoNumber   String?  @map("momo_number")
+  trustScore   Int      @default(0) @map("trust_score")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relationships (Prisma uses these to join tables automatically)
+  bids         Bid[]
+
+  // This maps the Prisma model to your existing lowercase SQL table
+  @@map("users") 
+}
+
+model Auction {
+  id                Int      @id @default(autoincrement())
+  title             String
+  basePrice         Decimal  @map("base_price") @db.Decimal(10, 2)
+  currentHighestBid Decimal  @map("current_highest_bid") @db.Decimal(10, 2)
+  status            String   @default("ACTIVE")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  bids              Bid[]
+
+  @@map("auctions")
+}
+
+model Bid {
+  id        Int      @id @default(autoincrement())
+  amount    Decimal  @map("bid_amount") @db.Decimal(10, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Foreign Keys mapping back to User and Auction
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  
+  auctionId Int      @map("auction_id")
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+
+  @@map("bids")
+}
