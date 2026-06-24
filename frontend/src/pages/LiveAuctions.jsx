@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import useSocket from "../hooks/useSocket";
 import api from "../services/api";
-import { useAuth } from "../context/AuthContext"; // <-- Auth Context imported
+import { useAuth } from "../context/AuthContext";
+import LoadingOverlay from "../components/LoadingOverlay";
+import ErrorMessage from "../components/ErrorMessage";
 
 const LiveAuctions = () => {
   const AUCTION_ID = 1; // Hardcoded for testing the MacBook auction
@@ -51,12 +53,7 @@ const LiveAuctions = () => {
     setBidInput(""); // Clear the input field
   };
 
-  if (!auction)
-    return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        Connecting to Live Auction...
-      </div>
-    );
+  if (!auction) return <LoadingOverlay message="Connecting to Live Auction..." />;
 
   return (
     <div
@@ -129,20 +126,7 @@ const LiveAuctions = () => {
           </p>
         </div>
 
-        {error && (
-          <div
-            style={{
-              backgroundColor: "#fef2f2",
-              color: "#991b1b",
-              padding: "1rem",
-              borderRadius: "6px",
-              marginBottom: "1rem",
-              textAlign: "center",
-            }}
-          >
-            {error}
-          </div>
-        )}
+        {error && <ErrorMessage message={error} />}
 
         {/* If the user is logged in, show the form. If not, tell them to log in! */}
         {user ? (

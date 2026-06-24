@@ -5,8 +5,9 @@ const { Server } = require("socket.io"); // <-- 2. Import Socket.io
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
-require("./config/db");
-const initDb = require("./config/initDb");
+// DB pool removed in favor of Prisma. Prisma is the single source of truth for DB access.
+const { execSync } = require("child_process");
+const path = require("path");
 
 const app = express();
 
@@ -59,7 +60,16 @@ app.use((err, req, res, next) =>
 // ============================================================================
 const startServer = async () => {
   try {
-    await initDb();
+    // Ensure Prisma client is generated and push the schema to the database
+    try {
+      const projectRoot = path.resolve(__dirname, "..", "..");
+      console.log("🔁 Running Prisma generate and db push to ensure schema is applied...");
+      execSync("npx prisma generate", { stdio: "inherit", cwd: projectRoot });
+      execSync("npx prisma db push --accept-data-loss", { stdio: "inherit", cwd: projectRoot });
+      console.log("✅ Prisma schema pushed to database");
+    } catch (prismaErr) {
+      console.warn("⚠️ Prisma push failed (you may be using external migrations):", prismaErr.message);
+    }
 
     // 5. CRITICAL: Use server.listen() instead of app.listen() to start both API and WebSockets
     server.listen(PORT, () => {

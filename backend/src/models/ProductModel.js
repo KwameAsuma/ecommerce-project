@@ -1,29 +1,35 @@
-const pool = require("../config/db");
+const prisma = require("../config/prisma");
 
 /**
- * ProductModel.js - Raw SQL queries for native_products operations
- * All database operations for the native store are isolated here
+ * ProductModel - Prisma-based implementations for native_products
  */
 
 // CREATE PRODUCT
 exports.createProduct = async (productData) => {
   const { vendorId, title, description, price, stockCount, category } =
     productData;
-  const query = `
-    INSERT INTO native_products (vendor_id, title, description, price, stock_count, category, created_at)
-    VALUES ($1, $2, $3, $4, $5, $6, NOW())
-    RETURNING id, vendor_id, title, description, price, stock_count, category, created_at;
-  `;
   try {
-    const result = await pool.query(query, [
-      vendorId,
-      title,
-      description ?? null,
-      price,
-      stockCount,
-      category ?? null,
-    ]);
-    return result.rows[0];
+    const product = await prisma.nativeProduct.create({
+      data: {
+        vendorId,
+        title,
+        description: description ?? null,
+        price: price?.toString?.() ?? String(price),
+        stockCount,
+        category: category ?? null,
+      },
+      select: {
+        id: true,
+        vendorId: true,
+        title: true,
+        description: true,
+        price: true,
+        stockCount: true,
+        category: true,
+        createdAt: true,
+      },
+    });
+    return product;
   } catch (error) {
     throw new Error(`Error creating product: ${error.message}`);
   }
@@ -31,14 +37,11 @@ exports.createProduct = async (productData) => {
 
 // GET ALL NATIVE PRODUCTS
 exports.getAllNativeProducts = async () => {
-  const query = `
-    SELECT id, vendor_id, title, description, price, stock_count, category, created_at
-    FROM native_products
-    ORDER BY created_at DESC;
-  `;
   try {
-    const result = await pool.query(query);
-    return result.rows;
+    const products = await prisma.nativeProduct.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return products;
   } catch (error) {
     throw new Error(`Error fetching native products: ${error.message}`);
   }
@@ -46,14 +49,11 @@ exports.getAllNativeProducts = async () => {
 
 // GET PRODUCT BY ID
 exports.getProductById = async (productId) => {
-  const query = `
-    SELECT id, vendor_id, title, description, price, stock_count, category, created_at
-    FROM native_products
-    WHERE id = $1;
-  `;
   try {
-    const result = await pool.query(query, [productId]);
-    return result.rows[0];
+    const product = await prisma.nativeProduct.findUnique({
+      where: { id: Number(productId) },
+    });
+    return product;
   } catch (error) {
     throw new Error(`Error fetching product: ${error.message}`);
   }
@@ -61,15 +61,12 @@ exports.getProductById = async (productId) => {
 
 // GET PRODUCTS BY CATEGORY
 exports.getProductsByCategory = async (category) => {
-  const query = `
-    SELECT id, vendor_id, title, description, price, stock_count, category, created_at
-    FROM native_products
-    WHERE category = $1
-    ORDER BY created_at DESC;
-  `;
   try {
-    const result = await pool.query(query, [category]);
-    return result.rows;
+    const products = await prisma.nativeProduct.findMany({
+      where: { category: category },
+      orderBy: { createdAt: "desc" },
+    });
+    return products;
   } catch (error) {
     throw new Error(`Error fetching products by category: ${error.message}`);
   }
@@ -77,15 +74,12 @@ exports.getProductsByCategory = async (category) => {
 
 // GET PRODUCTS BY VENDOR
 exports.getProductsByVendor = async (vendorId) => {
-  const query = `
-    SELECT id, vendor_id, title, description, price, stock_count, category, created_at
-    FROM native_products
-    WHERE vendor_id = $1
-    ORDER BY created_at DESC;
-  `;
   try {
-    const result = await pool.query(query, [vendorId]);
-    return result.rows;
+    const products = await prisma.nativeProduct.findMany({
+      where: { vendorId: Number(vendorId) },
+      orderBy: { createdAt: "desc" },
+    });
+    return products;
   } catch (error) {
     throw new Error(`Error fetching vendor products: ${error.message}`);
   }
@@ -93,43 +87,36 @@ exports.getProductsByVendor = async (vendorId) => {
 
 // UPDATE PRODUCT
 exports.updateProduct = async (productId, updates) => {
-  const { title, description, price, stockCount, category } = updates;
-  const query = `
-    UPDATE native_products
-    SET title = COALESCE($1, title),
-        description = COALESCE($2, description),
-        price = COALESCE($3, price),
-        stock_count = COALESCE($4, stock_count),
-        category = COALESCE($5, category)
-    WHERE id = $6
-    RETURNING id, vendor_id, title, description, price, stock_count, category, created_at;
-  `;
   try {
-    const result = await pool.query(query, [
-      title,
-      description,
-      price,
-      stockCount,
-      category,
-      productId,
-    ]);
-    return result.rows[0];
+    const data = {};
+    if (updates.title !== undefined) data.title = updates.title;
+    if (updates.description !== undefined) data.description = updates.description;
+    if (updates.price !== undefined) data.price = updates.price.toString();
+    if (updates.stockCount !== undefined) data.stockCount = updates.stockCount;
+    if (updates.category !== undefined) data.category = updates.category;
+
+    const product = await prisma.nativeProduct.update({
+      where: { id: Number(productId) },
+      data,
+    });
+    return product;
   } catch (error) {
+    // If record not found, Prisma throws — normalize to null
+    if (error.code === "P2025") return null;
     throw new Error(`Error updating product: ${error.message}`);
   }
 };
 
 // DELETE PRODUCT
 exports.deleteProduct = async (productId) => {
-  const query = `
-    DELETE FROM native_products
-    WHERE id = $1
-    RETURNING id;
-  `;
   try {
-    const result = await pool.query(query, [productId]);
-    return result.rows[0];
+    const deleted = await prisma.nativeProduct.delete({
+      where: { id: Number(productId) },
+      select: { id: true },
+    });
+    return deleted;
   } catch (error) {
+    if (error.code === "P2025") return null;
     throw new Error(`Error deleting product: ${error.message}`);
   }
 };

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import LoadingOverlay from "../components/LoadingOverlay";
+import ErrorMessage from "../components/ErrorMessage";
 
 const CatalogPage = () => {
   const [products, setProducts] = useState([]);
@@ -24,18 +26,8 @@ const CatalogPage = () => {
     fetchProducts();
   }, []);
 
-  if (loading)
-    return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        Loading Native Store...
-      </div>
-    );
-  if (error)
-    return (
-      <div style={{ padding: "2rem", color: "red", textAlign: "center" }}>
-        {error}
-      </div>
-    );
+  if (loading) return <LoadingOverlay message="Loading Native Store..." />;
+  if (error) return <ErrorMessage message={error} />;
 
   return (
     <div

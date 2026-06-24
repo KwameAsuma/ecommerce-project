@@ -32,27 +32,44 @@ model User {
 model Auction {
   id                Int      @id @default(autoincrement())
   title             String
+  importerId        Int      @map("importer_id")
   basePrice         Decimal  @map("base_price") @db.Decimal(10, 2)
-  currentHighestBid Decimal  @map("current_highest_bid") @db.Decimal(10, 2)
-  status            String   @default("ACTIVE")
+  currentHighestBid Decimal  @map("current_highest_bid") @db.Decimal(10, 2) @default(0)
+  status            String   @default("active")
+  endTime           DateTime @map("end_time")
   createdAt         DateTime @default(now()) @map("created_at")
 
   bids              Bid[]
+
+  importer          User?    @relation(fields: [importerId], references: [id])
 
   @@map("auctions")
 }
 
 model Bid {
   id        Int      @id @default(autoincrement())
-  amount    Decimal  @map("bid_amount") @db.Decimal(10, 2)
-  createdAt DateTime @default(now()) @map("created_at")
-
-  // Foreign Keys mapping back to User and Auction
-  userId    Int      @map("user_id")
-  user      User     @relation(fields: [userId], references: [id])
-  
   auctionId Int      @map("auction_id")
+  userId    Int      @map("user_id")
+  bidAmount Decimal  @map("bid_amount") @db.Decimal(10, 2)
+  timestamp DateTime @default(now()) @map("timestamp")
+
+  user      User     @relation(fields: [userId], references: [id])
   auction   Auction  @relation(fields: [auctionId], references: [id])
 
   @@map("bids")
+}
+
+model NativeProduct {
+  id         Int      @id @default(autoincrement())
+  vendorId   Int      @map("vendor_id")
+  title      String
+  description String?
+  price      Decimal  @db.Decimal(10, 2)
+  stockCount Int      @map("stock_count")
+  category   String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  vendor     User     @relation(fields: [vendorId], references: [id])
+
+  @@map("native_products")
 }

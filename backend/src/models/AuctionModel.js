@@ -1,26 +1,24 @@
-const pool = require("../config/db");
+const prisma = require("../config/prisma");
 
 /**
- * AuctionModel.js - Raw SQL queries for Auction and Bid operations
- * All database operations for auctions are isolated here
+ * AuctionModel - Prisma-based implementations for auctions and bids
  */
 
 // CREATE AUCTION
 exports.createAuction = async (auctionData) => {
   const { importerId, title, basePrice, endTime } = auctionData;
-  const query = `
-    INSERT INTO auctions (importer_id, title, base_price, current_highest_bid, status, end_time, created_at)
-    VALUES ($1, $2, $3, 0, 'active', $4, NOW())
-    RETURNING id, importer_id, title, base_price, current_highest_bid, status, end_time, created_at;
-  `;
   try {
-    const result = await pool.query(query, [
-      importerId,
-      title,
-      basePrice,
-      endTime,
-    ]);
-    return result.rows[0];
+    const auction = await prisma.auction.create({
+      data: {
+        importerId: importerId,
+        title,
+        basePrice: basePrice?.toString?.() ?? String(basePrice),
+        currentHighestBid: "0",
+        status: "active",
+        endTime: new Date(endTime),
+      },
+    });
+    return auction;
   } catch (error) {
     throw new Error(`Error creating auction: ${error.message}`);
   }
@@ -28,15 +26,15 @@ exports.createAuction = async (auctionData) => {
 
 // GET ACTIVE AUCTIONS
 exports.getActiveAuctions = async () => {
-  const query = `
-    SELECT id, importer_id, title, base_price, current_highest_bid, status, end_time, created_at
-    FROM auctions
-    WHERE status = 'active' AND end_time > NOW()
-    ORDER BY end_time ASC;
-  `;
   try {
-    const result = await pool.query(query);
-    return result.rows;
+    const auctions = await prisma.auction.findMany({
+      where: {
+        status: "active",
+        endTime: { gt: new Date() },
+      },
+      orderBy: { endTime: "asc" },
+    });
+    return auctions;
   } catch (error) {
     throw new Error(`Error fetching active auctions: ${error.message}`);
   }
@@ -44,14 +42,11 @@ exports.getActiveAuctions = async () => {
 
 // GET AUCTION BY ID
 exports.getAuctionById = async (auctionId) => {
-  const query = `
-    SELECT id, importer_id, title, base_price, current_highest_bid, status, end_time, created_at
-    FROM auctions
-    WHERE id = $1;
-  `;
   try {
-    const result = await pool.query(query, [auctionId]);
-    return result.rows[0];
+    const auction = await prisma.auction.findUnique({
+      where: { id: Number(auctionId) },
+    });
+    return auction;
   } catch (error) {
     throw new Error(`Error fetching auction: ${error.message}`);
   }
@@ -60,20 +55,22 @@ exports.getAuctionById = async (auctionId) => {
 // CREATE BID
 exports.createBid = async (bidData) => {
   const { auctionId, userId, bidAmount } = bidData;
-  const query = `
-    INSERT INTO bids (auction_id, user_id, bid_amount, timestamp)
-    VALUES ($1, $2, $3, NOW())
-    RETURNING id, auction_id, user_id, bid_amount, timestamp;
-  `;
   try {
-    const result = await pool.query(query, [auctionId, userId, bidAmount]);
+    const bid = await prisma.bid.create({
+      data: {
+        auctionId: Number(auctionId),
+        userId: Number(userId),
+        bidAmount: bidAmount?.toString?.() ?? String(bidAmount),
+      },
+    });
 
-    await pool.query(
-      "UPDATE auctions SET current_highest_bid = $1 WHERE id = $2",
-      [bidAmount, auctionId],
-    );
+    // Update auction current highest bid
+    await prisma.auction.update({
+      where: { id: Number(auctionId) },
+      data: { currentHighestBid: bid.bidAmount },
+    });
 
-    return result.rows[0];
+    return bid;
   } catch (error) {
     throw new Error(`Error creating bid: ${error.message}`);
   }
@@ -81,15 +78,12 @@ exports.createBid = async (bidData) => {
 
 // GET BIDS FOR AUCTION
 exports.getBidsForAuction = async (auctionId) => {
-  const query = `
-    SELECT id, auction_id, user_id, bid_amount, timestamp
-    FROM bids
-    WHERE auction_id = $1
-    ORDER BY bid_amount DESC, timestamp DESC;
-  `;
   try {
-    const result = await pool.query(query, [auctionId]);
-    return result.rows;
+    const bids = await prisma.bid.findMany({
+      where: { auctionId: Number(auctionId) },
+      orderBy: [{ bidAmount: "desc" }, { timestamp: "desc" }],
+    });
+    return bids;
   } catch (error) {
     throw new Error(`Error fetching bids: ${error.message}`);
   }
@@ -97,16 +91,12 @@ exports.getBidsForAuction = async (auctionId) => {
 
 // GET HIGHEST BID FOR AUCTION
 exports.getHighestBid = async (auctionId) => {
-  const query = `
-    SELECT id, user_id, bid_amount, timestamp
-    FROM bids
-    WHERE auction_id = $1
-    ORDER BY bid_amount DESC, timestamp DESC
-    LIMIT 1;
-  `;
   try {
-    const result = await pool.query(query, [auctionId]);
-    return result.rows[0];
+    const bid = await prisma.bid.findFirst({
+      where: { auctionId: Number(auctionId) },
+      orderBy: [{ bidAmount: "desc" }, { timestamp: "desc" }],
+    });
+    return bid;
   } catch (error) {
     throw new Error(`Error fetching highest bid: ${error.message}`);
   }
@@ -114,15 +104,12 @@ exports.getHighestBid = async (auctionId) => {
 
 // GET USER'S BIDS
 exports.getUserBids = async (userId) => {
-  const query = `
-    SELECT id, auction_id, bid_amount, timestamp
-    FROM bids
-    WHERE user_id = $1
-    ORDER BY timestamp DESC;
-  `;
   try {
-    const result = await pool.query(query, [userId]);
-    return result.rows;
+    const bids = await prisma.bid.findMany({
+      where: { userId: Number(userId) },
+      orderBy: { timestamp: "desc" },
+    });
+    return bids;
   } catch (error) {
     throw new Error(`Error fetching user bids: ${error.message}`);
   }
@@ -130,16 +117,14 @@ exports.getUserBids = async (userId) => {
 
 // CLOSE AUCTION
 exports.closeAuction = async (auctionId) => {
-  const query = `
-    UPDATE auctions
-    SET status = 'closed'
-    WHERE id = $1
-    RETURNING id, importer_id, title, base_price, current_highest_bid, status, end_time;
-  `;
   try {
-    const result = await pool.query(query, [auctionId]);
-    return result.rows[0];
+    const auction = await prisma.auction.update({
+      where: { id: Number(auctionId) },
+      data: { status: "closed" },
+    });
+    return auction;
   } catch (error) {
+    if (error.code === "P2025") return null;
     throw new Error(`Error closing auction: ${error.message}`);
   }
 };
