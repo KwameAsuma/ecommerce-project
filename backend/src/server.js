@@ -32,10 +32,12 @@ app.use(cookieParser());
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const auctionRoutes = require("./routes/auctionRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/auctions", auctionRoutes);
+app.use("/api/users", userRoutes);
 
 // ============================================================================
 // WEBSOCKET MOUNTING
@@ -62,7 +64,7 @@ const startServer = async () => {
   try {
     // Ensure Prisma client is generated and push the schema to the database
     try {
-      const projectRoot = path.resolve(__dirname, "..", "..");
+      const projectRoot = path.resolve(__dirname, "..");
       console.log("🔁 Running Prisma generate and db push to ensure schema is applied...");
       execSync("npx prisma generate", { stdio: "inherit", cwd: projectRoot });
       execSync("npx prisma db push --accept-data-loss", { stdio: "inherit", cwd: projectRoot });

@@ -24,6 +24,8 @@ model User {
 
   // Relationships (Prisma uses these to join tables automatically)
   bids         Bid[]
+  auctions     Auction[]
+  products     NativeProduct[]
 
   // This maps the Prisma model to your existing lowercase SQL table
   @@map("users") 

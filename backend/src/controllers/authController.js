@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 const registerUser = async (req, res) => {
   try {
-    const { email, password, name, momo_number } = req.body;
+    const { email, password, name, momo_number, role } = req.body;
 
     if (!email || !password || !name) {
       return res
@@ -34,6 +34,7 @@ const registerUser = async (req, res) => {
         email: email,
         passwordHash: passwordHash, // Matches your schema exactly
         name: name,
+        role: role || "BUYER",
         momoNumber: momo_number || null, // Optional field
       },
     });
@@ -60,6 +61,7 @@ const registerUser = async (req, res) => {
         id: newUser.id,
         email: newUser.email,
         name: newUser.name,
+        role: newUser.role === "MERCHANT" ? "merchant" : "customer",
       },
     });
   } catch (error) {
@@ -109,6 +111,7 @@ const loginUser = async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        role: user.role === "MERCHANT" ? "merchant" : "customer",
       },
     });
   } catch (error) {
@@ -135,6 +138,7 @@ const getMe = async (req, res) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        role: user.role === "MERCHANT" ? "merchant" : "customer",
       },
     });
   } catch (error) {

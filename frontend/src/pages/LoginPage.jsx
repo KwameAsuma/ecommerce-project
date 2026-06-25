@@ -1,114 +1,72 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
-  const { login } = useAuth();
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError("");
     try {
-      const response = await login(email, password);
-      if (response.status === "success") {
-        navigate("/catalog");
-      } else {
-        setError(response.error || "Login failed. Check credentials.");
-      }
+      const data = await login(email, password);
+      const role = data?.user?.role || "customer";
+      navigate(role === "merchant" ? "/merchant" : "/catalog");
     } catch (err) {
-      setError("Login failed. Please try again.");
-    } finally {
-      setLoading(false);
+      setError(err.message || "Invalid credentials");
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "2rem",
-        background: "#f8fafc",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "420px",
-          width: "100%",
-          padding: "2rem",
-          borderRadius: "24px",
-          background: "white",
-          boxShadow: "0 25px 75px rgba(15, 23, 42, 0.08)",
-        }}
-      >
-        <h1 style={{ marginBottom: "0.75rem", color: "#111827" }}>Login</h1>
-        <p style={{ marginBottom: "1.5rem", color: "#475569" }}>
-          Access your account to place bids and view the private auction experience.
-        </p>
+    <div className="auth-container">
+      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+        <h1 style={{ fontSize: "2rem", fontWeight: "900", color: "var(--brand-blue)", margin: 0 }}>TradeHub Ghana</h1>
+      </div>
+      
+      <div className="auth-card">
+        <h2 style={{ textAlign: "center", margin: "0 0 0.5rem 0", fontSize: "1.5rem" }}>SIGN IN</h2>
+        <p style={{ textAlign: "center", color: "var(--text-secondary)", marginBottom: "2rem", fontSize: "0.9rem" }}>Enter as user credentials</p>
+        
+        {error && <div style={{ color: "var(--danger)", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid var(--danger)", padding: "1rem", borderRadius: "8px", marginBottom: "1.5rem", fontSize: "0.9rem", textAlign: "center" }}>{error}</div>}
+
         <form onSubmit={handleSubmit}>
-          <label style={{ display: "block", color: "#475569", marginBottom: "0.5rem" }}>
-            Email
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{
-              width: "100%",
-              padding: "0.85rem 1rem",
-              borderRadius: "14px",
-              border: "1px solid #d1d5db",
-              marginBottom: "1rem",
-            }}
-          />
-
-          <label style={{ display: "block", color: "#475569", marginBottom: "0.5rem" }}>
-            Password
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{
-              width: "100%",
-              padding: "0.85rem 1rem",
-              borderRadius: "14px",
-              border: "1px solid #d1d5db",
-              marginBottom: "1rem",
-            }}
-          />
-
-          {error && (
-            <div style={{ color: "#b91c1c", marginBottom: "1rem" }}>{error}</div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "0.95rem 1rem",
-              borderRadius: "14px",
-              border: "none",
-              background: "#2563eb",
-              color: "white",
-              fontWeight: 700,
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-          >
-            {loading ? "Logging in..." : "Login"}
+          <div className="form-group">
+            <label>Username</label>
+            <input
+              type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div style={{ textAlign: "right", marginBottom: "1.5rem" }}>
+            <Link to="#" style={{ fontSize: "0.85rem", color: "var(--brand-blue)", textDecoration: "none" }}>Reset password?</Link>
+          </div>
+          
+          <button type="submit" className="btn-primary">
+            Sign In
           </button>
         </form>
+
+        <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
+          <Link to="/register" style={{ fontSize: "0.9rem", color: "var(--brand-blue)", textDecoration: "none" }}>Don't have an account? Register</Link>
+        </div>
       </div>
     </div>
   );

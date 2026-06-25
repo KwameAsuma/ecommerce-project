@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import api from "../services/api";
 
 const AuthContext = createContext(null);
@@ -6,47 +6,48 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState("customer");
 
-  // Check if user has a valid cookie session when the app loads
   useEffect(() => {
-    const checkSession = async () => {
+    const checkAuth = async () => {
       try {
         const res = await api.get("/auth/me");
         if (res.data.status === "success") {
           setUser(res.data.user);
+          if (res.data.user.role) setUserRole(res.data.user.role);
         }
       } catch (err) {
-        // Silent catch: cookie is missing or expired, meaning user is a guest
-        setUser(null);
+        // Not logged in
       } finally {
         setLoading(false);
       }
     };
-    checkSession();
+    checkAuth();
   }, []);
 
   const login = async (email, password) => {
     const res = await api.post("/auth/login", { email, password });
     if (res.data.status === "success") {
       setUser(res.data.user);
+      if (res.data.user.role) setUserRole(res.data.user.role);
     }
     return res.data;
   };
 
   const logout = async () => {
     try {
-      // Clear the cookie session on the server
       await api.post("/auth/logout");
     } catch (e) {
-      console.error("Logout error", e);
+      console.error(e);
     } finally {
       setUser(null);
+      setUserRole("customer");
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, loading, userRole, setUserRole, login, logout }}>
+      {children}
     </AuthContext.Provider>
   );
 };
