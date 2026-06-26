@@ -10,7 +10,7 @@ const protect = (req, res, next) => {
     }
 
     // Verify token identity
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_super_secret_key");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Attach the verified user ID to the request object for downstream controllers
     req.userId = decoded.userId;
