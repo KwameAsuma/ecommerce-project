@@ -46,22 +46,6 @@ const AuctionsPage = () => {
           </p>
         </div>
 
-        {/* Dual-Catalog Toggle */}
-        <div style={{ display: "flex", backgroundColor: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "12px", padding: "0.4rem" }}>
-          <button 
-            onClick={() => navigate("/catalog")}
-            style={{ padding: "0.6rem 1.5rem", borderRadius: "8px", border: "none", backgroundColor: "transparent", color: "var(--text-secondary)", fontWeight: "600", fontSize: "0.9rem", cursor: "pointer", transition: "color 0.2s" }}
-            onMouseOver={e => e.currentTarget.style.color = "var(--text-primary)"}
-            onMouseOut={e => e.currentTarget.style.color = "var(--text-secondary)"}
-          >
-            Native Store
-          </button>
-          <button 
-            style={{ padding: "0.6rem 1.5rem", borderRadius: "8px", border: "none", backgroundColor: "var(--bg-base)", color: "var(--text-primary)", fontWeight: "700", fontSize: "0.9rem", boxShadow: "0 2px 5px rgba(0,0,0,0.1)", cursor: "default" }}
-          >
-            Consolidated Imports
-          </button>
-        </div>
       </div>
 
       {/* Featured / Most Active Auctions (Top 3 Carousel) */}

@@ -1,3 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  }
+  .active-nav-item {
+    font-variation-settings: 'FILL' 1;
+  }
+  .transition-soft {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
 :root {
   /* TradeHub Ghana Corporate Palette */
   --bg-base: #f8fafc;

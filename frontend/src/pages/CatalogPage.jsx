@@ -1,9 +1,29 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCatalog } from "../context/CatalogContext";
 import { useCart } from "../context/CartContext";
 import { mockCategories } from "../data/mockDb";
 
 const CatalogPage = () => {
+  const [headlineIdx, setHeadlineIdx] = useState(0);
+  const [fade, setFade] = useState(true);
+  const headlines = ["The Global Standard.", "Curated African Excellence.", "Premium Export Quality."];
+  const subtexts = [
+    "Curated export-quality goods from verified Ghanaian merchants.",
+    "Discover handcrafted luxury delivered worldwide.",
+    "Ethically sourced, sustainably crafted premium products."
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setHeadlineIdx((prev) => (prev + 1) % headlines.length);
+        setFade(true);
+      }, 500);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
   const navigate = useNavigate();
   const { products, loading, filters, updateFilter } = useCatalog();
   const { addToCart } = useCart();
@@ -19,29 +39,27 @@ const CatalogPage = () => {
       {/* Top Section */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "2.5rem", fontWeight: "900", color: "var(--text-primary)", letterSpacing: "-1px", margin: "0 0 0.5rem 0" }}>
-            The Global Standard.
+          <h1 style={{ 
+            fontFamily: "'Playfair Display', serif", 
+            fontSize: "2.5rem", 
+            fontWeight: "900", 
+            color: "var(--text-primary)", 
+            letterSpacing: "-1px", 
+            margin: "0 0 0.5rem 0",
+            opacity: fade ? 1 : 0,
+            transition: "opacity 0.5s ease"
+          }}>
+            {headlines[headlineIdx]}
           </h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem", margin: 0 }}>
-            Curated export-quality goods from verified Ghanaian merchants.
+          <p style={{ 
+            color: "var(--text-secondary)", 
+            fontSize: "1.1rem", 
+            margin: 0,
+            opacity: fade ? 1 : 0,
+            transition: "opacity 0.5s ease"
+          }}>
+            {subtexts[headlineIdx]}
           </p>
-        </div>
-
-        {/* Dual-Catalog Toggle */}
-        <div style={{ display: "flex", backgroundColor: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "12px", padding: "0.4rem" }}>
-          <button 
-            style={{ padding: "0.6rem 1.5rem", borderRadius: "8px", border: "none", backgroundColor: "var(--bg-base)", color: "var(--text-primary)", fontWeight: "700", fontSize: "0.9rem", boxShadow: "0 2px 5px rgba(0,0,0,0.1)", cursor: "default" }}
-          >
-            Native Store
-          </button>
-          <button 
-            onClick={() => navigate("/auctions")}
-            style={{ padding: "0.6rem 1.5rem", borderRadius: "8px", border: "none", backgroundColor: "transparent", color: "var(--text-secondary)", fontWeight: "600", fontSize: "0.9rem", cursor: "pointer", transition: "color 0.2s" }}
-            onMouseOver={e => e.currentTarget.style.color = "var(--text-primary)"}
-            onMouseOut={e => e.currentTarget.style.color = "var(--text-secondary)"}
-          >
-            Consolidated Imports
-          </button>
         </div>
       </div>
 

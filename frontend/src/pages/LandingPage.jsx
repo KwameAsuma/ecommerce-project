@@ -119,7 +119,7 @@ const LandingPage = () => {
       <NavBar theme={theme} toggleTheme={toggleTheme} />
 
       {/* --- HERO SECTION (Static) --- */}
-      <section style={{ position: "relative", backgroundColor: bgMain, padding: "6rem 2rem", display: "flex", justifyContent: "center", overflow: "hidden" }}>
+      <section style={{ position: "relative", backgroundColor: bgMain, padding: "3rem 2rem", display: "flex", justifyContent: "center", overflow: "hidden" }}>
         {/* Background Decorative Blur */}
         <div style={{ position: "absolute", top: "20%", left: "10%", width: "40vw", height: "40vw", background: isDark ? "radial-gradient(circle, rgba(245,158,11,0.05) 0%, rgba(0,0,0,0) 70%)" : "radial-gradient(circle, rgba(37,99,235,0.05) 0%, rgba(255,255,255,0) 70%)", zIndex: 0, borderRadius: "50%" }}></div>
 
@@ -129,7 +129,7 @@ const LandingPage = () => {
             <div className="glass-tag" style={{ display: "inline-block", backgroundColor: isDark ? "rgba(245,158,11,0.1)" : "rgba(37,99,235,0.1)", color: primaryBrand, padding: "0.5rem 1.2rem", borderRadius: "999px", fontSize: "0.85rem", fontWeight: "600", marginBottom: "1.5rem", border: `1px solid ${isDark ? "rgba(245,158,11,0.2)" : "rgba(37,99,235,0.2)"}` }}>
               ✓ Escrow Protected Platform
             </div>
-            <h1 style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: "800", color: textMain, lineHeight: "1.1", marginBottom: "1.5rem", letterSpacing: "-0.02em" }}>
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2.5rem, 5vw, 4rem)", fontWeight: "800", color: textMain, lineHeight: "1.1", marginBottom: "1.5rem", letterSpacing: "-0.02em" }}>
               The Future of <br />
               <span style={{ color: primaryBrand }}>Ghanaian Commerce</span>
             </h1>
@@ -170,7 +170,7 @@ const LandingPage = () => {
       <section style={{ backgroundColor: bgSec, padding: "8rem 2rem", borderTop: `1px solid ${borderCol}` }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
           <div className="fade-in-hidden">
-            <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)", fontWeight: "800", color: textMain, marginBottom: "1.5rem", letterSpacing: "-0.02em" }}>Built for Reliability</h2>
+            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 2.5rem)", fontWeight: "800", color: textMain, marginBottom: "1.5rem", letterSpacing: "-0.02em" }}>Built for Reliability</h2>
             <p style={{ color: textSec, marginBottom: "5rem", fontSize: "1.15rem", maxWidth: "600px", margin: "0 auto 5rem auto", lineHeight: "1.6" }}>Professional retail mechanics combined with local market understanding. Experience a new standard of commerce.</p>
           </div>
 
@@ -179,19 +179,19 @@ const LandingPage = () => {
             {/* Cards */}
             <div className="fade-in-hidden premium-card" style={{ backgroundColor: bgMain, padding: "3rem 2.5rem", borderRadius: "20px", border: `1px solid ${borderCol}` }}>
               <div style={{ backgroundColor: isDark ? "rgba(245,158,11,0.1)" : "rgba(37,99,235,0.1)", width: "56px", height: "56px", borderRadius: "14px", display: "flex", justifyContent: "center", alignItems: "center", color: primaryBrand, marginBottom: "2rem", fontSize: "1.5rem" }}>🛍️</div>
-              <h3 style={{ fontSize: "1.4rem", fontWeight: "700", marginBottom: "1rem", color: textMain, letterSpacing: "-0.01em" }}>Native Store</h3>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.4rem", fontWeight: "700", marginBottom: "1rem", color: textMain, letterSpacing: "-0.01em" }}>Native Store</h3>
               <p style={{ color: textSec, lineHeight: "1.7" }}>Shop fixed-price, high-quality local goods directly from verified artisans and merchants without the hassle.</p>
             </div>
 
             <div className="fade-in-hidden premium-card" style={{ backgroundColor: bgMain, padding: "3rem 2.5rem", borderRadius: "20px", border: `1px solid ${borderCol}`, transitionDelay: "100ms" }}>
               <div style={{ backgroundColor: isDark ? "rgba(234,88,12,0.1)" : "rgba(234,88,12,0.1)", width: "56px", height: "56px", borderRadius: "14px", display: "flex", justifyContent: "center", alignItems: "center", color: "#ea580c", marginBottom: "2rem", fontSize: "1.5rem" }}>👥</div>
-              <h3 style={{ fontSize: "1.4rem", fontWeight: "700", marginBottom: "1rem", color: textMain, letterSpacing: "-0.01em" }}>Demand Pooling</h3>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.4rem", fontWeight: "700", marginBottom: "1rem", color: textMain, letterSpacing: "-0.01em" }}>Demand Pooling</h3>
               <p style={{ color: textSec, lineHeight: "1.7" }}>Join collective buying pools for global tech and imports. Lower costs and secure logistics managed by us.</p>
             </div>
 
             <div className="fade-in-hidden premium-card" style={{ backgroundColor: bgMain, padding: "3rem 2.5rem", borderRadius: "20px", border: `1px solid ${borderCol}`, transitionDelay: "200ms" }}>
               <div style={{ backgroundColor: isDark ? "rgba(16,185,129,0.1)" : "rgba(16,185,129,0.1)", width: "56px", height: "56px", borderRadius: "14px", display: "flex", justifyContent: "center", alignItems: "center", color: "#10b981", marginBottom: "2rem", fontSize: "1.5rem" }}>🛡️</div>
-              <h3 style={{ fontSize: "1.4rem", fontWeight: "700", marginBottom: "1rem", color: textMain, letterSpacing: "-0.01em" }}>Escrow Security</h3>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.4rem", fontWeight: "700", marginBottom: "1rem", color: textMain, letterSpacing: "-0.01em" }}>Escrow Security</h3>
               <p style={{ color: textSec, lineHeight: "1.7" }}>Every transaction is protected. Funds are held securely until delivery is confirmed by both parties.</p>
             </div>
 
@@ -204,7 +204,7 @@ const LandingPage = () => {
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div className="fade-in-hidden" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "4rem", flexWrap: "wrap", gap: "2rem" }}>
             <div>
-              <h2 style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)", fontWeight: "800", color: textMain, marginBottom: "1rem", letterSpacing: "-0.02em" }}>A Diverse Marketplace</h2>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 2.5rem)", fontWeight: "800", color: textMain, marginBottom: "1rem", letterSpacing: "-0.02em" }}>A Diverse Marketplace</h2>
               <p style={{ color: textSec, fontSize: "1.15rem", maxWidth: "600px", lineHeight: "1.6" }}>Explore categories that connect you directly to the best local and imported goods.</p>
             </div>
             <button onClick={() => navigate("/login")} style={{ padding: "0.8rem 2rem", borderRadius: "8px", border: `1px solid ${borderCol}`, backgroundColor: bgSec, color: textMain, fontWeight: "600", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = primaryBrand} onMouseOut={e => e.currentTarget.style.borderColor = borderCol}>
