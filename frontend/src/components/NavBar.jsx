@@ -13,6 +13,8 @@ const NavBar = ({ theme, toggleTheme }) => {
   const hoverBg = isDark ? "#1e293b" : "#f1f5f9";
   const dropdownBg = isDark ? "#1e293b" : "#ffffff";
   const borderColor = isDark ? "#334155" : "#e2e8f0";
+  const primaryBrand = isDark ? "#f59e0b" : "#2563eb";
+  const primaryBrandHover = isDark ? "#d97706" : "#1d4ed8";
 
   const handleMouseEnter = (menu) => setActiveDropdown(menu);
   const handleMouseLeave = () => setActiveDropdown(null);
@@ -52,9 +54,9 @@ const NavBar = ({ theme, toggleTheme }) => {
           Native Store ▾
           {activeDropdown === 'native' && (
             <div style={{ position: "absolute", top: "100%", left: 0, backgroundColor: dropdownBg, border: `1px solid ${borderColor}`, borderRadius: "8px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", minWidth: "200px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              <Link to="/login" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Latest Arrivals</Link>
-              <Link to="/login" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Local Fabrics & Kente</Link>
-              <Link to="/login" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Premium Foods</Link>
+              <Link to="/catalog" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Latest Arrivals</Link>
+              <Link to="/catalog" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Local Fabrics & Kente</Link>
+              <Link to="/catalog" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Premium Foods</Link>
             </div>
           )}
         </div>
@@ -68,9 +70,9 @@ const NavBar = ({ theme, toggleTheme }) => {
           Auction Engine ▾
           {activeDropdown === 'auction' && (
             <div style={{ position: "absolute", top: "100%", left: 0, backgroundColor: dropdownBg, border: `1px solid ${borderColor}`, borderRadius: "8px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", minWidth: "200px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              <Link to="/login" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Live Auctions</Link>
-              <Link to="/login" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Upcoming Tech Pools</Link>
-              <Link to="/login" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Past Results</Link>
+              <Link to="/auctions" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Live Auctions</Link>
+              <Link to="/auctions" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Upcoming Tech Pools</Link>
+              <Link to="/auctions" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Past Results</Link>
             </div>
           )}
         </div>
@@ -84,7 +86,7 @@ const NavBar = ({ theme, toggleTheme }) => {
           Verified Merchants ▾
           {activeDropdown === 'merchants' && (
             <div style={{ position: "absolute", top: "100%", left: 0, backgroundColor: dropdownBg, border: `1px solid ${borderColor}`, borderRadius: "8px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", minWidth: "200px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              <Link to="/login" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Top Sellers</Link>
+              <Link to="/merchants" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Top Sellers</Link>
               <Link to="/register?role=merchant" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Become a Merchant</Link>
             </div>
           )}
@@ -94,28 +96,10 @@ const NavBar = ({ theme, toggleTheme }) => {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-        
-        {user ? (
-          <button
-            onClick={() => navigate("/dashboard")}
-            style={{
-              padding: "0.6rem 1.2rem",
-              borderRadius: "6px",
-              backgroundColor: isDark ? "#f97316" : "#1e3a8a",
-              color: "white",
-              border: "none",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}
-          >
-            Go to Dashboard
-          </button>
-        ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <Link to="/login" style={{ textDecoration: "none", color: text, fontWeight: "600" }}>Login</Link>
-            <Link to="/register" style={{ textDecoration: "none", backgroundColor: isDark ? "#f97316" : "#1e3a8a", color: "white", padding: "0.6rem 1.2rem", borderRadius: "6px", fontWeight: "600" }}>Sign Up</Link>
-          </div>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <Link to="/login" style={{ padding: "0.5rem 1.2rem", borderRadius: "6px", border: `1px solid ${borderColor}`, color: text, fontWeight: "600", textDecoration: "none", transition: "all 0.2s" }} onMouseOver={e=>e.currentTarget.style.borderColor=primaryBrand} onMouseOut={e=>e.currentTarget.style.borderColor=borderColor}>Login</Link>
+          <Link to="/register" style={{ padding: "0.6rem 1.2rem", borderRadius: "6px", backgroundColor: primaryBrand, color: "#fff", fontWeight: "600", textDecoration: "none", transition: "background-color 0.2s" }} onMouseOver={e=>e.currentTarget.style.backgroundColor=primaryBrandHover} onMouseOut={e=>e.currentTarget.style.backgroundColor=primaryBrand}>Sign Up</Link>
+        </div>
 
         {/* Theme Toggle */}
         <button 

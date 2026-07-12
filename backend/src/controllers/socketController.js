@@ -1,4 +1,5 @@
 const AuctionModel = require("../models/AuctionModel");
+const prisma = require("../config/prisma");
 
 module.exports = (io) => {
   // Listen for new clients connecting to the real-time server

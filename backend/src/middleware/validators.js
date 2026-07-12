@@ -22,7 +22,6 @@ exports.validateLogin = [
 ];
 
 exports.validateProductCreate = [
-  body("vendorId").isInt().withMessage("vendorId must be an integer"),
   body("title").notEmpty().withMessage("title is required"),
   body("price").isFloat({ gt: 0 }).withMessage("price must be a positive number"),
   body("stockCount").isInt({ min: 0 }).withMessage("stockCount must be integer >= 0"),

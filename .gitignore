@@ -2,8 +2,25 @@
 .env
 notes/
 
+# Dependencies
+node_modules/
+dist/
+build/
+
 # Database Storage
 pgdata/
+*.sql
+*.dump
+*.bak
 
 # OS Files
 .DS_Store
+
+# Uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/uploads/general/.gitkeep
+
+# Test Data and Scripts
+test_data/
+backend/prisma/migrations/

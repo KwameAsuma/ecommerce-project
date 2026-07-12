@@ -4,11 +4,17 @@ import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
 const RegisterPage = () => {
+  const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("BUYER");
+  const [momoNumber, setMomoNumber] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -21,11 +27,32 @@ const RegisterPage = () => {
     }
   }, [location]);
 
+  const isStep1Valid = name.trim() !== '' && email.trim() !== '' && phone.length === 10 && password.trim() !== '' && confirmPassword.trim() !== '' && password === confirmPassword;
+  const isStep2Valid = momoNumber.length === 10;
+
+  const handleNextStep = (e) => {
+    e.preventDefault();
+    if (!name || !email || !phone || !password || !confirmPassword) {
+      setError("Please fill in all basic information fields.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setError("");
+    if (role === "MERCHANT") {
+      setStep(2);
+    } else {
+      handleSubmit(e);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     try {
-      await api.post("/auth/register", { name, email, password, role });
+      await api.post("/auth/register", { name, email, phone, password, role, momo_number: momoNumber });
       const data = await login(email, password);
       const userRole = data?.user?.role || "customer";
       navigate(userRole === "merchant" ? "/merchant" : "/catalog");
@@ -35,84 +62,214 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "2rem", fontWeight: "900", color: "var(--brand-blue)", margin: 0 }}>TradeHub Ghana</h1>
-      </div>
+    <div className="min-h-screen w-full bg-surface-container flex items-center justify-center p-4 md:p-8 font-body text-on-surface">
+      
+      {/* Back to Home Link (Absolute Top Left) */}
+      <Link to="/" className="absolute top-6 left-6 md:top-10 md:left-10 flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-bold z-10 bg-surface/50 backdrop-blur-md px-4 py-2 rounded-full">
+        <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+        Home
+      </Link>
 
-      <div className="auth-card">
-        <h2 style={{ textAlign: "center", margin: "0 0 0.5rem 0", fontSize: "1.5rem" }}>SIGN UP</h2>
-        <p style={{ textAlign: "center", color: "var(--text-secondary)", marginBottom: "2rem", fontSize: "0.9rem" }}>Create your account</p>
+      {/* Centered Modal */}
+      <div className="w-full max-w-[1000px] min-h-[600px] md:h-[600px] bg-surface rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden relative border border-outline-variant">
         
-        {error && <div style={{ color: "var(--danger)", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid var(--danger)", padding: "1rem", borderRadius: "8px", marginBottom: "1.5rem", fontSize: "0.9rem", textAlign: "center" }}>{error}</div>}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Email / Phone</label>
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+        {/* Left Side - Image Coverage */}
+        <div className="hidden md:block md:w-[45%] relative bg-black">
+          {/* Overlay to give brand tint */}
+          <div className="absolute inset-0 bg-primary/20 mix-blend-multiply z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
           
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          <img 
+            src="/hero_business.png" 
+            alt="Business professionals" 
+            className="absolute inset-0 w-full h-full object-cover"
+          />
           
-          <div className="form-group" style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", marginBottom: "0.5rem", color: "var(--text-secondary)", fontWeight: "600", fontSize: "0.85rem" }}>I am registering as a:</label>
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <label style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.8rem", border: role === "BUYER" ? "2px solid var(--brand-blue)" : "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", transition: "all 0.2s" }}>
-                <input 
-                  type="radio" 
-                  name="role" 
-                  value="BUYER" 
-                  checked={role === "BUYER"} 
-                  onChange={() => setRole("BUYER")} 
-                  style={{ margin: 0 }}
-                />
-                <span style={{ fontWeight: "600", color: role === "BUYER" ? "var(--brand-blue)" : "var(--text-primary)" }}>Customer</span>
-              </label>
-              
-              <label style={{ flex: 1, display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.8rem", border: role === "MERCHANT" ? "2px solid var(--brand-gold)" : "1px solid var(--border)", borderRadius: "8px", cursor: "pointer", transition: "all 0.2s" }}>
-                <input 
-                  type="radio" 
-                  name="role" 
-                  value="MERCHANT" 
-                  checked={role === "MERCHANT"} 
-                  onChange={() => setRole("MERCHANT")} 
-                  style={{ margin: 0 }}
-                />
-                <span style={{ fontWeight: "600", color: role === "MERCHANT" ? "var(--brand-gold)" : "var(--text-primary)" }}>Merchant</span>
-              </label>
+          {/* Quote/Text over image */}
+          <div className="absolute bottom-8 left-8 right-8 z-20 text-white">
+            <h3 className="text-2xl font-display font-black leading-tight mb-2">Join the ecosystem of verified traders.</h3>
+            <p className="text-white/80 font-medium text-sm">Safe, escrow-protected commerce designed for the Ghanaian market.</p>
+          </div>
+        </div>
+
+        {/* Right Side - Form Area */}
+        <div className="w-full md:w-[55%] p-6 flex flex-col justify-center">
+          <div className="max-w-[400px] w-full mx-auto">
+            
+            {/* Logo/Icon at Top Center */}
+            <div className="flex items-center justify-center gap-2.5 mb-2">
+              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary shadow-sm">
+                <img src="/app_icon.png" alt="Logo" className="w-5 h-5 rounded-md" />
+              </div>
+              <span className="font-bold text-2xl tracking-tight text-primary">TradeHub</span>
             </div>
-          </div>
-          
-          <button type="submit" className="btn-gold" style={{ marginTop: "1rem" }}>
-            Sign Up
-          </button>
-        </form>
 
-        <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
-          <Link to="/login" style={{ fontSize: "0.9rem", color: "var(--brand-blue)", textDecoration: "none" }}>Already have an account? Sign In</Link>
+            <h2 className="text-xl md:text-2xl font-black text-center text-on-surface tracking-tight mb-4">
+              {step === 1 ? "Create an account" : "Merchant Setup"}
+            </h2>
+
+            {error && (
+              <div className="bg-error/10 border border-error text-error px-2 py-1.5 rounded-lg mb-2 text-xs text-center font-medium">
+                {error}
+              </div>
+            )}
+
+            {/* STEP 1 FORM */}
+            {step === 1 && (
+              <form onSubmit={handleNextStep} className="space-y-2.5">
+                <div>
+                  <input 
+                    type="text" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    required 
+                    placeholder="Full Name"
+                    className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent text-sm"
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  <div className="flex-1">
+                    <input 
+                      type="email" 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      required 
+                      placeholder="Email Address"
+                      className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent text-sm"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <input 
+                      type="tel" 
+                      value={phone} 
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} 
+                      required 
+                      maxLength="10"
+                      placeholder="Phone Number"
+                      className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent text-sm"
+                    />
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    required 
+                    placeholder="Create Password"
+                    className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent pr-12 text-sm"
+                  />
+                  <span 
+                    className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer hover:text-on-surface text-[18px]"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? 'visibility' : 'visibility_off'}
+                  </span>
+                </div>
+                
+                <div>
+                  <div className="relative">
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      value={confirmPassword} 
+                      onChange={(e) => setConfirmPassword(e.target.value)} 
+                      required 
+                      placeholder="Confirm Password"
+                      className={`w-full border rounded-xl px-4 py-3 outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent pr-12 text-sm ${confirmPassword && password !== confirmPassword ? 'border-error focus:border-error focus:ring-1 focus:ring-error' : 'border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary'}`}
+                    />
+                    <span 
+                      className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer hover:text-on-surface text-[18px]"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? 'visibility' : 'visibility_off'}
+                    </span>
+                  </div>
+                  {confirmPassword && password !== confirmPassword && (
+                    <p className="text-error text-xs font-medium mt-1 ml-1">Passwords do not match</p>
+                  )}
+                </div>
+                
+                <div className="pt-0.5">
+                  <div className="flex gap-3">
+                    <label className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 border-2 rounded-xl cursor-pointer transition-all ${role === 'BUYER' ? 'border-primary bg-primary/5' : 'border-outline-variant hover:border-primary/50'}`}>
+                      <input type="radio" name="role" value="BUYER" checked={role === "BUYER"} onChange={() => setRole("BUYER")} className="hidden" />
+                      <span className="material-symbols-outlined text-[18px]" style={{color: role === 'BUYER' ? 'var(--primary)' : 'var(--text-secondary)'}}>shopping_bag</span>
+                      <span className={`font-bold text-xs ${role === 'BUYER' ? 'text-primary' : 'text-on-surface-variant'}`}>Customer</span>
+                    </label>
+                    
+                    <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 border-2 rounded-xl cursor-pointer transition-all ${role === 'MERCHANT' ? 'border-amber-500 bg-amber-500/10' : 'border-outline-variant hover:border-amber-500/50'}`}>
+                      <input type="radio" name="role" value="MERCHANT" checked={role === "MERCHANT"} onChange={() => setRole("MERCHANT")} className="hidden" />
+                      <span className="material-symbols-outlined text-[18px]" style={{color: role === 'MERCHANT' ? '#f59e0b' : 'var(--text-secondary)'}}>storefront</span>
+                      <span className={`font-bold text-xs ${role === 'MERCHANT' ? 'text-amber-500' : 'text-on-surface-variant'}`}>Merchant</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <button 
+                  type="submit" 
+                  disabled={!isStep1Valid}
+                  className={`w-full py-2 rounded-xl font-bold transition-all mt-3 ${!isStep1Valid ? 'bg-outline-variant/50 text-on-surface-variant/50 cursor-not-allowed' : `text-on-primary shadow-md hover:opacity-90 active:scale-[0.98] ${role === 'MERCHANT' ? 'bg-amber-500 shadow-amber-500/20' : 'bg-primary shadow-primary/20'}`}`}
+                >
+                  {role === "MERCHANT" ? "Continue Setup →" : "Create an account"}
+                </button>
+
+                <div className="flex items-center gap-3 my-3">
+                  <div className="h-px bg-outline-variant flex-1"></div>
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Or</span>
+                  <div className="h-px bg-outline-variant flex-1"></div>
+                </div>
+
+                <button type="button" className="w-full flex items-center justify-center gap-2 border border-outline-variant rounded-xl py-2 hover:bg-surface-container-low transition-colors font-bold text-on-surface-variant text-sm active:scale-[0.98]">
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-4 h-4" alt="Google logo" />
+                  Sign up with Google
+                </button>
+              </form>
+            )}
+
+            {/* STEP 2 FORM (Merchants Only) */}
+            {step === 2 && (
+              <form onSubmit={handleSubmit} className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+                <div className="bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 mb-3">
+                  <p className="text-xs text-on-surface font-medium leading-relaxed">
+                    Please provide your MoMo number where your sales funds will be disbursed upon successful deliveries.
+                  </p>
+                </div>
+
+                <div>
+                  <input 
+                    type="tel" 
+                    value={momoNumber} 
+                    onChange={(e) => setMomoNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} 
+                    required 
+                    maxLength="10"
+                    placeholder="MoMo Number (e.g. 0541234567)"
+                    className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all text-on-surface font-medium tracking-wide placeholder-on-surface-variant/60 bg-transparent text-sm"
+                  />
+                </div>
+                
+                <div className="flex gap-4 pt-4">
+                  <button type="button" onClick={() => setStep(1)} className="px-6 py-2 rounded-xl border border-outline-variant text-on-surface-variant font-bold hover:bg-surface-container transition-colors text-sm">
+                    Back
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={!isStep2Valid}
+                    className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all ${!isStep2Valid ? 'bg-outline-variant/50 text-on-surface-variant/50 cursor-not-allowed' : 'bg-amber-500 text-on-primary shadow-lg shadow-amber-500/20 hover:opacity-90 active:scale-[0.98]'}`}
+                  >
+                    Complete Registration
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div className="mt-3 text-center">
+              <span className="text-on-surface-variant text-sm font-medium">Already have an account? </span>
+              <Link to="/login" className="text-primary font-bold hover:underline text-sm">Login</Link>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>

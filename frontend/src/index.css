@@ -12,11 +12,60 @@
   .transition-soft {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  /* Responsive Utility Classes */
+  .responsive-flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+  }
+  .responsive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+  @media (max-width: 768px) {
+    .hide-on-mobile {
+      display: none !important;
+    }
+    .mobile-col {
+      flex-direction: column !important;
+    }
+    .responsive-flex > div {
+      flex: 1 1 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
+    }
+    .customer-header {
+      padding: 0.5rem 1rem !important;
+      gap: 0.5rem !important;
+    }
+    .search-container {
+      width: 100% !important;
+      max-width: 100% !important;
+      flex-basis: 100% !important;
+      order: 3;
+    }
+    .main-content {
+      padding: 1rem 1rem !important;
+    }
+    .secondary-nav {
+      padding: 0 1rem !important;
+      justify-content: flex-start !important;
+    }
+  }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 :root {
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+body {
   /* TradeHub Ghana Corporate Palette */
   --bg-base: #f8fafc;
   --bg-panel: #ffffff;

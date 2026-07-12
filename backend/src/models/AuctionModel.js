@@ -131,16 +131,35 @@ exports.closeAuction = async (auctionId) => {
 
 // GET AUCTION HISTORY
 exports.getAuctionHistory = async () => {
-  const query = `
-    SELECT id, importer_id, title, base_price, current_highest_bid, status, end_time, created_at
-    FROM auctions
-    WHERE status = 'closed'
-    ORDER BY end_time DESC;
-  `;
   try {
-    const result = await pool.query(query);
-    return result.rows;
+    const auctions = await prisma.auction.findMany({
+      where: { status: "closed" },
+      orderBy: { endTime: "desc" },
+      include: {
+        bids: { orderBy: { bidAmount: "desc" }, take: 1 },
+      },
+    });
+    return auctions;
   } catch (error) {
     throw new Error(`Error fetching auction history: ${error.message}`);
+  }
+};
+
+// GET AUCTIONS BY VENDOR (IMPORTER)
+exports.getVendorAuctions = async (importerId) => {
+  try {
+    const auctions = await prisma.auction.findMany({
+      where: { importerId: Number(importerId) },
+      orderBy: { createdAt: "desc" },
+      include: {
+        bids: {
+          orderBy: { bidAmount: "desc" },
+          include: { user: { select: { id: true, name: true, email: true } } },
+        },
+      },
+    });
+    return auctions;
+  } catch (error) {
+    throw new Error(`Error fetching vendor auctions: ${error.message}`);
   }
 };

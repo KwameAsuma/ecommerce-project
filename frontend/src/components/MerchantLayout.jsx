@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -7,13 +7,42 @@ const MerchantLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [isPinned, setIsPinned] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+
+  const hoverTimeoutRef = useRef(null);
+
+  const isExpanded = isPinned || isHovered;
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(true);
+    }, 150); // 150ms delay
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setIsHovered(false);
+  };
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    if (window.confirm("Are you sure you want to log out?")) {
+      try {
+        await logout();
+        navigate('/login');
+      } catch (err) {
+        console.error("Logout failed", err);
+      }
+    }
   };
 
   const isActive = (path) => location.pathname === path;
@@ -103,53 +132,124 @@ const MerchantLayout = () => {
 
       <div className="flex flex-1 relative">
         {/* SideNavBar */}
-        <aside className="hidden md:flex flex-col h-[calc(100vh-64px)] w-[280px] bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline p-4 sticky top-16 z-30">
-          <div className="mb-8 px-2">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-on-secondary font-bold font-headline-md">GM</div>
-              <div>
-                <p className="font-headline-md text-label-md font-extrabold text-on-surface">Ghana Merchant</p>
-                <p className="font-label-sm text-label-sm text-on-surface-variant">Verified Seller</p>
-              </div>
+        <aside 
+          onMouseLeave={handleMouseLeave}
+          className={`hidden md:flex flex-col h-[calc(100vh-64px)] ${isExpanded ? 'w-[280px]' : 'w-[80px]'} bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline p-4 sticky top-16 z-30 transition-all duration-300`}
+        >
+          <div className={`flex items-center ${isExpanded ? 'justify-between' : 'justify-center'} mb-8 px-2`}>
+            <div 
+              onClick={() => setIsPinned(true)}
+              className="flex items-center gap-3 cursor-pointer"
+              title="Pin Sidebar"
+            >
+              <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-on-secondary font-bold font-headline-md flex-shrink-0">GM</div>
+              {isExpanded && (
+                <div>
+                  <p className="font-headline-md text-label-md font-extrabold text-on-surface whitespace-nowrap">Ghana Merchant</p>
+                  <p className="font-label-sm text-label-sm text-on-surface-variant">Verified Seller</p>
+                </div>
+              )}
             </div>
+            {isExpanded && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPinned(false);
+                  setIsHovered(false);
+                }} 
+                className="text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-full transition-colors flex items-center justify-center cursor-pointer"
+                title="Collapse Sidebar"
+              >
+                <span className="material-symbols-outlined">chevron_left</span>
+              </button>
+            )}
           </div>
           
           <nav className="flex-1 space-y-1">
-            <Link to="/merchant" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-label-md transition-all ${isActive('/merchant') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
+            <Link 
+              to="/merchant" 
+              onMouseEnter={handleMouseEnter}
+              onClick={() => setIsPinned(true)}
+              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
+              title={!isExpanded ? "Command Center" : undefined}
+            >
               <span className={`material-symbols-outlined ${isActive('/merchant') ? 'active-nav-item' : ''}`} data-icon="dashboard">dashboard</span>
-              Command Center
+              {isExpanded && <span>Command Center</span>}
             </Link>
-            <Link to="/merchant/inventory" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-label-md transition-all ${isActive('/merchant/inventory') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
+            <Link 
+              to="/merchant/inventory" 
+              onMouseEnter={handleMouseEnter}
+              onClick={() => setIsPinned(true)}
+              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant/inventory') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
+              title={!isExpanded ? "Inventory" : undefined}
+            >
               <span className={`material-symbols-outlined ${isActive('/merchant/inventory') ? 'active-nav-item' : ''}`} data-icon="inventory_2">inventory_2</span>
-              Inventory
+              {isExpanded && <span>Inventory</span>}
             </Link>
-            <Link to="/merchant/auctions" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-label-md transition-all ${isActive('/merchant/auctions') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
+            <Link 
+              to="/merchant/auctions" 
+              onMouseEnter={handleMouseEnter}
+              onClick={() => setIsPinned(true)}
+              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant/auctions') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
+              title={!isExpanded ? "Auctions" : undefined}
+            >
               <span className={`material-symbols-outlined ${isActive('/merchant/auctions') ? 'active-nav-item' : ''}`} data-icon="gavel">gavel</span>
-              Auctions
+              {isExpanded && <span>Auctions</span>}
             </Link>
-            <Link to="/merchant/escrow" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-label-md transition-all ${isActive('/merchant/escrow') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
+            <Link 
+              to="/merchant/escrow" 
+              onMouseEnter={handleMouseEnter}
+              onClick={() => setIsPinned(true)}
+              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant/escrow') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
+              title={!isExpanded ? "Escrow Payouts" : undefined}
+            >
               <span className={`material-symbols-outlined ${isActive('/merchant/escrow') ? 'active-nav-item' : ''}`} data-icon="payments">payments</span>
-              Escrow Payouts
+              {isExpanded && <span>Escrow Payouts</span>}
             </Link>
-            <Link to="/merchant/settings" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-label-md transition-all ${isActive('/merchant/settings') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
+            <Link 
+              to="/merchant/settings" 
+              onMouseEnter={handleMouseEnter}
+              onClick={() => setIsPinned(true)}
+              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant/settings') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
+              title={!isExpanded ? "Settings" : undefined}
+            >
               <span className={`material-symbols-outlined ${isActive('/merchant/settings') ? 'active-nav-item' : ''}`} data-icon="settings">settings</span>
-              Settings
+              {isExpanded && <span>Settings</span>}
             </Link>
           </nav>
           
-          <button onClick={() => setIsAddProductOpen(true)} className="mt-4 w-full bg-primary text-on-primary py-3 rounded-xl font-label-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]">
+          <button 
+            onMouseEnter={handleMouseEnter}
+            onClick={() => {
+              setIsPinned(true);
+              navigate("/merchant/products/new");
+            }} 
+            className={`mt-4 w-full bg-primary text-on-primary py-3 rounded-xl font-label-md flex items-center justify-center ${isExpanded ? 'gap-2' : ''} hover:opacity-90 transition-all whitespace-nowrap overflow-hidden active:scale-[0.98]`} 
+            title={!isExpanded ? "Add New Product" : undefined}
+          >
             <span className="material-symbols-outlined text-[20px]" data-icon="add">add</span>
-            Add New Product
+            {isExpanded && <span>Add New Product</span>}
           </button>
           
-          <div className="mt-auto pt-4 border-t border-outline-variant space-y-1">
-            <Link to="/merchant/support" className={`flex items-center gap-3 px-4 py-3 rounded-lg font-label-md transition-all ${isActive('/merchant/support') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
+          <div className="mt-auto pt-4 border-t border-outline-variant space-y-1 overflow-hidden">
+            <Link 
+              to="/merchant/support" 
+              onMouseEnter={handleMouseEnter}
+              onClick={() => setIsPinned(true)}
+              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant/support') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
+              title={!isExpanded ? "Support" : undefined}
+            >
               <span className={`material-symbols-outlined ${isActive('/merchant/support') ? 'active-nav-item' : ''}`} data-icon="support_agent">support_agent</span>
-              Support
+              {isExpanded && <span>Support</span>}
             </Link>
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg font-label-md transition-all">
+            <button 
+              onMouseEnter={handleMouseEnter}
+              onClick={handleLogout} 
+              className={`w-full flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden`} 
+              title={!isExpanded ? "Sign Out" : undefined}
+            >
               <span className="material-symbols-outlined" data-icon="logout">logout</span>
-              Sign Out
+              {isExpanded && <span>Sign Out</span>}
             </button>
           </div>
         </aside>
@@ -188,7 +288,7 @@ const MerchantLayout = () => {
           <span className={`material-symbols-outlined ${isActive('/merchant/inventory') ? 'active-nav-item' : ''}`} data-icon="inventory_2">inventory_2</span>
           <span className="text-[10px] font-label-sm">Items</span>
         </Link>
-        <button onClick={() => setIsAddProductOpen(true)} className="flex flex-col items-center gap-1 text-on-surface-variant">
+        <button onClick={() => navigate("/merchant/products/new")} className="flex flex-col items-center gap-1 text-on-surface-variant">
           <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white -mt-8 shadow-lg">
             <span className="material-symbols-outlined" data-icon="add">add</span>
           </div>
@@ -203,36 +303,6 @@ const MerchantLayout = () => {
           <span className="text-[10px] font-label-sm">Logout</span>
         </button>
       </nav>
-
-      {/* Add New Product Modal Overlay */}
-      {isAddProductOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-surface-container-lowest w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container">
-              <h2 className="font-headline-md font-bold text-on-surface">Add New Product</h2>
-              <button onClick={() => setIsAddProductOpen(false)} className="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full hover:bg-error-container">
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            <div className="p-8 flex flex-col items-center justify-center min-h-[300px]">
-              <div className="w-20 h-20 bg-surface-container-low rounded-full flex items-center justify-center text-primary mb-4 border border-outline-variant">
-                <span className="material-symbols-outlined text-[40px]">inventory_2</span>
-              </div>
-              <h3 className="font-label-md font-bold text-on-surface text-lg">Product Creation Wizard</h3>
-              <p className="text-on-surface-variant text-center max-w-sm mt-2 font-body-md">
-                This guided wizard will help you list a new item on the native store or launch it into the auction engine.
-              </p>
-              <div className="mt-6 px-6 py-3 bg-surface-variant text-on-surface-variant rounded-lg font-label-md">
-                Form implementation coming soon
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t border-outline-variant bg-surface-container-low flex justify-end gap-3">
-              <button onClick={() => setIsAddProductOpen(false)} className="px-6 py-2 border border-outline-variant rounded-lg font-label-md text-on-surface-variant hover:bg-surface-container transition-colors">Cancel</button>
-              <button disabled className="px-6 py-2 bg-primary/50 text-on-primary rounded-lg font-label-md cursor-not-allowed">Continue</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

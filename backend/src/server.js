@@ -11,20 +11,39 @@ const path = require("path");
 
 const app = express();
 
-// 3. Wrap Express inside an HTTP server and attach Socket.io
 const server = http.createServer(app);
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost",
+  "http://127.0.0.1"
+];
+
+if (process.env.NGROK_URL) {
+  allowedOrigins.push(process.env.NGROK_URL);
+}
+
 const io = new Server(server, {
   cors: {
-    origin: "*", // NGINX handles security and routing from the frontend
-    methods: ["GET", "POST"],
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
   },
 });
 
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
+
+// Mount static uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // ============================================================================
 // ROUTE MOUNTING
@@ -32,12 +51,24 @@ app.use(cookieParser());
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const auctionRoutes = require("./routes/auctionRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 const userRoutes = require("./routes/userRoutes");
+const financeRoutes = require("./routes/financeRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
+const supportRoutes = require("./routes/supportRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/auctions", auctionRoutes);
+app.use("/api/orders", orderRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/finances", financeRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/support", supportRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // ============================================================================
 // WEBSOCKET MOUNTING

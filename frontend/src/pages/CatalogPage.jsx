@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCatalog } from "../context/CatalogContext";
 import { useCart } from "../context/CartContext";
-import { mockCategories } from "../data/mockDb";
+import { mockCategories } from "../data/constants";
 
 const CatalogPage = () => {
   const [headlineIdx, setHeadlineIdx] = useState(0);
@@ -29,9 +29,8 @@ const CatalogPage = () => {
   const { addToCart } = useCart();
 
   const handleBuyNow = (product) => {
-    // Add to cart and immediately go to checkout
-    addToCart(product);
-    navigate("/checkout");
+    // Isolate the buy now flow
+    navigate(`/checkout?buyNow=${product.id}&qty=1`);
   };
 
   return (

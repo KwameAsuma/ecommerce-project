@@ -8,12 +8,12 @@ const prisma = new PrismaClient();
 
 const registerUser = async (req, res) => {
   try {
-    const { email, password, name, momo_number, role } = req.body;
+    const { email, phone, password, name, momo_number, role } = req.body;
 
-    if (!email || !password || !name) {
+    if (!email || !phone || !password || !name) {
       return res
         .status(400)
-        .json({ error: "Name, email, and password are required." });
+        .json({ error: "Name, email, phone, and password are required." });
     }
 
     // 1. Check for existing user using Prisma
@@ -32,6 +32,7 @@ const registerUser = async (req, res) => {
     const newUser = await prisma.user.create({
       data: {
         email: email,
+        phone: phone,
         passwordHash: passwordHash, // Matches your schema exactly
         name: name,
         role: role || "BUYER",
@@ -55,14 +56,12 @@ const registerUser = async (req, res) => {
     });
 
     // 6. Return success WITHOUT exposing the token string
+    const { passwordHash: _, ...safeUser } = newUser;
+    safeUser.role = newUser.role?.toUpperCase() === "ADMIN" ? "admin" : newUser.role?.toUpperCase() === "MERCHANT" ? "merchant" : "customer";
+
     return res.status(201).json({
       message: "Registration successful",
-      user: {
-        id: newUser.id,
-        email: newUser.email,
-        name: newUser.name,
-        role: newUser.role === "MERCHANT" ? "merchant" : "customer",
-      },
+      user: safeUser,
     });
   } catch (error) {
     console.error("Registration error:", error);
@@ -104,15 +103,13 @@ const loginUser = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000, // Expires in 1 day (matches token)
     });
 
+    const { passwordHash: _, ...safeUser } = user;
+    safeUser.role = user.role?.toUpperCase() === "ADMIN" ? "admin" : user.role?.toUpperCase() === "MERCHANT" ? "merchant" : "customer";
+
     res.status(200).json({
       status: "success",
       message: "Logged in successfully",
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role === "MERCHANT" ? "merchant" : "customer",
-      },
+      user: safeUser,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -132,14 +129,12 @@ const getMe = async (req, res) => {
       return res.status(404).json({ error: "User profile no longer exists." });
     }
 
+    const { passwordHash: _, ...safeUser } = user;
+    safeUser.role = user.role?.toUpperCase() === "ADMIN" ? "admin" : user.role?.toUpperCase() === "MERCHANT" ? "merchant" : "customer";
+
     return res.status(200).json({
       status: "success",
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role === "MERCHANT" ? "merchant" : "customer",
-      },
+      user: safeUser,
     });
   } catch (error) {
     console.error("GetMe extraction error:", error);
@@ -147,4 +142,56 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, getMe };
+const logoutUser = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+  return res.status(200).json({ status: "success", message: "Logged out successfully" });
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Current password and new password are required." });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "New password must be at least 6 characters." });
+    }
+
+    // 1. Find user using Prisma (req.userId set by protect middleware)
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    // 2. Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: "Current password is incorrect." });
+    }
+
+    // 3. Hash new password and update
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: req.userId },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    return res.status(200).json({ status: "success", message: "Password updated successfully." });
+  } catch (error) {
+    console.error("Change password error:", error);
+    return res.status(500).json({ error: "Failed to change password." });
+  }
+};
+
+module.exports = { registerUser, loginUser, getMe, logoutUser, changePassword };

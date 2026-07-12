@@ -2,6 +2,9 @@ const ProductModel = require("../models/ProductModel");
 
 exports.createProduct = async (req, res) => {
   try {
+    // Securely inject the authenticated user's ID as the vendor
+    req.body.vendorId = req.userId;
+    
     const product = await ProductModel.createProduct(req.body);
     res.status(201).json({ message: "Product created successfully", product });
   } catch (error) {

@@ -40,6 +40,11 @@ exports.getAllNativeProducts = async () => {
   try {
     const products = await prisma.nativeProduct.findMany({
       orderBy: { createdAt: "desc" },
+      include: {
+        vendor: {
+          select: { name: true, trustScore: true }
+        }
+      }
     });
     return products;
   } catch (error) {
@@ -52,6 +57,11 @@ exports.getProductById = async (productId) => {
   try {
     const product = await prisma.nativeProduct.findUnique({
       where: { id: Number(productId) },
+      include: {
+        vendor: {
+          select: { name: true, trustScore: true }
+        }
+      }
     });
     return product;
   } catch (error) {
@@ -65,6 +75,11 @@ exports.getProductsByCategory = async (category) => {
     const products = await prisma.nativeProduct.findMany({
       where: { category: category },
       orderBy: { createdAt: "desc" },
+      include: {
+        vendor: {
+          select: { name: true, trustScore: true }
+        }
+      }
     });
     return products;
   } catch (error) {
@@ -78,6 +93,11 @@ exports.getProductsByVendor = async (vendorId) => {
     const products = await prisma.nativeProduct.findMany({
       where: { vendorId: Number(vendorId) },
       orderBy: { createdAt: "desc" },
+      include: {
+        vendor: {
+          select: { name: true, trustScore: true }
+        }
+      }
     });
     return products;
   } catch (error) {

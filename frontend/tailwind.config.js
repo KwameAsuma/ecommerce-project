@@ -23,6 +23,7 @@ export default {
         "secondary-fixed-dim": "#e2e8f0",
         "surface-container-high": "#f1f5f9",
         "surface-container": "#f8fafc",
+        "brand-gold": "#eab308",
         "inverse-on-surface": "#f1f5f9",
         "on-surface": "#0f172a",
         "primary-fixed-dim": "#cbd5e1",

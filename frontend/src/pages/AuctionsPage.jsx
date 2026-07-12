@@ -1,6 +1,8 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockProducts } from "../data/mockDb";
+import api from "../services/api";
+import LoadingOverlay from "../components/LoadingOverlay";
+import ErrorMessage from "../components/ErrorMessage";
 
 const ChevronLeftIcon = () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>;
 const ChevronRightIcon = () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
@@ -8,10 +10,37 @@ const ChevronRightIcon = () => <svg width="24" height="24" fill="none" stroke="c
 const AuctionsPage = () => {
   const navigate = useNavigate();
   const carouselRef = useRef(null);
+  const [auctions, setAuctions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const fallbackImages = [
+    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=800&auto=format&fit=crop", // Watch (id 0 or 5)
+    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800&auto=format&fit=crop", // Headphones
+    "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=800&auto=format&fit=crop", // Camera
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop", // Shoes
+    "https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?q=80&w=800&auto=format&fit=crop"  // iPhone (replaced wolf)
+  ];
+
+  const getImageUrl = (auction) => {
+    if (auction.imageUrl) return `http://localhost:5000${auction.imageUrl}`;
+    const id = auction.id || 0;
+    return fallbackImages[id % fallbackImages.length];
+  };
+
+  const handleScroll = () => {
+    if (carouselRef.current) {
+      const scrollLeft = carouselRef.current.scrollLeft;
+      const clientWidth = carouselRef.current.clientWidth;
+      const index = Math.round(scrollLeft / clientWidth);
+      setActiveIndex(index);
+    }
+  };
 
   const scrollLeft = () => {
     if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: -350, behavior: 'smooth' });
+      carouselRef.current.scrollBy({ left: -carouselRef.current.clientWidth, behavior: 'smooth' });
     }
   };
 
@@ -27,11 +56,28 @@ const AuctionsPage = () => {
   };
 
   useEffect(() => {
+    const fetchAuctions = async () => {
+      try {
+        const res = await api.get('/auctions');
+        setAuctions(res.data.auctions || res.data || []);
+      } catch (err) {
+        setError("Failed to load active auctions.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAuctions();
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(() => {
       scrollRight();
     }, 3000);
     return () => clearInterval(timer);
   }, []);
+
+  if (loading) return <LoadingOverlay message="Loading Auctions..." />;
+  if (error) return <ErrorMessage message={error} />;
 
   return (
     <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
@@ -64,19 +110,21 @@ const AuctionsPage = () => {
         {/* Carousel Track */}
         <div 
           ref={carouselRef}
+          onScroll={handleScroll}
           style={{ 
             display: "flex", 
             overflowX: "auto", 
             scrollSnapType: "x mandatory",
             scrollbarWidth: "none",
             msOverflowStyle: "none",
-            height: "500px"
+            height: "500px",
+            scrollBehavior: "smooth"
           }}
         >
-          {mockProducts.slice(0, 4).map((product, index) => (
-            <div key={`hot-${product.id}`} style={{ minWidth: "100%", width: "100%", position: "relative", scrollSnapAlign: "start", flexShrink: 0, cursor: "pointer" }} onClick={() => navigate(`/product/${product.id}`)}>
+          {auctions.slice(0, 4).map((auction, index) => (
+            <div key={`hot-${auction.id}`} style={{ minWidth: "100%", width: "100%", position: "relative", scrollSnapAlign: "start", flexShrink: 0, cursor: "pointer" }} onClick={() => navigate(`/auctions/${auction.id}`)}>
               {/* Background Image */}
-              <img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={getImageUrl(auction)} alt={auction.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               
               {/* Gradient Overlay for Text Readability */}
               <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0) 100%)" }}></div>
@@ -87,15 +135,15 @@ const AuctionsPage = () => {
                   <span style={{ backgroundColor: "var(--brand-blue)", color: "white", padding: "0.3rem 0.8rem", borderRadius: "20px", fontSize: "0.7rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <span style={{ width: "6px", height: "6px", backgroundColor: "white", borderRadius: "50%", animation: "pulse 1.5s infinite" }}></span> LIVE AUCTION
                   </span>
-                  <span style={{ fontSize: "0.85rem", fontWeight: "600", opacity: 0.8 }}>Ends in 00h 15m 42s</span>
+                  <span style={{ fontSize: "0.85rem", fontWeight: "600", opacity: 0.8 }}>Ends: {new Date(auction.endTime).toLocaleString()}</span>
                 </div>
-                <h2 style={{ fontSize: "2.5rem", fontWeight: "900", margin: "0 0 0.5rem 0", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>{product.name}</h2>
+                <h2 style={{ fontSize: "2.5rem", fontWeight: "900", margin: "0 0 0.5rem 0", textShadow: "0 2px 4px rgba(0,0,0,0.5)" }}>{auction.title}</h2>
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "0.95rem", opacity: 0.9 }}>
-                  <span>{product.category}</span>
+                  <span>General</span>
                   <span>|</span>
-                  <span>{product.region}</span>
+                  <span>Global</span>
                   <span>|</span>
-                  <span style={{ color: "var(--brand-gold)", fontWeight: "800" }}>Current Bid: GH₵ {(product.price * 1.5).toLocaleString()}</span>
+                  <span style={{ color: "var(--brand-gold)", fontWeight: "800" }}>Current Bid: GH₵ {parseFloat(auction.currentHighestBid || auction.basePrice || 0).toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -114,8 +162,8 @@ const AuctionsPage = () => {
 
         {/* Pagination Dots (Bottom Right) */}
         <div style={{ position: "absolute", bottom: "30px", right: "40px", display: "flex", gap: "0.4rem", zIndex: 10 }}>
-          {[0, 1, 2, 3].map((_, i) => (
-            <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: i === 0 ? "white" : "rgba(255,255,255,0.3)" }}></div>
+          {auctions.slice(0, 4).map((_, i) => (
+            <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: i === activeIndex ? "white" : "rgba(255,255,255,0.3)", transition: "background-color 0.3s" }}></div>
           ))}
         </div>
       </div>
@@ -123,26 +171,26 @@ const AuctionsPage = () => {
       {/* Grid of Other Auctions (10 items) */}
       <h2 style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--text-primary)", margin: "0 0 1.5rem 0" }}>All Active Auctions</h2>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1.5rem", marginBottom: "4rem" }}>
-        {mockProducts.slice(3, 13).map((product) => (
-          <div key={`auction-${product.id}`} style={{ backgroundColor: "var(--bg-panel)", borderRadius: "12px", border: "1px solid var(--border)", overflow: "hidden", display: "flex", flexDirection: "column", transition: "transform 0.2s" }} onMouseOver={e=>e.currentTarget.style.transform="translateY(-4px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
+        {auctions.slice(4).map((auction) => (
+          <div key={`auction-${auction.id}`} style={{ backgroundColor: "var(--bg-panel)", borderRadius: "12px", border: "1px solid var(--border)", overflow: "hidden", display: "flex", flexDirection: "column", transition: "transform 0.2s" }} onMouseOver={e=>e.currentTarget.style.transform="translateY(-4px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
             <div style={{ position: "relative", height: "180px" }}>
-              <img src={product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={getImageUrl(auction)} alt={auction.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", top: "8px", right: "8px", backgroundColor: "var(--text-primary)", color: "var(--bg-base)", padding: "0.3rem 0.6rem", borderRadius: "16px", fontSize: "0.65rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "0.3rem" }}>
                 <span style={{ width: "4px", height: "4px", backgroundColor: "var(--bg-base)", borderRadius: "50%", animation: "pulse 1.5s infinite" }}></span> LIVE
               </div>
             </div>
             <div style={{ padding: "1.2rem", flexGrow: 1, display: "flex", flexDirection: "column" }}>
-              <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 1rem 0" }}>{product.name}</h3>
+              <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 1rem 0" }}>{auction.title}</h3>
               <div style={{ marginTop: "auto" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "0.5rem" }}>
                   <span style={{ color: "var(--text-secondary)" }}>Current Bid</span>
-                  <span style={{ fontWeight: "800", color: "var(--brand-gold)" }}>GH₵ {(product.price * 1.1).toLocaleString()}</span>
+                  <span style={{ fontWeight: "800", color: "var(--brand-gold)" }}>GH₵ {parseFloat(auction.currentHighestBid || auction.basePrice || 0).toLocaleString()}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", marginBottom: "1rem" }}>
-                  <span style={{ color: "var(--text-secondary)" }}>Ends In</span>
-                  <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>04h 22m</span>
+                  <span style={{ color: "var(--text-secondary)" }}>Ends</span>
+                  <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>{new Date(auction.endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                 </div>
-                <button style={{ width: "100%", padding: "0.6rem", backgroundColor: "transparent", color: "var(--text-primary)", border: "1px solid var(--border)", borderRadius: "6px", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem", transition: "all 0.2s" }} onMouseOver={e=>e.currentTarget.style.backgroundColor="var(--bg-base)"} onMouseOut={e=>e.currentTarget.style.backgroundColor="transparent"}>
+                <button style={{ width: "100%", padding: "0.6rem", backgroundColor: "transparent", color: "var(--text-primary)", border: "1px solid var(--border)", borderRadius: "6px", fontWeight: "700", cursor: "pointer", fontSize: "0.85rem", transition: "all 0.2s" }} onMouseOver={e=>e.currentTarget.style.backgroundColor="var(--bg-base)"} onMouseOut={e=>e.currentTarget.style.backgroundColor="transparent"} onClick={() => navigate(`/auctions/${auction.id}`)}>
                   View Auction
                 </button>
               </div>

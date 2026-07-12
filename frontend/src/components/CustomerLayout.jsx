@@ -5,7 +5,7 @@ import { useCatalog } from "../context/CatalogContext";
 import { useCart } from "../context/CartContext";
 
 const CustomerLayout = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { filters, updateFilter } = useCatalog();
   const { cartCount } = useCart();
   const navigate = useNavigate();
@@ -23,9 +23,22 @@ const CustomerLayout = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Force Admin to stay in Admin Ecosystem
+  useEffect(() => {
+    if (user && (user.role === 'admin' || user.role === 'ADMIN')) {
+      navigate('/admin');
+    }
+  }, [user, navigate]);
+
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    if (window.confirm("Are you sure you want to log out?")) {
+      try {
+        await logout();
+        navigate('/login');
+      } catch (err) {
+        console.error("Logout failed", err);
+      }
+    }
   };
 
   const isActive = (path) => location.pathname === path || (path === "/catalog" && location.pathname.startsWith("/product"));
@@ -45,6 +58,51 @@ const CustomerLayout = () => {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        
+        .custom-tooltip-container {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+        
+        .custom-tooltip {
+          visibility: hidden;
+          opacity: 0;
+          background-color: var(--bg-panel);
+          color: var(--text-primary);
+          text-align: center;
+          padding: 0.5rem 0.8rem;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);
+          position: absolute;
+          z-index: 100;
+          top: 130%;
+          left: 50%;
+          transform: translateX(-50%) translateY(5px);
+          white-space: nowrap;
+          font-size: 0.75rem;
+          font-weight: 700;
+          transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+        }
+        
+        /* Little triangle pointer for the tooltip */
+        .custom-tooltip::after {
+          content: "";
+          position: absolute;
+          bottom: 100%;
+          left: 50%;
+          margin-left: -5px;
+          border-width: 5px;
+          border-style: solid;
+          border-color: transparent transparent var(--border) transparent;
+        }
+
+        .custom-tooltip-container:hover .custom-tooltip {
+          visibility: visible;
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
       `}</style>
       
       {/* Sticky Header Container */}
@@ -57,11 +115,13 @@ const CustomerLayout = () => {
         transition: "box-shadow 0.3s ease"
       }}>
         {/* Top Header */}
-        <header style={{ 
-          padding: "0.2rem 3rem", 
+        <header className="customer-header" style={{ 
+          padding: "0.5rem 2rem", 
           display: "flex", 
           justifyContent: "space-between", 
-          alignItems: "center"
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "1rem"
         }}>
         
         {/* Left: Hamburger & Brand */}
@@ -81,8 +141,8 @@ const CustomerLayout = () => {
         </div>
 
         {/* Center: Search & Unified Filter */}
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <div style={{ position: "relative", width: "400px" }}>
+        <div className="search-container" style={{ display: "flex", alignItems: "center", gap: "1rem", flex: "1 1 300px", maxWidth: "600px" }}>
+          <div style={{ position: "relative", flexGrow: 1 }}>
             <span className="material-symbols-outlined" style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: "20px" }}>search</span>
             <input 
               type="text" 
@@ -150,27 +210,43 @@ const CustomerLayout = () => {
           </div>
         </div>
 
-        {/* Right: Icons */}
+        {/* Right: Icons / Auth */}
         <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-          <div style={{ cursor: "pointer", position: "relative", color: "var(--text-secondary)", display: "flex", alignItems: "center", transition: "color 0.2s" }} onMouseOver={e=>e.currentTarget.style.color="var(--brand-blue)"} onMouseOut={e=>e.currentTarget.style.color="var(--text-secondary)"} onClick={() => navigate("/checkout")}>
-            <span className="material-symbols-outlined text-[24px]">shopping_bag</span>
+          
+          <div className="custom-tooltip-container" style={{ cursor: "pointer", position: "relative", color: "var(--text-secondary)", display: "flex", alignItems: "center", transition: "color 0.2s" }} onMouseOver={e=>e.currentTarget.style.color="var(--brand-blue)"} onMouseOut={e=>e.currentTarget.style.color="var(--text-secondary)"} onClick={() => navigate("/checkout")}>
+            <span className="material-symbols-outlined text-[24px]">shopping_cart</span>
             {cartCount > 0 && (
               <span style={{ position: "absolute", top: -6, right: -8, backgroundColor: "var(--brand-gold)", color: "#000", fontSize: "0.7rem", fontWeight: "800", width: "18px", height: "18px", display: "flex", justifyContent: "center", alignItems: "center", borderRadius: "50%" }}>
                 {cartCount}
               </span>
             )}
+            <span className="custom-tooltip">View Cart</span>
           </div>
-          <div style={{ cursor: "pointer", color: "var(--text-secondary)", display: "flex", alignItems: "center", transition: "color 0.2s" }} onMouseOver={e=>e.currentTarget.style.color="var(--brand-blue)"} onMouseOut={e=>e.currentTarget.style.color="var(--text-secondary)"} onClick={() => navigate("/profile")}>
-            <span className="material-symbols-outlined text-[24px]">account_circle</span>
-          </div>
-          <div style={{ cursor: "pointer", color: "var(--text-error)", display: "flex", alignItems: "center", transition: "opacity 0.2s" }} onMouseOver={e=>e.currentTarget.style.opacity="0.8"} onMouseOut={e=>e.currentTarget.style.opacity="1"} onClick={handleLogout}>
-            <span className="material-symbols-outlined text-[24px]">logout</span>
-          </div>
+          
+          {user ? (
+            <>
+              <div className="custom-tooltip-container" style={{ cursor: "pointer", color: "var(--text-secondary)", display: "flex", alignItems: "center", transition: "color 0.2s" }} onMouseOver={e=>e.currentTarget.style.color="var(--brand-blue)"} onMouseOut={e=>e.currentTarget.style.color="var(--text-secondary)"} onClick={() => navigate("/profile")}>
+                <span className="material-symbols-outlined text-[24px]">account_circle</span>
+                <span className="custom-tooltip">User Profile</span>
+              </div>
+              
+              <div className="custom-tooltip-container" style={{ cursor: "pointer", color: "var(--text-error)", display: "flex", alignItems: "center", transition: "opacity 0.2s" }} onMouseOver={e=>e.currentTarget.style.opacity="0.8"} onMouseOut={e=>e.currentTarget.style.opacity="1"} onClick={handleLogout}>
+                <span className="material-symbols-outlined text-[24px]">logout</span>
+                <span className="custom-tooltip">Log Out</span>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+              <button onClick={() => navigate("/login")} style={{ backgroundColor: "transparent", border: "none", color: "var(--text-secondary)", fontWeight: "700", cursor: "pointer", fontSize: "0.9rem" }}>Login</button>
+              <button onClick={() => navigate("/register")} style={{ backgroundColor: "var(--brand-blue)", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "0.9rem" }}>Sign Up</button>
+            </div>
+          )}
+          
         </div>
         </header>
 
         {/* Secondary Navigation (Ecosystem Tabs) */}
-        <div style={{ padding: "0 3rem", display: "flex", justifyContent: "flex-end" }}>
+        <div className="secondary-nav" style={{ padding: "0 2rem", display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: "1rem" }}>
         <div style={{ display: "flex", gap: "2rem" }}>
           <button 
             onClick={() => navigate("/catalog")}
@@ -247,21 +323,24 @@ const CustomerLayout = () => {
               </Link>
             </div>
 
-            <div style={{ marginTop: "auto", paddingTop: "2rem", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "1rem" }}>
-              <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "var(--brand-blue)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", fontSize: "1.2rem" }}>
-                K
+            {user && (
+              <div style={{ marginTop: "auto", paddingTop: "2rem", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "1rem" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "var(--brand-blue)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", fontSize: "1.2rem" }}>
+                  {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontWeight: "700", color: "var(--text-primary)", fontSize: "0.95rem", textTransform: "capitalize" }}>{user.name}</p>
+                  <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.8rem", textTransform: "capitalize" }}>{user.role}</p>
+                </div>
+                <button onClick={handleLogout} className="material-symbols-outlined" style={{ marginLeft: "auto", cursor: "pointer", color: "var(--danger)", border: "none", backgroundColor: "transparent" }} title="Sign Out">logout</button>
               </div>
-              <div>
-                <p style={{ margin: 0, fontWeight: "700", color: "var(--text-primary)", fontSize: "0.95rem" }}>Kwame Asuma</p>
-                <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.8rem" }}>Premium Buyer</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Main Full-Width Content Area */}
-      <main style={{ flexGrow: 1, padding: "1.5rem 3rem" }} onClick={() => setFilterOpen(false)}>
+      <main className="main-content" style={{ flexGrow: 1, padding: "1.5rem 2rem" }} onClick={() => setFilterOpen(false)}>
         <div key={location.pathname} style={{ animation: "fadeRoute 0.4s ease-out" }}>
           <Outlet />
         </div>

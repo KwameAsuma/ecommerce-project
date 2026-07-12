@@ -15,17 +15,55 @@ datasource db {
 model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
+  phone        String?
   passwordHash String   @map("password_hash")
   name         String
   role         String   @default("BUYER")
   momoNumber   String?  @map("momo_number")
-  trustScore   Int      @default(0) @map("trust_score")
-  createdAt    DateTime @default(now()) @map("created_at")
+  trustScore      Int      @default(0) @map("trust_score")
+  availableBalance Decimal @default(0) @map("available_balance") @db.Decimal(10, 2)
+  pendingEscrow   Decimal  @default(0) @map("pending_escrow") @db.Decimal(10, 2)
+  lifetimeRevenue Decimal  @default(0) @map("lifetime_revenue") @db.Decimal(10, 2)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Customer / General Preferences
+  deliveryAddress String?  @map("delivery_address")
+  currency        String   @default("GHS")
+  language        String   @default("English (UK)")
+  theme           String   @default("light")
+  orderUpdates    Boolean  @default(true) @map("order_updates")
+  promotions      Boolean  @default(false)
+  priceDropAlerts Boolean  @default(false) @map("price_drop_alerts")
+
+  // Merchant Specific Details
+  storeDescription String? @map("store_description")
+  supportEmail     String? @map("support_email")
+  supportPhone     String? @map("support_phone")
+  storeAddress     String? @map("store_address")
+  taxId            String? @map("tax_id")
+  returnPolicy     String? @map("return_policy")
+  avatarUrl        String? @map("avatar_url")
+  storeBannerUrl   String? @map("store_banner_url")
+
+  // Merchant Notification Preferences
+  emailNotifications Boolean @default(true) @map("email_notifications")
+  lowStockWarnings   Boolean @default(true) @map("low_stock_warnings")
+  bidAlerts          Boolean @default(true) @map("bid_alerts")
+  dailySalesDigest   Boolean @default(false) @map("daily_sales_digest")
+  marketingEmails    Boolean @default(false) @map("marketing_emails")
 
   // Relationships (Prisma uses these to join tables automatically)
   bids         Bid[]
   auctions     Auction[]
   products     NativeProduct[]
+  buyerOrders  Order[]         @relation("BuyerOrders")
+  vendorOrders Order[]         @relation("VendorOrders")
+  transactions Transaction[]
+  tickets      SupportTicket[]
+  
+  // Phase 2 Relations
+  reviewsGiven     Review[]  @relation("ReviewsGiven")
+  reviewsReceived  Review[]  @relation("ReviewsReceived")
 
   // This maps the Prisma model to your existing lowercase SQL table
   @@map("users") 
@@ -39,6 +77,7 @@ model Auction {
   currentHighestBid Decimal  @map("current_highest_bid") @db.Decimal(10, 2) @default(0)
   status            String   @default("active")
   endTime           DateTime @map("end_time")
+  imageUrl          String?  @map("image_url")
   createdAt         DateTime @default(now()) @map("created_at")
 
   bids              Bid[]
@@ -69,9 +108,93 @@ model NativeProduct {
   price      Decimal  @db.Decimal(10, 2)
   stockCount Int      @map("stock_count")
   category   String?
+  imageUrl   String?  @map("image_url")
   createdAt  DateTime @default(now()) @map("created_at")
 
   vendor     User     @relation(fields: [vendorId], references: [id])
+  orders     Order[]
 
   @@map("native_products")
+}
+
+model Order {
+  id              Int      @id @default(autoincrement())
+  customerId      Int      @map("customer_id")
+  vendorId        Int      @map("vendor_id")
+  productId       Int      @map("product_id")
+  quantity        Int      @default(1)
+  totalAmount     Decimal  @map("total_amount") @db.Decimal(10, 2)
+  status          String   @default("HELD_IN_ESCROW") 
+  deliveryAddress String?  @map("delivery_address")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  customer        User          @relation("BuyerOrders", fields: [customerId], references: [id])
+  vendor          User          @relation("VendorOrders", fields: [vendorId], references: [id])
+  product         NativeProduct @relation(fields: [productId], references: [id])
+
+  @@map("orders")
+}
+
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  type      String   // e.g. "Sale (Escrow Release)", "MoMo Withdrawal", "Platform Fee"
+  amount    Decimal  @db.Decimal(10, 2)
+  status    String   @default("Completed")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("transactions")
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  reviewerId Int      @map("reviewer_id")
+  merchantId Int      @map("merchant_id")
+  productId  Int?     @map("product_id")
+  rating     Int      // 1 to 5
+  comment    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  reviewer   User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  merchant   User     @relation("ReviewsReceived", fields: [merchantId], references: [id])
+
+  @@map("reviews")
+}
+
+model SupportTicket {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  subject   String
+  status    String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id])
+  messages  TicketMessage[]
+
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int      @map("ticket_id")
+  sender    String   // "MERCHANT" or "ADMIN"
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("ticket_messages")
+}
+
+model FAQ {
+  id        Int      @id @default(autoincrement())
+  question  String
+  answer    String
+  order     Int      @default(0)
+
+  @@map("faqs")
 }

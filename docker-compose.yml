@@ -34,6 +34,7 @@ services:
       - "5000:5000"
     volumes:
       - ./backend:/app
+      - ./test_data:/app/test_data
       - /app/node_modules
     environment:
       DB_HOST: db
@@ -42,6 +43,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      NGROK_URL: ${NGROK_URL:-}
     depends_on:
       - db
 
@@ -54,6 +57,8 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    environment:
+      VITE_NGROK_HOST: ${VITE_NGROK_HOST:-}
 
   # 5. Nginx Reverse Proxy / Router
   nginx:

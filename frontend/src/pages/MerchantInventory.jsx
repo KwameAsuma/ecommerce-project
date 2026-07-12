@@ -1,59 +1,7 @@
-import React from "react";
-
-const mockInventory = [
-  {
-    id: "KEN-GLD-001",
-    name: "Premium Handwoven Kente",
-    category: "Traditional Apparel",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAZjgjmdSVgIPF_1GJOSmaOd8rBe6yiYIZieQa-C5q_Ba540xoCRTJwH5lK-rat9PINLzHb3_x_gPh9tN9d_qaTrIaamecHlL9Qewyo6dlUtPmHamqCjKdbgs0S9lu7bA3RE8GJyIx0QJCb-skJV54VfGE-cSs5uwYl_Z0HPYWz93iCBB2asAbcM16UBAq8zJnhH-CoJ1GOmoo3vtXZHfBnC9fTdqVWqb_SKar1fPGr_OVS4nQXBHnQbXKfh5TRpAdd5-WShwt-WmE",
-    catalogType: "Native Store",
-    stockUnits: 24,
-    stockStatus: "HEALTHY",
-    price: 1450.00,
-    priceLabel: "Fixed Price",
-    status: "Active",
-    statusColor: "bg-tertiary",
-  },
-  {
-    id: "ELC-MAC-M1-S",
-    name: "Refurbished MacBook Pro M1",
-    category: "Electronics",
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=200",
-    catalogType: "Auction Engine",
-    stockUnits: 1,
-    stockStatus: "AUCTION LIVE",
-    price: 12500.00,
-    priceLabel: "8 Bids Placed",
-    status: "Live",
-    statusColor: "bg-secondary",
-  },
-  {
-    id: "HLT-SHB-ORG",
-    name: "Organic Shea Butter",
-    category: "Beauty & Health",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBovg_RZCTEWcFx8oeR4OxGSXzTwTN0FhVLYo22wn8w5-rP6GVKmB53NDLZRbydQ7TV7KGBC6VkoNcXGlulB9brmqaFDJJOxU3PouIJM0swZFdSvu-h4IbcgXdQ8R3p9g95drKxYxngdROcPREqmK8nKNtnOEcFOhkSAntVp2qLc5DKGP50fI2hO2k1_EFC9Dt6D8jsgkLHJ_X7-YeU9MFW9pxjx_Jaz-_Gb5aIGxVWkhBLTgZ442q7SJFOztpA9KgdYpsnBRELj58",
-    catalogType: "Native Store",
-    stockUnits: 5,
-    stockStatus: "LOW STOCK",
-    price: 120.00,
-    priceLabel: "Restock Suggested",
-    status: "Listed",
-    statusColor: "bg-outline",
-  },
-  {
-    id: "FTW-SND-LTH",
-    name: "Artisan Leather Sandals",
-    category: "Footwear",
-    image: "https://images.unsplash.com/photo-1562183241-b937e95585b6?auto=format&fit=crop&q=80&w=200",
-    catalogType: "Native Store",
-    stockUnits: 0,
-    stockStatus: "OUT OF STOCK",
-    price: 350.00,
-    priceLabel: "Unavailable",
-    status: "Paused",
-    statusColor: "bg-error",
-  }
-];
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 
 const getStockBadgeClasses = (status) => {
   switch (status) {
@@ -71,6 +19,108 @@ const getStockBadgeClasses = (status) => {
 };
 
 const MerchantInventory = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await api.get(`/products/vendor/${user.id}`);
+        setProducts(res.data.products || res.data || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [user]);
+
+  // Derive unique categories from products
+  const categories = React.useMemo(() => {
+    const cats = [...new Set(products.map(p => p.category).filter(Boolean))];
+    return cats.sort();
+  }, [products]);
+
+  // Apply filters
+  const filteredProducts = React.useMemo(() => {
+    let result = products;
+    if (categoryFilter) {
+      result = result.filter(p => p.category === categoryFilter);
+    }
+    if (stockFilter) {
+      result = result.filter(p => {
+        const stock = p.stockCount || p.stock_count || 0;
+        switch (stockFilter) {
+          case 'in-stock': return stock > 5;
+          case 'low-stock': return stock > 0 && stock <= 5;
+          case 'out-of-stock': return stock === 0;
+          default: return true;
+        }
+      });
+    }
+    return result;
+  }, [products, categoryFilter, stockFilter]);
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+  const paginatedProducts = filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const showingFrom = filteredProducts.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const showingTo = Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryFilter, stockFilter]);
+
+  const clearFilters = () => {
+    setCategoryFilter("");
+    setStockFilter("");
+    setCurrentPage(1);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ["SKU/ID", "Title", "Category", "Price", "Stock Level", "Status"];
+    const csvData = filteredProducts.map(p => {
+      const stock = p.stockCount || p.stock_count || 0;
+      const status = stock > 0 ? "IN STOCK" : "OUT OF STOCK";
+      return [
+        `PROD-${p.id}`,
+        `"${p.title.replace(/"/g, '""')}"`,
+        p.category || "Uncategorized",
+        p.price,
+        stock,
+        status
+      ].join(",");
+    });
+    const csvString = [headers.join(","), ...csvData].join("\n");
+    const blob = new Blob([csvString], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `inventory_export_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    try {
+      await api.delete(`/products/${id}`);
+      setProducts(products.filter(p => p.id !== id));
+    } catch(e) {
+      console.error("Failed to delete", e);
+      alert("Failed to delete product.");
+    }
+  };
+
   return (
     <div className="max-w-container-max mx-auto space-y-gutter">
       {/* Page Header */}
@@ -80,7 +130,7 @@ const MerchantInventory = () => {
           <p className="text-on-surface-variant font-body-md mt-1">Real-time overview of your product ecosystem across native and auction channels.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={() => alert("Downloading CSV...")} className="bg-surface border border-outline-variant text-on-surface px-6 py-3 rounded-xl font-label-md flex items-center gap-2 hover:bg-surface-container transition-soft active:scale-[0.98]">
+          <button onClick={handleExportCSV} className="bg-surface border border-outline-variant text-on-surface px-6 py-3 rounded-xl font-label-md flex items-center gap-2 hover:bg-surface-container transition-soft active:scale-[0.98]">
             <span className="material-symbols-outlined text-[20px]" data-icon="download">download</span>
             Export CSV
           </button>
@@ -99,10 +149,11 @@ const MerchantInventory = () => {
             <span className="font-label-md text-on-surface-variant font-medium">Filters:</span>
           </div>
           
-          <select className="bg-surface border border-outline-variant text-on-surface text-label-md px-4 py-2 rounded-full appearance-none outline-none focus:border-primary pr-8 relative cursor-pointer hover:bg-surface-container transition-colors">
-            <option>Category: All</option>
-            <option>Traditional Apparel</option>
-            <option>Electronics</option>
+          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="bg-surface border border-outline-variant text-on-surface text-label-md px-4 py-2 rounded-full appearance-none outline-none focus:border-primary pr-8 relative cursor-pointer hover:bg-surface-container transition-colors">
+            <option value="">Category: All</option>
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
           </select>
           
           <select className="bg-surface border border-outline-variant text-on-surface text-label-md px-4 py-2 rounded-full appearance-none outline-none focus:border-primary pr-8 relative cursor-pointer hover:bg-surface-container transition-colors">
@@ -111,11 +162,11 @@ const MerchantInventory = () => {
             <option>Paused</option>
           </select>
 
-          <select className="bg-surface border border-outline-variant text-on-surface text-label-md px-4 py-2 rounded-full appearance-none outline-none focus:border-primary pr-8 relative cursor-pointer hover:bg-surface-container transition-colors">
-            <option>Stock: Any</option>
-            <option>In Stock</option>
-            <option>Low Stock</option>
-            <option>Out of Stock</option>
+          <select value={stockFilter} onChange={(e) => setStockFilter(e.target.value)} className="bg-surface border border-outline-variant text-on-surface text-label-md px-4 py-2 rounded-full appearance-none outline-none focus:border-primary pr-8 relative cursor-pointer hover:bg-surface-container transition-colors">
+            <option value="">Stock: Any</option>
+            <option value="in-stock">In Stock</option>
+            <option value="low-stock">Low Stock</option>
+            <option value="out-of-stock">Out of Stock</option>
           </select>
 
           <select className="bg-surface border border-outline-variant text-on-surface text-label-md px-4 py-2 rounded-full appearance-none outline-none focus:border-primary pr-8 relative cursor-pointer hover:bg-surface-container transition-colors">
@@ -126,7 +177,7 @@ const MerchantInventory = () => {
           </select>
 
           <div className="w-px h-6 bg-outline-variant mx-2 hidden md:block"></div>
-          <button onClick={() => alert("Filters cleared!")} className="text-primary text-label-md font-medium hover:underline px-2">Clear all filters</button>
+          <button onClick={clearFilters} className="text-primary text-label-md font-medium hover:underline px-2">Clear all filters</button>
         </div>
 
         <div className="flex items-center bg-surface-container-low border border-outline-variant rounded-lg p-1">
@@ -156,57 +207,66 @@ const MerchantInventory = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
-              {mockInventory.map((item, index) => (
-                <tr key={index} className="hover:bg-surface-container-low transition-colors group">
+              {loading ? (
+                <tr><td colSpan="8" className="p-4 text-center">Loading inventory...</td></tr>
+              ) : filteredProducts.length === 0 ? (
+                <tr><td colSpan="8" className="p-4 text-center text-on-surface-variant">{products.length === 0 ? 'No products found.' : 'No products match the selected filters.'}</td></tr>
+              ) : paginatedProducts.map((item, index) => (
+                <tr key={item.id} className="hover:bg-surface-container-low transition-colors group">
                   <td className="p-4">
                     <input type="checkbox" className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer"/>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-surface-variant overflow-hidden border border-outline-variant flex-shrink-0">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      <div className="w-12 h-12 rounded-lg bg-surface-variant overflow-hidden border border-outline-variant flex-shrink-0 flex items-center justify-center text-primary font-bold text-lg">
+                        {item.title.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-label-md font-bold text-on-surface group-hover:text-primary transition-colors cursor-pointer">{item.name}</p>
-                        <p className="text-[12px] text-on-surface-variant mt-0.5">{item.category}</p>
+                        <p className="font-label-md font-bold text-on-surface group-hover:text-primary transition-colors cursor-pointer">{item.title}</p>
+                        <p className="text-[12px] text-on-surface-variant mt-0.5">{item.category || "Uncategorized"}</p>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="font-body-md text-on-surface-variant tracking-wider text-sm">{item.id}</span>
+                    <span className="font-body-md text-on-surface-variant tracking-wider text-sm">PROD-{item.id}</span>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[18px] text-on-surface-variant" data-icon={item.catalogType === 'Native Store' ? 'storefront' : 'gavel'}>
-                        {item.catalogType === 'Native Store' ? 'storefront' : 'gavel'}
+                      <span className="material-symbols-outlined text-[18px] text-on-surface-variant" data-icon={'storefront'}>
+                        storefront
                       </span>
-                      <span className="font-body-md text-on-surface">{item.catalogType}</span>
+                      <span className="font-body-md text-on-surface">Native Store</span>
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="flex flex-col items-start gap-1">
-                      <span className="font-label-md font-bold text-on-surface">{item.stockUnits} {item.stockUnits === 1 ? 'Unit' : 'Units'}</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getStockBadgeClasses(item.stockStatus)}`}>
-                        {item.stockStatus}
+                      <span className="font-label-md font-bold text-on-surface">{item.stockCount || item.stock_count} Units</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${(item.stockCount || item.stock_count) > 0 ? getStockBadgeClasses('HEALTHY') : getStockBadgeClasses('OUT OF STOCK')}`}>
+                        {(item.stockCount || item.stock_count) > 0 ? "IN STOCK" : "OUT OF STOCK"}
                       </span>
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="flex flex-col">
-                      <span className="font-label-md font-bold text-on-surface">GHS {item.price.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
-                      <span className="text-[12px] text-on-surface-variant mt-0.5">{item.priceLabel}</span>
+                      <span className="font-label-md font-bold text-on-surface">GHS {parseFloat(item.price).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                      <span className="text-[12px] text-on-surface-variant mt-0.5">Fixed Price</span>
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${item.statusColor}`}></div>
-                      <span className="font-body-md text-on-surface">{item.status}</span>
+                      <div className={`w-2 h-2 rounded-full bg-tertiary`}></div>
+                      <span className="font-body-md text-on-surface">Active</span>
                     </div>
                   </td>
                   <td className="p-4 text-center">
-                    <button onClick={() => alert("Opening item actions menu...")} className="text-on-surface-variant hover:text-primary p-2 transition-colors rounded-full hover:bg-surface-container">
-                      <span className="material-symbols-outlined text-[20px]" data-icon="more_horiz">more_horiz</span>
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                      <button onClick={() => navigate(`/merchant/products/${item.id}/edit`)} className="text-on-surface-variant hover:text-primary p-2 transition-colors rounded-full hover:bg-surface-container" title="Edit Product">
+                        <span className="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
+                      </button>
+                      <button onClick={() => handleDelete(item.id)} className="text-error hover:text-error/80 p-2 transition-colors rounded-full hover:bg-error-container/20" title="Delete Product">
+                        <span className="material-symbols-outlined text-[20px]" data-icon="delete">delete</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -216,17 +276,33 @@ const MerchantInventory = () => {
         
         {/* Pagination */}
         <div className="px-6 py-4 border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface-container-low">
-          <span className="text-label-md text-on-surface-variant">Showing 1 to 4 of 128 products</span>
+          <span className="text-label-md text-on-surface-variant">Showing {showingFrom} to {showingTo} of {filteredProducts.length} products</span>
           <div className="flex items-center gap-1">
-            <button onClick={() => alert("Previous page")} className="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:bg-surface-variant disabled:opacity-50" disabled>
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:bg-surface-variant disabled:opacity-50" disabled={currentPage === 1}>
               <span className="material-symbols-outlined text-[18px]" data-icon="chevron_left">chevron_left</span>
             </button>
-            <button onClick={() => alert("Page 1")} className="w-8 h-8 flex items-center justify-center rounded bg-primary text-on-primary font-label-md font-bold">1</button>
-            <button onClick={() => alert("Page 2")} className="w-8 h-8 flex items-center justify-center rounded text-on-surface hover:bg-surface-variant font-label-md">2</button>
-            <button onClick={() => alert("Page 3")} className="w-8 h-8 flex items-center justify-center rounded text-on-surface hover:bg-surface-variant font-label-md">3</button>
-            <span className="w-8 h-8 flex items-center justify-center text-on-surface-variant">...</span>
-            <button onClick={() => alert("Page 32")} className="w-8 h-8 flex items-center justify-center rounded text-on-surface hover:bg-surface-variant font-label-md">32</button>
-            <button onClick={() => alert("Next page")} className="w-8 h-8 flex items-center justify-center rounded text-on-surface hover:bg-surface-variant">
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`w-8 h-8 flex items-center justify-center rounded font-label-md ${currentPage === pageNum ? 'bg-primary text-on-primary font-bold' : 'text-on-surface hover:bg-surface-variant'}`}>{pageNum}</button>
+              );
+            })}
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <>
+                <span className="w-8 h-8 flex items-center justify-center text-on-surface-variant">...</span>
+                <button onClick={() => setCurrentPage(totalPages)} className="w-8 h-8 flex items-center justify-center rounded text-on-surface hover:bg-surface-variant font-label-md">{totalPages}</button>
+              </>
+            )}
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="w-8 h-8 flex items-center justify-center rounded text-on-surface hover:bg-surface-variant disabled:opacity-50" disabled={currentPage === totalPages}>
               <span className="material-symbols-outlined text-[18px]" data-icon="chevron_right">chevron_right</span>
             </button>
           </div>

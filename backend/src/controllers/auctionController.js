@@ -2,11 +2,22 @@ const AuctionModel = require("../models/AuctionModel");
 
 exports.createAuction = async (req, res) => {
   try {
-    const auction = await AuctionModel.createAuction(req.body);
+    const auctionData = { ...req.body, importerId: req.userId };
+    const auction = await AuctionModel.createAuction(auctionData);
     res.status(201).json({ message: "Auction created successfully", auction });
   } catch (error) {
     console.error("Error creating auction:", error);
     res.status(500).json({ error: "Failed to create auction" });
+  }
+};
+
+exports.getVendorAuctions = async (req, res) => {
+  try {
+    const auctions = await AuctionModel.getVendorAuctions(req.userId);
+    res.status(200).json({ status: "success", auctions });
+  } catch (error) {
+    console.error("Error fetching vendor auctions:", error);
+    res.status(500).json({ error: "Failed to fetch vendor auctions" });
   }
 };
 

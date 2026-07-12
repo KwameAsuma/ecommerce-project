@@ -1,6 +1,6 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { mockProducts } from "../data/mockDb";
+import api from "../services/api";
 
 const ChevronLeftIcon = () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>;
 const ChevronRightIcon = () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
@@ -9,6 +9,25 @@ const VerifiedIcon = () => <svg width="16" height="16" fill="none" stroke="var(-
 const VerifiedMerchantsPage = () => {
   const navigate = useNavigate();
   const carouselRef = useRef(null);
+
+  const [merchants, setMerchants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchMerchants = async () => {
+      try {
+        const res = await api.get("/users/merchants");
+        setMerchants(res.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch merchants:", err);
+        setError("Failed to load merchants. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMerchants();
+  }, []);
 
   const scrollLeft = () => {
     if (carouselRef.current) {
@@ -22,8 +41,13 @@ const VerifiedMerchantsPage = () => {
     }
   };
 
-  // Group mock products by merchant for display
-  const merchants = Array.from(new Set(mockProducts.map(p => p.merchant)));
+  if (loading) {
+    return <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-primary)" }}>Loading Merchants...</div>;
+  }
+
+  if (error) {
+    return <div style={{ textAlign: "center", padding: "4rem", color: "var(--brand-red, #ef4444)" }}>{error}</div>;
+  }
 
   return (
     <div>
@@ -46,62 +70,86 @@ const VerifiedMerchantsPage = () => {
         </div>
       </div>
 
-      {/* Horizontal Carousel */}
-      <div 
-        ref={carouselRef}
-        style={{ 
-          display: "flex", 
-          gap: "2rem", 
-          overflowX: "auto", 
-          paddingBottom: "2rem", 
-          scrollbarWidth: "none",
-          msOverflowStyle: "none"
-        }}
-      >
-        {merchants.map((merchantName, idx) => {
-          const product = mockProducts.find(p => p.merchant === merchantName);
-          return (
-            <div key={`merchant-${idx}`} style={{ minWidth: "350px", width: "350px", backgroundColor: "var(--bg-panel)", borderRadius: "12px", border: "1px solid var(--border)", padding: "2rem", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+      {merchants.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-secondary)" }}>
+          No verified merchants found yet.
+        </div>
+      ) : (
+        <div 
+          ref={carouselRef}
+          style={{ 
+            display: "flex", 
+            gap: "2rem", 
+            overflowX: "auto", 
+            paddingBottom: "2rem", 
+            scrollbarWidth: "none",
+            msOverflowStyle: "none"
+          }}
+        >
+          {merchants.map((merchant) => (
+            <div key={`merchant-${merchant.id}`} style={{ minWidth: "350px", width: "350px", backgroundColor: "var(--bg-panel)", borderRadius: "12px", border: "1px solid var(--border)", padding: "2rem", display: "flex", flexDirection: "column", flexShrink: 0 }}>
               
               <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
                 <div style={{ width: "60px", height: "60px", borderRadius: "50%", backgroundColor: "var(--border)", overflow: "hidden" }}>
                    <div style={{width:"100%", height:"100%", backgroundColor:"var(--brand-blue)", display:"flex", justifyContent:"center", alignItems:"center", color:"white", fontSize:"1.5rem", fontWeight:"bold"}}>
-                      {merchantName.charAt(0)}
+                      {merchant.name.charAt(0)}
                    </div>
                 </div>
                 <div>
                   <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--text-primary)", margin: "0 0 0.3rem 0", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    {merchantName} <VerifiedIcon />
+                    {merchant.name} <VerifiedIcon />
                   </h3>
-                  <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem", fontWeight: "600" }}>{product.region}</div>
+                  <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem", fontWeight: "600" }}>
+                    Joined {new Date(merchant.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                  </div>
                 </div>
               </div>
 
               <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
                 <div style={{ flex: 1, backgroundColor: "var(--bg-base)", padding: "1rem", borderRadius: "8px", textAlign: "center" }}>
-                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--brand-gold)" }}>{product.trustScore}</div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600", marginTop: "0.2rem" }}>Trust Score</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--brand-gold)" }}>★ {merchant.averageRating ? merchant.averageRating.toFixed(1) : (merchant.trustScore / 20).toFixed(1)}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600", marginTop: "0.2rem" }}>Avg Rating</div>
                 </div>
                 <div style={{ flex: 1, backgroundColor: "var(--bg-base)", padding: "1rem", borderRadius: "8px", textAlign: "center" }}>
-                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--text-primary)" }}>{product.reviews}</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--text-primary)" }}>{merchant.productCount}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600", marginTop: "0.2rem" }}>Products</div>
+                </div>
+                <div style={{ flex: 1, backgroundColor: "var(--bg-base)", padding: "1rem", borderRadius: "8px", textAlign: "center" }}>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--text-primary)" }}>{merchant.salesCount}</div>
                   <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600", marginTop: "0.2rem" }}>Sales</div>
                 </div>
               </div>
 
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: "1.5", marginBottom: "2rem", flexGrow: 1 }}>
-                Specializes in premium {product.category.toLowerCase()}. All exports are certified and quality tested.
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: "1.5", marginBottom: "1.5rem" }}>
+                Verified merchant with {merchant.productCount} listed {merchant.productCount === 1 ? 'product' : 'products'} and {merchant.salesCount} completed {merchant.salesCount === 1 ? 'sale' : 'sales'}. All exports are certified and quality tested.
               </p>
 
-              <button 
-                onClick={() => navigate("/catalog")}
-                style={{ width: "100%", padding: "0.8rem", backgroundColor: "transparent", color: "var(--text-primary)", border: "1px solid var(--border)", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", transition: "all 0.2s" }}
-              >
-                View Catalog
-              </button>
+              <div style={{ marginBottom: "1.5rem", flexGrow: 1 }}>
+                <h4 style={{ fontSize: "0.95rem", fontWeight: "700", marginBottom: "0.5rem" }}>Recent Reviews</h4>
+                {merchant.recentReviews && merchant.recentReviews.length > 0 ? (
+                  merchant.recentReviews.map(r => (
+                    <div key={r.id} style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.5rem", borderLeft: "2px solid var(--border)", paddingLeft: "0.5rem" }}>
+                      <div style={{color: "var(--brand-gold)"}}>{"★".repeat(r.rating)}</div>
+                      "{r.comment}" - {r.reviewer?.name}
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>No reviews yet.</div>
+                )}
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem", width: "100%", marginTop: "auto" }}>
+                <button 
+                  onClick={() => navigate(`/merchant-profile/${merchant.id}`)}
+                  style={{ flex: 1, padding: "0.8rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", transition: "all 0.2s" }}
+                >
+                  View Storefront
+                </button>
+              </div>
             </div>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      )}
       
       <style>
         {`

@@ -139,14 +139,14 @@ const LandingPage = () => {
             
             <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
               <button 
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/register")}
                 style={{ backgroundColor: primaryBrand, color: "#fff", padding: "1rem 2.5rem", borderRadius: "8px", fontWeight: "600", border: "none", cursor: "pointer", transition: "background-color 0.2s", fontSize: "1rem" }}
                 onMouseOver={e => e.currentTarget.style.backgroundColor = primaryBrandHover}
                 onMouseOut={e => e.currentTarget.style.backgroundColor = primaryBrand}>
                 Join the Hub →
               </button>
               <button 
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/catalog")}
                 style={{ backgroundColor: "transparent", color: textMain, padding: "1rem 2.5rem", borderRadius: "8px", fontWeight: "600", border: `1px solid ${borderCol}`, cursor: "pointer", transition: "all 0.2s", fontSize: "1rem" }}
                 onMouseOver={e => { e.currentTarget.style.backgroundColor = secondaryBrand; e.currentTarget.style.borderColor = "transparent"; }}
                 onMouseOut={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.borderColor = borderCol; }}>
@@ -207,7 +207,7 @@ const LandingPage = () => {
               <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(2rem, 4vw, 2.5rem)", fontWeight: "800", color: textMain, marginBottom: "1rem", letterSpacing: "-0.02em" }}>A Diverse Marketplace</h2>
               <p style={{ color: textSec, fontSize: "1.15rem", maxWidth: "600px", lineHeight: "1.6" }}>Explore categories that connect you directly to the best local and imported goods.</p>
             </div>
-            <button onClick={() => navigate("/login")} style={{ padding: "0.8rem 2rem", borderRadius: "8px", border: `1px solid ${borderCol}`, backgroundColor: bgSec, color: textMain, fontWeight: "600", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = primaryBrand} onMouseOut={e => e.currentTarget.style.borderColor = borderCol}>
+            <button onClick={() => navigate("/catalog")} style={{ padding: "0.8rem 2rem", borderRadius: "8px", border: `1px solid ${borderCol}`, backgroundColor: bgSec, color: textMain, fontWeight: "600", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e => e.currentTarget.style.borderColor = primaryBrand} onMouseOut={e => e.currentTarget.style.borderColor = borderCol}>
               View Full Catalog
             </button>
           </div>
@@ -217,7 +217,7 @@ const LandingPage = () => {
             <div style={{ overflow: "hidden", borderRadius: "24px", border: `1px solid ${borderCol}` }}>
               <div className="carousel-track" style={{ transform: `translateX(-${activeCategorySlide * 100}%)` }}>
                 {categories.map((category, idx) => (
-                  <div key={idx} style={{ flex: "0 0 100%", position: "relative", height: "450px", cursor: "pointer" }} onClick={() => navigate("/login")}>
+                  <div key={idx} style={{ flex: "0 0 100%", position: "relative", height: "450px", cursor: "pointer" }} onClick={() => navigate("/catalog")}>
                     <img 
                       src={category.img} 
                       alt={category.title} 
