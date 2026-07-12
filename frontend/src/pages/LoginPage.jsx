@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const LoginPage = () => {
+const LoginPage = ({ isAdminLogin = false }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   
-  const { login, isLoading } = useAuth();
+  const { login, logout, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const isFormValid = email.trim() !== '' && password.trim() !== '';
@@ -19,6 +19,19 @@ const LoginPage = () => {
     try {
       const data = await login(email, password);
       const role = data?.user?.role || "customer";
+
+      if (isAdminLogin && role !== "admin") {
+        await logout();
+        setError("Invalid email or password");
+        return;
+      }
+
+      if (!isAdminLogin && role === "admin") {
+        await logout();
+        setError("Invalid email or password");
+        return;
+      }
+
       if (role === "admin") navigate("/admin");
       else if (role === "merchant") navigate("/merchant");
       else navigate("/catalog");
@@ -42,7 +55,9 @@ const LoginPage = () => {
             <span className="font-bold text-xl tracking-tight text-primary">TradeHub</span>
           </div>
 
-          <h2 className="text-2xl font-black text-on-surface tracking-tight mb-6 text-center">Log in to your account</h2>
+          <h2 className="text-2xl font-black text-on-surface tracking-tight mb-6 text-center">
+            {isAdminLogin ? "Secure Admin Portal" : "Log in to your account"}
+          </h2>
           
           {error && (
             <div className="bg-error/10 border border-error text-error px-4 py-3 rounded-xl mb-4 text-sm font-medium">

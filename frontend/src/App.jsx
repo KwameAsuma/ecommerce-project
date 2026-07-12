@@ -73,6 +73,7 @@ function App() {
               {/* Guest Only Routes (Redirects if logged in) */}
               <Route element={<PublicOnlyRoute />}>
                 <Route path="/login" element={<LoginPage />} />
+                <Route path={import.meta.env.VITE_ADMIN_LOGIN_PATH || "/admin-access-portal"} element={<LoginPage isAdminLogin={true} />} />
                 <Route path="/register" element={<RegisterPage />} />
               </Route>
 

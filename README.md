@@ -44,6 +44,9 @@ The entire TradeHub ecosystem is fully Dockerized. You do **not** need Node.js, 
    # Backend API Configuration
    PORT=5000
    JWT_SECRET=
+
+   # Admin Security
+   VITE_ADMIN_LOGIN_PATH=/your-custom-secret-url
    ```
 
 3. **Build & Run the Stack**
@@ -56,6 +59,13 @@ Wait a few moments for the database to initialize and the servers to boot. You c
 - **Main Platform (UI)**: `http://localhost`
 - **Backend API**: `http://localhost/api`
 - **Database Management (pgAdmin)**: `http://localhost:8080`
+
+### 4. Create an Admin Account (Optional but Recommended)
+Since the system handles admin accounts strictly for security, you must manually create the first admin using the provided CLI tool. With the Docker containers running, execute this command in your terminal:
+```bash
+docker compose exec backend npm run create-admin "your@email.com" "yourpassword123"
+```
+**Important Security Note**: Admins are intentionally blocked from logging in via the public `http://localhost/login` page. This prevents attackers from guessing where the admin portal is. To log in, you must navigate to the exact secret URL you defined as `VITE_ADMIN_LOGIN_PATH` in your `.env` file (e.g., `http://localhost/your-custom-secret-url`).
 
 ### Graceful Shutdown
 To stop the environment safely without losing database data, press `Ctrl+C` in the terminal and run:
