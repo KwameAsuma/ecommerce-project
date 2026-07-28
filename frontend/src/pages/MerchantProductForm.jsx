@@ -116,7 +116,7 @@ const MerchantProductForm = () => {
         <div className="flex items-start gap-6">
           <div className="w-40 h-40 bg-surface-container-high rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
             {formData.imageUrl ? (
-              <img src={`http://localhost:5000${formData.imageUrl}`} alt="Product Preview" className="w-full h-full object-cover" />
+              <img src={`http://localhost:5001${formData.imageUrl}`} alt="Product Preview" className="w-full h-full object-cover" />
             ) : (
               <span className="material-symbols-outlined text-[48px] text-on-surface-variant/50">image</span>
             )}

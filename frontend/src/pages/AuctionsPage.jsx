@@ -24,7 +24,7 @@ const AuctionsPage = () => {
   ];
 
   const getImageUrl = (auction) => {
-    if (auction.imageUrl) return `http://localhost:5000${auction.imageUrl}`;
+    if (auction.imageUrl) return `http://localhost:5001${auction.imageUrl}`;
     const id = auction.id || 0;
     return fallbackImages[id % fallbackImages.length];
   };

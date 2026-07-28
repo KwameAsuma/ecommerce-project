@@ -78,13 +78,13 @@ const ProductDetailsPage = () => {
 
         {/* Hero Image */}
         <div style={{ width: "100%", height: "450px", backgroundColor: "#f1f5f9", borderRadius: "12px", overflow: "hidden", marginBottom: "1rem" }}>
-          <img src={product.imageUrl ? `http://localhost:5000${product.imageUrl}` : product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={product.imageUrl ? `http://localhost:5001${product.imageUrl}` : product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
 
         {/* Thumbnails */}
         <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
           <div style={{ width: "80px", height: "80px", borderRadius: "8px", overflow: "hidden", border: "2px solid var(--brand-blue)" }}>
-            <img src={product.imageUrl ? `http://localhost:5000${product.imageUrl}` : product.image} alt="Thumb" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={product.imageUrl ? `http://localhost:5001${product.imageUrl}` : product.image} alt="Thumb" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
         </div>
 

@@ -185,7 +185,7 @@ const ProfilePage = () => {
           <div style={{ position: "relative", width: "120px", height: "120px", marginBottom: "1.5rem" }}>
             <div style={{ width: "100%", height: "100%", borderRadius: "50%", backgroundColor: "var(--brand-blue)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "3rem", fontWeight: "900", boxShadow: "0 10px 25px rgba(30, 58, 138, 0.2)", overflow: "hidden" }}>
               {user?.avatarUrl ? (
-                <img src={`http://localhost:5000${user.avatarUrl}`} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={`http://localhost:5001${user.avatarUrl}`} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               ) : (
                 user?.name?.charAt(0) || "K"
               )}

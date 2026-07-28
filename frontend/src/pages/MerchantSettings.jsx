@@ -166,7 +166,7 @@ const MerchantSettings = () => {
                   <div className="flex items-center gap-4">
                     <div className="w-20 h-20 rounded-full bg-surface-container-high border-2 border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
                       {avatarUrl ? (
-                        <img src={`http://localhost:5000${avatarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
+                        <img src={`http://localhost:5001${avatarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-2xl font-bold text-primary">{storeName ? storeName.charAt(0) : "S"}</span>
                       )}
@@ -190,7 +190,7 @@ const MerchantSettings = () => {
                   <div className="flex flex-col gap-3">
                     <div className="w-full h-20 rounded-xl bg-surface-container-high border-2 border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
                       {storeBannerUrl ? (
-                        <img src={`http://localhost:5000${storeBannerUrl}`} alt="Banner" className="w-full h-full object-cover" />
+                        <img src={`http://localhost:5001${storeBannerUrl}`} alt="Banner" className="w-full h-full object-cover" />
                       ) : (
                         <span className="material-symbols-outlined text-on-surface-variant/50">panorama</span>
                       )}

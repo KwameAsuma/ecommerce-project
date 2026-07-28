@@ -38,12 +38,20 @@
     .customer-header {
       padding: 0.5rem 1rem !important;
       gap: 0.5rem !important;
+      flex-wrap: wrap !important;
+    }
+    .customer-header > div:first-child {
+      gap: 1rem !important;
+    }
+    .customer-header > div:last-child {
+      gap: 0.8rem !important;
     }
     .search-container {
       width: 100% !important;
       max-width: 100% !important;
       flex-basis: 100% !important;
       order: 3;
+      margin-top: 0.5rem;
     }
     .main-content {
       padding: 1rem 1rem !important;
@@ -51,6 +59,21 @@
     .secondary-nav {
       padding: 0 1rem !important;
       justify-content: flex-start !important;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    /* Fix huge text on mobile */
+    .main-content h1 {
+      font-size: 1.8rem !important;
+      line-height: 1.2 !important;
+    }
+    .main-content p {
+      font-size: 0.9rem !important;
+    }
+    /* Shrink product grid on mobile so we can fit 2 items if needed, or 1 nice item */
+    .product-grid {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+      gap: 1rem !important;
     }
   }
   .no-scrollbar::-webkit-scrollbar { display: none; }

@@ -332,7 +332,7 @@ const MerchantAuctions = () => {
               <div className="flex items-start gap-4">
                 <div className="w-20 h-20 bg-surface-container-high rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
                   {newImageUrl ? (
-                    <img src={`http://localhost:5000${newImageUrl}`} alt="Auction Preview" className="w-full h-full object-cover" />
+                    <img src={`http://localhost:5001${newImageUrl}`} alt="Auction Preview" className="w-full h-full object-cover" />
                   ) : (
                     <span className="material-symbols-outlined text-[24px] text-on-surface-variant/50">image</span>
                   )}

@@ -31,7 +31,7 @@ const LiveAuctions = () => {
 
   const getImageUrl = (auction) => {
     if (!auction) return fallbackImages[0];
-    if (auction.imageUrl) return `http://localhost:5000${auction.imageUrl}`;
+    if (auction.imageUrl) return `http://localhost:5001${auction.imageUrl}`;
     const aid = auction.id || 0;
     return fallbackImages[aid % fallbackImages.length];
   };

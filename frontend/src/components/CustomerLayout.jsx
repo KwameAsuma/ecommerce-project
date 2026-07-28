@@ -6,7 +6,37 @@ import { useCart } from "../context/CartContext";
 
 const CustomerLayout = () => {
   const { user, logout } = useAuth();
-  const { filters, updateFilter } = useCatalog();
+  const { filters, updateFilter, allProducts } = useCatalog();
+  
+  const [localSearchQuery, setLocalSearchQuery] = useState(filters.searchQuery || "");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  useEffect(() => {
+    setLocalSearchQuery(filters.searchQuery || "");
+  }, [filters.searchQuery]);
+
+  const getAutocompleteSuggestions = () => {
+    if (!localSearchQuery.trim()) {
+      return ["Refurbished Electronics", "Shea Butter", "Kente", "Organic Honey"];
+    }
+    if (!allProducts) return [];
+    
+    const query = localSearchQuery.toLowerCase();
+    const matches = allProducts.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
+    
+    const uniqueMatches = [];
+    const seen = new Set();
+    for (const match of matches) {
+      if (!seen.has(match.name)) {
+        seen.add(match.name);
+        uniqueMatches.push(match.name);
+      }
+      if (uniqueMatches.length >= 5) break;
+    }
+    return uniqueMatches;
+  };
+
+  const suggestions = getAutocompleteSuggestions();
   const { cartCount } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -135,9 +165,11 @@ const CustomerLayout = () => {
             <span className="material-symbols-outlined text-[28px]">menu</span>
           </div>
 
-          <h1 onClick={() => navigate("/catalog")} style={{ fontSize: "1.6rem", fontWeight: "900", color: "var(--brand-blue)", margin: 0, cursor: "pointer", letterSpacing: "-0.5px", textTransform: "uppercase" }}>
-            TradeHub
-          </h1>
+          <Link to="/catalog" style={{ textDecoration: "none" }}>
+            <h1 style={{ fontSize: "1.6rem", fontWeight: "900", color: "var(--brand-blue)", margin: 0, cursor: "pointer", letterSpacing: "-0.5px", textTransform: "uppercase" }}>
+              TradeHub
+            </h1>
+          </Link>
         </div>
 
         {/* Center: Search & Unified Filter */}
@@ -147,10 +179,50 @@ const CustomerLayout = () => {
             <input 
               type="text" 
               placeholder="Search premium goods..." 
-              value={filters.searchQuery || ""}
-              onChange={(e) => updateFilter("searchQuery", e.target.value)}
+              value={localSearchQuery}
+              onChange={(e) => setLocalSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  updateFilter("searchQuery", localSearchQuery);
+                  setIsSearchFocused(false);
+                  navigate("/catalog");
+                }
+              }}
               style={{ width: "100%", padding: "0.7rem 1rem 0.7rem 2.8rem", borderRadius: "999px", border: "1px solid var(--border)", backgroundColor: "var(--bg-base)", fontSize: "0.9rem", outline: "none", transition: "all 0.2s", color: "var(--text-primary)" }}
             />
+            {isSearchFocused && (
+              <div style={{ position: "absolute", top: "100%", left: 0, width: "100%", marginTop: "0.5rem", backgroundColor: "var(--bg-panel)", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 10px 25px rgba(0,0,0,0.1)", zIndex: 100, overflow: "hidden" }}>
+                {!localSearchQuery.trim() && <div style={{ padding: "0.8rem 1rem", fontSize: "0.8rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid var(--border)" }}>Trending Searches</div>}
+                
+                {localSearchQuery.trim() && suggestions.length === 0 && (
+                  <div style={{ padding: "1.5rem 1rem", color: "var(--text-secondary)", fontSize: "0.95rem", textAlign: "center" }}>
+                    Oops, we do not have the item you are looking for at the moment.
+                  </div>
+                )}
+                
+                {suggestions.map((suggestion, idx) => (
+                  <div 
+                    key={idx}
+                    onClick={() => {
+                      setLocalSearchQuery(suggestion);
+                      updateFilter("searchQuery", suggestion);
+                      setIsSearchFocused(false);
+                      navigate("/catalog");
+                    }}
+                    style={{ padding: "0.8rem 1rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.8rem", color: "var(--text-primary)", fontSize: "0.95rem", transition: "background 0.2s" }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = "var(--bg-base)"}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "var(--text-muted)" }}>
+                      {localSearchQuery.trim() ? "search" : "trending_up"}
+                    </span>
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Unified Filter Button */}
@@ -298,7 +370,9 @@ const CustomerLayout = () => {
           <div style={{ width: "320px", height: "100%", backgroundColor: "var(--bg-panel)", borderRight: "1px solid var(--border)", padding: "2.5rem", display: "flex", flexDirection: "column", gap: "1.5rem", boxShadow: "20px 0 40px rgba(0,0,0,0.2)" }} onClick={(e) => e.stopPropagation()}>
             
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--brand-blue)", margin: 0, letterSpacing: "-0.5px", textTransform: "uppercase" }}>TradeHub</h2>
+              <Link to="/catalog" onClick={() => setNavOpen(false)} style={{ textDecoration: "none" }}>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--brand-blue)", margin: 0, cursor: "pointer", letterSpacing: "-0.5px", textTransform: "uppercase" }}>TradeHub</h2>
+              </Link>
               <div onClick={() => setNavOpen(false)} style={{ cursor: "pointer", color: "var(--text-secondary)", display: "flex", alignItems: "center", padding: "0.5rem", borderRadius: "50%", backgroundColor: "var(--bg-base)" }}>
                 <span className="material-symbols-outlined">close</span>
               </div>
@@ -327,7 +401,7 @@ const CustomerLayout = () => {
               <div style={{ marginTop: "auto", paddingTop: "2rem", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "1rem" }}>
                 <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "var(--brand-blue)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", fontSize: "1.2rem", overflow: "hidden" }}>
                   {user.avatarUrl ? (
-                    <img src={`http://localhost:5000${user.avatarUrl}`} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={`http://localhost:5001${user.avatarUrl}`} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
                     user.name ? user.name.charAt(0).toUpperCase() : "U"
                   )}

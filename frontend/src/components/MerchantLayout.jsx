@@ -52,12 +52,11 @@ const MerchantLayout = () => {
       {/* TopNavBar */}
       <header className="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline w-full h-16 flex justify-between items-center px-margin-desktop sticky top-0 z-40">
         <div className="flex items-center gap-4">
-          <h1 
-            className="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary tracking-tight cursor-pointer flex items-baseline gap-2"
-            onClick={() => navigate("/merchant")}
-          >
-            TradeHub <span className="text-sm font-normal text-tertiary">Merchant Platform</span>
-          </h1>
+          <Link to="/merchant" className="no-underline">
+            <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary tracking-tight cursor-pointer flex items-baseline gap-2">
+              TradeHub <span className="text-sm font-normal text-tertiary">Merchant Platform</span>
+            </h1>
+          </Link>
         </div>
         <div className="flex items-center gap-6">
           <div className="hidden md:flex items-center bg-surface-container-low border border-outline-variant rounded-full px-4 py-1.5 w-64 focus-within:border-primary transition-colors">
@@ -104,7 +103,7 @@ const MerchantLayout = () => {
               className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-outline-variant cursor-pointer hover:opacity-80 transition-opacity"
             >
               {user?.avatarUrl ? (
-                <img className="w-full h-full object-cover pointer-events-none" alt="Merchant Profile" src={`http://localhost:5000${user.avatarUrl}`}/>
+                <img className="w-full h-full object-cover pointer-events-none" alt="Merchant Profile" src={`http://localhost:5001${user.avatarUrl}`}/>
               ) : (
                 <span className="font-bold text-sm text-primary">{user?.name ? user.name.charAt(0).toUpperCase() : "M"}</span>
               )}
@@ -148,7 +147,7 @@ const MerchantLayout = () => {
             >
               <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-on-secondary font-bold font-headline-md flex-shrink-0 overflow-hidden">
                 {user?.avatarUrl ? (
-                  <img src={`http://localhost:5000${user.avatarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={`http://localhost:5001${user.avatarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   user?.name ? user.name.charAt(0).toUpperCase() : "M"
                 )}
