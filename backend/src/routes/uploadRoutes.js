@@ -7,7 +7,12 @@ const fs = require("fs");
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    const dir = path.join(__dirname, "../../uploads/general");
+    const type = req.query.type || "general";
+    // Whitelist allowed directories for security
+    const allowedTypes = ["profiles", "products", "documents", "general"];
+    const folder = allowedTypes.includes(type) ? type : "general";
+    
+    const dir = path.join(__dirname, "../../uploads", folder);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
