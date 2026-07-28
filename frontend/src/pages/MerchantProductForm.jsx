@@ -137,21 +137,21 @@ const MerchantProductForm = () => {
                   setImageUploading(true);
                   setError(null);
                   
-                  const reader = new FileReader();
-                  reader.onloadend = async () => {
-                    try {
-                      const res = await api.post("/upload", { image: reader.result, folder: "products" });
-                      if (res.data.status === "success") {
-                        setFormData({ ...formData, imageUrl: res.data.url });
-                      }
-                    } catch (err) {
-                      console.error(err);
-                      setError("Failed to upload image. Image may be too large.");
-                    } finally {
-                      setImageUploading(false);
+                  const formDataPayload = new FormData();
+                  formDataPayload.append("image", file);
+                  
+                  api.post("/upload/image", formDataPayload, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                  }).then(res => {
+                    if (res.data.status === "success") {
+                      setFormData({ ...formData, imageUrl: res.data.imageUrl });
                     }
-                  };
-                  reader.readAsDataURL(file);
+                  }).catch(err => {
+                    console.error(err);
+                    setError("Failed to upload image. Image may be too large.");
+                  }).finally(() => {
+                    setImageUploading(false);
+                  });
                 }}
               />
             </label>

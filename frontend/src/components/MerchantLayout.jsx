@@ -3,7 +3,7 @@ import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const MerchantLayout = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -103,15 +103,19 @@ const MerchantLayout = () => {
               onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotificationsOpen(false); }}
               className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-outline-variant cursor-pointer hover:opacity-80 transition-opacity"
             >
-              <img className="w-full h-full object-cover pointer-events-none" alt="Merchant Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3AOsAwVf70-xfL5RCHMYkfZppwGZAbk2w6VZyK1YPCESu__EsNQ0JiTM6ErG2-kMxLvPGum25T9KtJ181_RTJD991kF-ELx8L-qhDcH5IIpPitzx0RmnlSgDnAYdIsAMWGTPlWDa5LGx3WcIbCML8Eafq_dzZTcwcI1pIk27apY1BK8cs1gWFdgk1i4Si6IPujoPDU8t_HShbA5mW3fpjAPvxH1y8V-Tbbj5dpia0JZodNmBWNqQHKEAo73BEfAdc8c-8wzBvXZ8"/>
+              {user?.avatarUrl ? (
+                <img className="w-full h-full object-cover pointer-events-none" alt="Merchant Profile" src={`http://localhost:5000${user.avatarUrl}`}/>
+              ) : (
+                <span className="font-bold text-sm text-primary">{user?.name ? user.name.charAt(0).toUpperCase() : "M"}</span>
+              )}
             </div>
 
             {/* Profile Dropdown */}
             {isProfileOpen && (
               <div className="absolute top-12 right-0 w-48 bg-surface-container-lowest border border-outline-variant shadow-lg rounded-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="px-4 py-3 border-b border-outline-variant">
-                  <p className="font-bold text-label-md text-on-surface">Ghana Merchant</p>
-                  <p className="text-label-sm text-on-surface-variant">seller@tradehub.com</p>
+                  <p className="font-bold text-label-md text-on-surface">{user?.name || "Ghana Merchant"}</p>
+                  <p className="text-label-sm text-on-surface-variant">{user?.email || "seller@tradehub.com"}</p>
                 </div>
                 <div className="py-1">
                   <button onClick={() => { setIsProfileOpen(false); navigate("/profile"); }} className="w-full text-left px-4 py-2 text-label-md text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2">
@@ -142,10 +146,16 @@ const MerchantLayout = () => {
               className="flex items-center gap-3 cursor-pointer"
               title="Pin Sidebar"
             >
-              <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-on-secondary font-bold font-headline-md flex-shrink-0">GM</div>
+              <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-on-secondary font-bold font-headline-md flex-shrink-0 overflow-hidden">
+                {user?.avatarUrl ? (
+                  <img src={`http://localhost:5000${user.avatarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  user?.name ? user.name.charAt(0).toUpperCase() : "M"
+                )}
+              </div>
               {isExpanded && (
                 <div>
-                  <p className="font-headline-md text-label-md font-extrabold text-on-surface whitespace-nowrap">Ghana Merchant</p>
+                  <p className="font-headline-md text-label-md font-extrabold text-on-surface whitespace-nowrap">{user?.name || "Ghana Merchant"}</p>
                   <p className="font-label-sm text-label-sm text-on-surface-variant">Verified Seller</p>
                 </div>
               )}

@@ -96,9 +96,9 @@ const CatalogPage = () => {
             </span>
           )}
           
-          {filters.priceRange < 10000 && (
+          {filters.priceRange !== "All Prices" && (
             <span style={{ display: "inline-flex", alignItems: "center", padding: "0.3rem 0.8rem", backgroundColor: "rgba(30, 58, 138, 0.05)", border: "1px solid rgba(30, 58, 138, 0.1)", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "600", color: "var(--brand-blue)" }}>
-              Under GH₵ {filters.priceRange} <span onClick={() => updateFilter("priceRange", 10000)} style={{ marginLeft: "0.5rem", cursor: "pointer", fontSize: "0.8rem" }}>✕</span>
+              Under GH₵ {filters.priceRange.toLocaleString()} <span onClick={() => updateFilter("priceRange", "All Prices")} style={{ marginLeft: "0.5rem", cursor: "pointer", fontSize: "0.8rem" }}>✕</span>
             </span>
           )}
 

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useCatalog } from "../context/CatalogContext";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -12,13 +13,30 @@ const CheckoutPage = () => {
   const buyNowQty = parseInt(searchParams.get("qty")) || 1;
 
   const { products } = useCatalog();
+  const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState("momo");
+  const [walletBalance, setWalletBalance] = useState(0);
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [orderComments, setOrderComments] = useState("");
   const [momoNumber, setMomoNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   
   const { cartItems, cartTotal, cartCount, clearCart, addToCart, removeFromCart, decreaseQuantity } = useCart();
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      if (user?.id) {
+        try {
+          const res = await api.get(`/finances/${user.id}`);
+          setWalletBalance(res.data.balances.availableBalance || 0);
+        } catch (err) {
+          console.error("Failed to load wallet", err);
+        }
+      }
+    };
+    fetchWallet();
+  }, [user]);
 
   // Determine which items to checkout (Buy Now vs Cart)
   const checkoutItems = useMemo(() => {
@@ -39,8 +57,12 @@ const CheckoutPage = () => {
       setError("Please enter a delivery address.");
       return;
     }
-    if (momoNumber.length < 9) {
+    if (paymentMethod !== "wallet" && momoNumber.length < 9) {
       setError("Please enter a valid Mobile Money number.");
+      return;
+    }
+    if (paymentMethod === "wallet" && walletBalance < totalToPay) {
+      setError("Insufficient wallet balance.");
       return;
     }
     setError(null);
@@ -48,7 +70,8 @@ const CheckoutPage = () => {
 
     try {
       // Create the order via API using checkoutItems
-      await api.post("/orders", { cartItems: checkoutItems, deliveryAddress });
+      const fullAddress = orderComments.trim() ? `${deliveryAddress} | Comments: ${orderComments}` : deliveryAddress;
+      await api.post("/orders", { cartItems: checkoutItems, deliveryAddress: fullAddress, paymentMethod });
       
       // Simulate payment delay for user experience
       await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -154,14 +177,29 @@ const CheckoutPage = () => {
             <div className="glass-panel premium-card">
               <h2 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "1rem", margin: "0 0 2rem 0" }}>
                 <span style={{ backgroundColor: "var(--brand-blue)", color: "white", width: "32px", height: "32px", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "1.1rem" }}>2</span>
-                Delivery Address
+                Delivery Details
               </h2>
-              <textarea 
-                value={deliveryAddress}
-                onChange={(e) => setDeliveryAddress(e.target.value)}
-                placeholder="Enter your full delivery address and any special instructions..."
-                style={{ width: "100%", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border)", backgroundColor: "var(--bg-base)", color: "var(--text-primary)", fontSize: "1rem", outline: "none", minHeight: "100px", resize: "vertical" }}
-              />
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Delivery Address</label>
+                  <input 
+                    type="text"
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    placeholder="Ghana Post GPS, Coordinates, or precise location..."
+                    style={{ width: "100%", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border)", backgroundColor: "var(--bg-base)", color: "var(--text-primary)", fontSize: "1rem", outline: "none" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Comments / Special Instructions</label>
+                  <textarea 
+                    value={orderComments}
+                    onChange={(e) => setOrderComments(e.target.value)}
+                    placeholder="Any special instructions for the driver..."
+                    style={{ width: "100%", padding: "1rem", borderRadius: "12px", border: "1px solid var(--border)", backgroundColor: "var(--bg-base)", color: "var(--text-primary)", fontSize: "0.9rem", outline: "none", minHeight: "60px", resize: "vertical" }}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="glass-panel premium-card">
@@ -188,24 +226,35 @@ const CheckoutPage = () => {
                   <div style={{ width: "48px", height: "48px", backgroundColor: "var(--brand-blue)", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", color: "white", fontSize: "1.5rem", fontWeight: "800" }}>A</div>
                   <span style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1rem" }}>AT Money</span>
                 </div>
-              </div>
 
-              <div>
-                <label style={{ display: "block", marginBottom: "0.8rem", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Mobile Money Number</label>
-                <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", backgroundColor: "var(--bg-base)" }}>
-                  <div style={{ padding: "1rem 1.5rem", borderRight: "1px solid var(--border)", fontWeight: "800", color: "var(--text-primary)", backgroundColor: "var(--bg-panel)", display: "flex", alignItems: "center" }}>+233</div>
-                  <input 
-                    type="text" 
-                    placeholder="XX XXX XXXX" 
-                    value={momoNumber}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, ""); // Only allow digits
-                      if (val.length <= 10) setMomoNumber(val);
-                    }}
-                    style={{ flexGrow: 1, padding: "1rem 1.5rem", border: "none", outline: "none", fontSize: "1.1rem", backgroundColor: "transparent", color: "var(--text-primary)", fontWeight: "600", letterSpacing: "1px" }} 
-                  />
+                <div onClick={() => setPaymentMethod("wallet")} style={{ backgroundColor: paymentMethod === "wallet" ? "rgba(34, 197, 94, 0.05)" : "var(--bg-base)", border: paymentMethod === "wallet" ? "2px solid #22c55e" : "1px solid var(--border)", padding: "1.5rem", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", cursor: "pointer", transition: "all 0.2s", position: "relative" }}>
+                  {paymentMethod === "wallet" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "10px", right: "10px", color: "#22c55e", fontSize: "20px" }}>check_circle</span>}
+                  <div style={{ width: "48px", height: "48px", backgroundColor: "#22c55e", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", color: "white", fontSize: "1.5rem", fontWeight: "800" }}>
+                    <span className="material-symbols-outlined">account_balance_wallet</span>
+                  </div>
+                  <span style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1rem" }}>TradeHub Wallet</span>
+                  <span style={{ fontSize: "0.85rem", fontWeight: "700", color: walletBalance >= totalToPay ? "var(--success)" : "var(--danger)" }}>Balance: GH₵ {Number(walletBalance).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
               </div>
+
+              {paymentMethod !== "wallet" && (
+                <div>
+                  <label style={{ display: "block", marginBottom: "0.8rem", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Mobile Money Number</label>
+                  <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", backgroundColor: "var(--bg-base)" }}>
+                    <div style={{ padding: "1rem 1.5rem", borderRight: "1px solid var(--border)", fontWeight: "800", color: "var(--text-primary)", backgroundColor: "var(--bg-panel)", display: "flex", alignItems: "center" }}>+233</div>
+                    <input 
+                      type="text" 
+                      placeholder="XX XXX XXXX" 
+                      value={momoNumber}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, ""); // Only allow digits
+                        if (val.length <= 10) setMomoNumber(val);
+                      }}
+                      style={{ flexGrow: 1, padding: "1rem 1.5rem", border: "none", outline: "none", fontSize: "1.1rem", backgroundColor: "transparent", color: "var(--text-primary)", fontWeight: "600", letterSpacing: "1px" }} 
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>

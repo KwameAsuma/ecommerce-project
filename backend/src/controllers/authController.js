@@ -16,7 +16,6 @@ const registerUser = async (req, res) => {
         .json({ error: "Name, email, phone, and password are required." });
     }
 
-    // 1. Check for existing user using Prisma
     const existingUser = await prisma.user.findUnique({
       where: { email: email },
     });
@@ -25,10 +24,8 @@ const registerUser = async (req, res) => {
       return res.status(409).json({ error: "Email already registered." });
     }
 
-    // 2. Hash the password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // 3. Create the user in PostgreSQL using Prisma
     const newUser = await prisma.user.create({
       data: {
         email: email,
@@ -40,14 +37,12 @@ const registerUser = async (req, res) => {
       },
     });
 
-    // 4. Generate JWT
     const token = jwt.sign(
       { userId: newUser.id },
       process.env.JWT_SECRET,
       { expiresIn: "1h" },
     );
 
-    // 5. Drop the token into the secure cookie lockbox
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -55,7 +50,6 @@ const registerUser = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    // 6. Return success WITHOUT exposing the token string
     const { passwordHash: _, ...safeUser } = newUser;
     safeUser.role = newUser.role?.toUpperCase() === "ADMIN" ? "admin" : newUser.role?.toUpperCase() === "MERCHANT" ? "merchant" : "customer";
 
@@ -73,7 +67,6 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Find user using Prisma
     const user = await prisma.user.findUnique({
       where: { email: email },
     });
@@ -82,14 +75,12 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
-    // 2. Compare password (FIXED: using passwordHash from Prisma)
     const isMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid email or password." });
     }
 
-    // 3. Generate JWT
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET,
@@ -97,10 +88,10 @@ const loginUser = async (req, res) => {
     );
 
     res.cookie("token", token, {
-      httpOnly: true, // CRITICAL: React/JS cannot touch this cookie
-      secure: process.env.NODE_ENV === "production", // Requires HTTPS in production
-      sameSite: "strict", // Prevents Cross-Site Request Forgery (CSRF)
-      maxAge: 24 * 60 * 60 * 1000, // Expires in 1 day (matches token)
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     const { passwordHash: _, ...safeUser } = user;
@@ -163,7 +154,6 @@ const changePassword = async (req, res) => {
       return res.status(400).json({ error: "New password must be at least 6 characters." });
     }
 
-    // 1. Find user using Prisma (req.userId set by protect middleware)
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
     });
@@ -172,14 +162,12 @@ const changePassword = async (req, res) => {
       return res.status(404).json({ error: "User not found." });
     }
 
-    // 2. Verify current password
     const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
 
     if (!isMatch) {
       return res.status(401).json({ error: "Current password is incorrect." });
     }
 
-    // 3. Hash new password and update
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
     await prisma.user.update({

@@ -176,12 +176,10 @@ const MerchantSettings = () => {
                       <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                         const file = e.target.files[0];
                         if (!file) return;
-                        const reader = new FileReader();
-                        reader.onloadend = async () => {
-                          const res = await api.post("/upload", { image: reader.result, folder: "profiles" });
-                          if (res.data.status === "success") setAvatarUrl(res.data.url);
-                        };
-                        reader.readAsDataURL(file);
+                        const formData = new FormData();
+                        formData.append("image", file);
+                        const res = await api.post("/upload/image", formData, { headers: { "Content-Type": "multipart/form-data" } });
+                        if (res.data.status === "success") setAvatarUrl(res.data.imageUrl);
                       }} />
                     </label>
                   </div>
@@ -202,12 +200,10 @@ const MerchantSettings = () => {
                       <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                         const file = e.target.files[0];
                         if (!file) return;
-                        const reader = new FileReader();
-                        reader.onloadend = async () => {
-                          const res = await api.post("/upload", { image: reader.result, folder: "profiles" });
-                          if (res.data.status === "success") setStoreBannerUrl(res.data.url);
-                        };
-                        reader.readAsDataURL(file);
+                        const formData = new FormData();
+                        formData.append("image", file);
+                        const res = await api.post("/upload/image", formData, { headers: { "Content-Type": "multipart/form-data" } });
+                        if (res.data.status === "success") setStoreBannerUrl(res.data.imageUrl);
                       }} />
                     </label>
                   </div>

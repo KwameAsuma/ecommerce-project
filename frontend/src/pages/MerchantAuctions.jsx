@@ -37,6 +37,8 @@ const MerchantAuctions = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newBasePrice, setNewBasePrice] = useState("");
   const [newEndTime, setNewEndTime] = useState("");
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [imageUploading, setImageUploading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
 
@@ -69,14 +71,17 @@ const MerchantAuctions = () => {
         title: newTitle,
         basePrice: parseFloat(newBasePrice),
         endTime: new Date(newEndTime).toISOString(),
+        imageUrl: newImageUrl || null,
       });
       setShowCreateModal(false);
       setNewTitle("");
       setNewBasePrice("");
       setNewEndTime("");
+      setNewImageUrl("");
       fetchAuctions();
     } catch (err) {
-      setCreateError(err.response?.data?.error || "Failed to create auction.");
+      const errorMsg = err.response?.data?.errors?.[0]?.msg || err.response?.data?.error || "Failed to create auction.";
+      setCreateError(errorMsg);
     } finally {
       setCreating(false);
     }
@@ -323,6 +328,51 @@ const MerchantAuctions = () => {
               {createError && (
                 <div className="bg-error/10 border border-error text-error px-4 py-3 rounded-xl text-sm font-medium">{createError}</div>
               )}
+
+              <div className="flex items-start gap-4">
+                <div className="w-20 h-20 bg-surface-container-high rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {newImageUrl ? (
+                    <img src={`http://localhost:5000${newImageUrl}`} alt="Auction Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="material-symbols-outlined text-[24px] text-on-surface-variant/50">image</span>
+                  )}
+                </div>
+                <div className="space-y-2 flex-1">
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Auction Image</label>
+                  <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition-colors ${imageUploading ? "bg-surface-container text-on-surface-variant" : "bg-primary/10 text-primary hover:bg-primary/20"}`}>
+                    <span className="material-symbols-outlined text-[16px]">{imageUploading ? "hourglass_empty" : "upload"}</span>
+                    {imageUploading ? "Uploading..." : "Upload Image"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={imageUploading}
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        setImageUploading(true);
+                        setCreateError("");
+                        
+                        const formDataPayload = new FormData();
+                        formDataPayload.append("image", file);
+                        
+                        api.post("/upload/image", formDataPayload, {
+                          headers: { "Content-Type": "multipart/form-data" }
+                        }).then(res => {
+                          if (res.data.status === "success") {
+                            setNewImageUrl(res.data.imageUrl);
+                          }
+                        }).catch(err => {
+                          console.error(err);
+                          setCreateError("Failed to upload image. Image may be too large.");
+                        }).finally(() => {
+                          setImageUploading(false);
+                        });
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
 
               <div>
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Auction Title</label>

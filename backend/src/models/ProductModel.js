@@ -6,7 +6,7 @@ const prisma = require("../config/prisma");
 
 // CREATE PRODUCT
 exports.createProduct = async (productData) => {
-  const { vendorId, title, description, price, stockCount, category } =
+  const { vendorId, title, description, price, stockCount, category, imageUrl } =
     productData;
   try {
     const product = await prisma.nativeProduct.create({
@@ -17,6 +17,7 @@ exports.createProduct = async (productData) => {
         price: price?.toString?.() ?? String(price),
         stockCount,
         category: category ?? null,
+        imageUrl: imageUrl ?? null,
       },
       select: {
         id: true,
@@ -26,6 +27,7 @@ exports.createProduct = async (productData) => {
         price: true,
         stockCount: true,
         category: true,
+        imageUrl: true,
         createdAt: true,
       },
     });
@@ -114,6 +116,7 @@ exports.updateProduct = async (productId, updates) => {
     if (updates.price !== undefined) data.price = updates.price.toString();
     if (updates.stockCount !== undefined) data.stockCount = updates.stockCount;
     if (updates.category !== undefined) data.category = updates.category;
+    if (updates.imageUrl !== undefined) data.imageUrl = updates.imageUrl;
 
     const product = await prisma.nativeProduct.update({
       where: { id: Number(productId) },

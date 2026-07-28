@@ -6,8 +6,7 @@ const pool = new Pool({
   port: process.env.DB_PORT, // Evaluates to 5432
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
+  database: process.env.DB_NAME,});
 
 // Test the connection on startup
 pool.connect((err, client, release) => {

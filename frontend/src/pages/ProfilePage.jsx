@@ -12,6 +12,11 @@ const ProfilePage = () => {
   const [loadingBids, setLoadingBids] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [depositAmount, setDepositAmount] = useState("");
+  const [isDepositing, setIsDepositing] = useState(false);
+  
   const [editForm, setEditForm] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -80,9 +85,20 @@ const ProfilePage = () => {
         setLoadingOrders(false);
       }
     };
+    
+    const fetchWallet = async () => {
+      if (!user?.id) return;
+      try {
+        const res = await api.get(`/finances/${user.id}`);
+        setWalletBalance(res.data.balances.availableBalance || 0);
+      } catch (err) {
+        console.error("Failed to load wallet", err);
+      }
+    };
 
     fetchBids();
     fetchOrders();
+    fetchWallet();
   }, [user]);
 
   const handleConfirmDelivery = async (orderId) => {
@@ -139,6 +155,23 @@ const ProfilePage = () => {
     }
   };
 
+  const handleDeposit = async () => {
+    if (!depositAmount || isNaN(depositAmount) || Number(depositAmount) <= 0) return;
+    setIsDepositing(true);
+    try {
+      const res = await api.post(`/finances/${user.id}/deposit`, { amount: Number(depositAmount) });
+      setWalletBalance(res.data.availableBalance);
+      setIsDepositModalOpen(false);
+      setDepositAmount("");
+      alert("Deposit successful!");
+    } catch (err) {
+      console.error("Deposit failed", err);
+      alert("Failed to deposit funds.");
+    } finally {
+      setIsDepositing(false);
+    }
+  };
+
   return (
     <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 2rem" }}>
       <h1 style={{ fontSize: "2.5rem", fontWeight: "900", color: "var(--text-primary)", letterSpacing: "-1px", margin: "0 0 2rem 0" }}>
@@ -174,9 +207,22 @@ const ProfilePage = () => {
             {user?.email || "kwame.asuma@tradehub.com"}
           </p>
           
-          <div style={{ width: "100%", padding: "1rem", backgroundColor: "var(--bg-base)", borderRadius: "8px", border: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+          <div style={{ width: "100%", padding: "1rem", backgroundColor: "var(--bg-base)", borderRadius: "8px", border: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
             <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Account Role</span>
             <span style={{ fontSize: "0.85rem", color: "var(--brand-gold)", fontWeight: "800", textTransform: "uppercase" }}>{user?.role || "Consumer"}</span>
+          </div>
+
+          <div style={{ width: "100%", padding: "1rem", backgroundColor: "var(--bg-base)", borderRadius: "8px", border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "2rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Wallet Balance</span>
+              <span style={{ fontSize: "1rem", color: "var(--brand-blue)", fontWeight: "800" }}>GH₵ {Number(walletBalance).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+            </div>
+            <button 
+              onClick={() => setIsDepositModalOpen(true)}
+              style={{ width: "100%", padding: "0.6rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "6px", fontWeight: "700", cursor: "pointer", marginTop: "0.5rem" }}
+            >
+              Load Funds
+            </button>
           </div>
 
           <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -330,6 +376,47 @@ const ProfilePage = () => {
 
         </div>
       </div>
+
+      {isDepositModalOpen && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
+          <div style={{ backgroundColor: "var(--bg-panel)", borderRadius: "16px", padding: "2rem", width: "100%", maxWidth: "400px", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--text-primary)", margin: 0 }}>Load Funds</h2>
+              <button onClick={() => setIsDepositModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
+              Enter the amount you wish to add to your escrow wallet.
+            </p>
+            
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "0.5rem", textTransform: "uppercase" }}>Amount (GH₵)</label>
+              <input 
+                type="number" 
+                value={depositAmount} 
+                onChange={(e) => setDepositAmount(e.target.value)}
+                placeholder="0.00"
+                style={{ width: "100%", padding: "1rem", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--bg-base)", color: "var(--text-primary)", fontSize: "1.2rem", fontWeight: "700" }} 
+              />
+            </div>
+            
+            <button 
+              onClick={handleDeposit}
+              disabled={isDepositing || !depositAmount || Number(depositAmount) <= 0}
+              style={{ 
+                width: "100%", padding: "1rem", backgroundColor: "var(--brand-blue)", color: "white", 
+                border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "1rem", cursor: "pointer",
+                opacity: (isDepositing || !depositAmount || Number(depositAmount) <= 0) ? 0.5 : 1
+              }}
+            >
+              {isDepositing ? "Processing..." : "Confirm Deposit"}
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

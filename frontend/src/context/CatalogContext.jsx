@@ -9,7 +9,7 @@ export const CatalogProvider = ({ children }) => {
 
   // Filters State
   const [filters, setFilters] = useState({
-    priceRange: 10000, // Max price
+    priceRange: "All Prices", // Max price
     region: "All Regions",
     trustScore: 80,
     category: "All Goods",
@@ -29,13 +29,13 @@ export const CatalogProvider = ({ children }) => {
           name: p.title,
           category: p.category || "Uncategorized",
           price: parseFloat(p.price),
-          region: "Greater Accra", // Placeholder for future region filtering
+          region: "Greater Accra",
           trustScore: p.vendor?.trustScore || 85,
-          rating: 4.8, // Placeholder
+          rating: 4.8,
           reviews: Math.floor(Math.random() * 200) + 10,
           merchant: p.vendor?.name || "Verified Merchant",
           vendorId: p.vendor?.id || p.vendorId || p.vendor_id,
-          image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80",
+          image: p.imageUrl ? `http://localhost:5000${p.imageUrl}` : "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80",
           tags: (p.stockCount > 0 || p.stock_count > 0) ? ["In Stock"] : ["Out of Stock"],
           description: p.description || "No description provided."
         }));
@@ -57,7 +57,7 @@ export const CatalogProvider = ({ children }) => {
 
   const resetFilters = () => {
     setFilters({
-      priceRange: 10000,
+      priceRange: "All Prices",
       region: "All Regions",
       trustScore: 80,
       category: "All Goods",
@@ -69,7 +69,7 @@ export const CatalogProvider = ({ children }) => {
   const filteredProducts = products.filter(p => {
     if (filters.category !== "All Goods" && p.category !== filters.category) return false;
     if (filters.region !== "All Regions" && p.region !== filters.region) return false;
-    if (p.price > filters.priceRange) return false;
+    if (filters.priceRange !== "All Prices" && p.price > filters.priceRange) return false;
     if (p.trustScore < filters.trustScore) return false;
     if (filters.searchQuery && !p.name.toLowerCase().includes(filters.searchQuery.toLowerCase())) return false;
     return true;

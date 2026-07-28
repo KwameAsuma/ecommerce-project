@@ -27,7 +27,7 @@ const RegisterPage = () => {
     }
   }, [location]);
 
-  const isStep1Valid = name.trim() !== '' && email.trim() !== '' && phone.length === 10 && password.trim() !== '' && confirmPassword.trim() !== '' && password === confirmPassword;
+  const isStep1Valid = name.trim() !== '' && email.trim() !== '' && phone.length === 10 && password.trim() !== '' && confirmPassword.trim() !== '';
   const isStep2Valid = momoNumber.length === 10;
 
   const handleNextStep = (e) => {
@@ -156,7 +156,7 @@ const RegisterPage = () => {
                   <input 
                     type={showPassword ? "text" : "password"} 
                     value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
+                    onChange={(e) => { setPassword(e.target.value); setError(""); }} 
                     required 
                     placeholder="Create Password"
                     className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent pr-12 text-sm"
@@ -174,10 +174,10 @@ const RegisterPage = () => {
                     <input 
                       type={showConfirmPassword ? "text" : "password"} 
                       value={confirmPassword} 
-                      onChange={(e) => setConfirmPassword(e.target.value)} 
+                      onChange={(e) => { setConfirmPassword(e.target.value); setError(""); }} 
                       required 
                       placeholder="Confirm Password"
-                      className={`w-full border rounded-xl px-4 py-3 outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent pr-12 text-sm ${confirmPassword && password !== confirmPassword ? 'border-error focus:border-error focus:ring-1 focus:ring-error' : 'border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary'}`}
+                      className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent pr-12 text-sm"
                     />
                     <span 
                       className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer hover:text-on-surface text-[18px]"
@@ -186,9 +186,6 @@ const RegisterPage = () => {
                       {showConfirmPassword ? 'visibility' : 'visibility_off'}
                     </span>
                   </div>
-                  {confirmPassword && password !== confirmPassword && (
-                    <p className="text-error text-xs font-medium mt-1 ml-1">Passwords do not match</p>
-                  )}
                 </div>
                 
                 <div className="pt-0.5">

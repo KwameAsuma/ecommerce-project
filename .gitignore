@@ -23,4 +23,6 @@ backend/uploads/*
 
 # Test Data and Scripts
 test_data/
+backend/test_data/
+backend/scripts/seedTestUsers.js
 backend/prisma/migrations/

@@ -170,7 +170,7 @@ const CustomerLayout = () => {
                 <div style={{ flex: 1 }}>
                   <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "var(--text-secondary)", marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "1px" }}>Max Price</label>
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-                    {[500, 1000, 5000, 10000, 20000].map(val => (
+                    {["All Prices", 500, 1000, 5000, 10000, 20000].map(val => (
                       <button 
                         key={`price-${val}`}
                         onClick={() => { handlePriceSelect(val); setFilterOpen(false); }}
@@ -178,7 +178,7 @@ const CustomerLayout = () => {
                         onMouseOver={e => { if(filters.priceRange !== val) e.currentTarget.style.backgroundColor = "var(--bg-base)"}}
                         onMouseOut={e => { if(filters.priceRange !== val) e.currentTarget.style.backgroundColor = "transparent"}}
                       >
-                        Up to GH₵ {val.toLocaleString()}
+                        {val === "All Prices" ? "All Prices" : `Up to GH₵ ${val.toLocaleString()}`}
                       </button>
                     ))}
                   </div>
@@ -325,8 +325,12 @@ const CustomerLayout = () => {
 
             {user && (
               <div style={{ marginTop: "auto", paddingTop: "2rem", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "1rem" }}>
-                <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "var(--brand-blue)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", fontSize: "1.2rem" }}>
-                  {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "var(--brand-blue)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", fontSize: "1.2rem", overflow: "hidden" }}>
+                  {user.avatarUrl ? (
+                    <img src={`http://localhost:5000${user.avatarUrl}`} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    user.name ? user.name.charAt(0).toUpperCase() : "U"
+                  )}
                 </div>
                 <div>
                   <p style={{ margin: 0, fontWeight: "700", color: "var(--text-primary)", fontSize: "0.95rem", textTransform: "capitalize" }}>{user.name}</p>

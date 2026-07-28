@@ -93,7 +93,59 @@ const withdrawFunds = async (req, res) => {
   }
 };
 
+// Process MoMo Deposit
+const depositFunds = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { amount } = req.body;
+
+    if (!amount || isNaN(amount) || Number(amount) <= 0) {
+      return res.status(400).json({ error: 'Invalid amount' });
+    }
+
+    const depositAmount = Number(amount);
+
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const [updatedUser, transaction] = await prisma.$transaction([
+      prisma.user.update({
+        where: { id: parseInt(userId) },
+        data: {
+          availableBalance: {
+            increment: depositAmount
+          }
+        }
+      }),
+      prisma.transaction.create({
+        data: {
+          userId: parseInt(userId),
+          type: 'Wallet Deposit',
+          amount: depositAmount,
+          status: 'Completed'
+        }
+      })
+    ]);
+
+    res.json({
+      message: 'Deposit successful',
+      availableBalance: updatedUser.availableBalance,
+      transaction
+    });
+
+  } catch (error) {
+    console.error('Error processing deposit:', error);
+    res.status(500).json({ error: 'Server error processing deposit' });
+  }
+};
+
 module.exports = {
   getFinances,
-  withdrawFunds
+  withdrawFunds,
+  depositFunds
 };

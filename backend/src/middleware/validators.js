@@ -35,7 +35,6 @@ exports.validateProductUpdate = [
 ];
 
 exports.validateAuctionCreate = [
-  body("importerId").isInt().withMessage("importerId must be an integer"),
   body("title").notEmpty().withMessage("title is required"),
   body("basePrice").isFloat({ gt: 0 }).withMessage("basePrice must be positive"),
   body("endTime").isISO8601().withMessage("endTime must be ISO8601 timestamp"),

@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 exports.createOrder = async (req, res) => {
   try {
-    const { cartItems, deliveryAddress } = req.body;
+    const { cartItems, deliveryAddress, paymentMethod } = req.body;
     const customerId = req.userId;
 
     if (!cartItems || cartItems.length === 0) {
@@ -13,6 +13,7 @@ exports.createOrder = async (req, res) => {
     // Process orders within a transaction to ensure all succeed or all fail
     const now = new Date();
     const orderResults = await prisma.$transaction(async (tx) => {
+      let totalOrderAmount = 0;
       const createdOrders = [];
       
       for (const item of cartItems) {
@@ -34,6 +35,9 @@ exports.createOrder = async (req, res) => {
           where: { id: product.id },
           data: { stockCount: product.stockCount - item.qty }
         });
+
+        const itemTotal = parseFloat(product.price) * item.qty;
+        totalOrderAmount += itemTotal;
 
         // Create Order (Held in Escrow automatically)
         const order = await tx.order.create({
@@ -70,6 +74,36 @@ exports.createOrder = async (req, res) => {
         }, 5000);
 
         createdOrders.push(order);
+      }
+      
+      if (paymentMethod === "wallet") {
+        const deliveryFee = createdOrders.length > 0 ? 45.00 : 0;
+        const escrowFee = totalOrderAmount * 0.015;
+        const totalToPay = totalOrderAmount + deliveryFee + escrowFee;
+
+        const customer = await tx.user.findUnique({
+          where: { id: customerId },
+          select: { availableBalance: true }
+        });
+        if (!customer || Number(customer.availableBalance) < totalToPay) {
+          throw new Error("Insufficient wallet balance for this purchase.");
+        }
+
+        // Deduct from wallet
+        await tx.user.update({
+          where: { id: customerId },
+          data: { availableBalance: { decrement: totalToPay } }
+        });
+        
+        // Log transaction
+        await tx.transaction.create({
+          data: {
+            userId: customerId,
+            type: 'Wallet Purchase',
+            amount: -totalToPay,
+            status: 'Completed'
+          }
+        });
       }
       
       return createdOrders;
