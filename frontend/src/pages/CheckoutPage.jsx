@@ -118,7 +118,7 @@ const CheckoutPage = () => {
       
       {/* Sticky Header Container (Removed to use CustomerLayout) */}
 
-      <main style={{ flexGrow: 1, padding: "3rem", display: "flex", justifyContent: "center" }} onClick={() => {}}>
+      <main className="padding-responsive" style={{ flexGrow: 1, display: "flex", justifyContent: "center" }} onClick={() => {}}>
         <div key="checkout-route" className="responsive-flex" style={{ animation: "fadeRoute 0.4s ease-out", maxWidth: "1300px", width: "100%" }}>
           
           {/* Left Column */}

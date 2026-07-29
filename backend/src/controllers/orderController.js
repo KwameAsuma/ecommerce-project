@@ -178,3 +178,62 @@ exports.updateOrderStatus = async (req, res) => {
     res.status(500).json({ error: "Failed to update order" });
   }
 };
+
+exports.releaseEscrow = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    // Only the customer who placed the order can release escrow
+    const order = await prisma.order.findUnique({ where: { id: Number(orderId) } });
+    if (!order) return res.status(404).json({ error: "Order not found" });
+
+    if (order.customerId !== req.userId) {
+      return res.status(403).json({ error: "Not authorized to release escrow for this order" });
+    }
+
+    if (order.status === "DELIVERED") {
+      return res.status(400).json({ error: "Escrow has already been released for this order" });
+    }
+
+    // Process escrow release in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update order status
+      const updatedOrder = await tx.order.update({
+        where: { id: order.id },
+        data: { status: "DELIVERED" }
+      });
+
+      // 2. Transfer funds to merchant's availableBalance
+      // Calculate platform fee (e.g., 5%)
+      const totalAmount = parseFloat(order.totalAmount);
+      const platformFee = totalAmount * 0.05;
+      const merchantPayout = totalAmount - platformFee;
+
+      await tx.user.update({
+        where: { id: order.vendorId },
+        data: { 
+          availableBalance: { increment: merchantPayout },
+          lifetimeRevenue: { increment: merchantPayout }
+        }
+      });
+
+      // 3. Log transaction for the merchant
+      await tx.transaction.create({
+        data: {
+          userId: order.vendorId,
+          type: 'Sale (Escrow Release)',
+          amount: merchantPayout,
+          status: 'Completed'
+        }
+      });
+
+      return updatedOrder;
+    });
+
+    res.status(200).json({ message: "Delivery confirmed. Funds released to merchant.", order: result });
+  } catch (error) {
+    console.error("Error releasing escrow:", error);
+    res.status(500).json({ error: "Failed to release escrow" });
+  }
+};
+

@@ -262,14 +262,14 @@ const CatalogPage = () => {
           
           {/* Row 4+ Moved to First: 5 Compact Cards Per Line */}
           {products.length > 7 && (
-             <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "0.8rem", marginBottom: "1rem" }}>
+             <div className="grid-5-col" style={{ marginBottom: "1rem" }}>
                 {products.slice(7).map((product, index) => renderProductCard(product, index + 7, true, null, false, true))}
              </div>
           )}
 
           {/* Row 1 Moved to Second: 3 Cards - Made taller, slimmer, and uniform (Style A) */}
           {products.length >= 3 ? (
-             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "3rem", padding: "0 3rem", marginTop: "2.5rem", marginBottom: "2rem" }}>
+             <div className="grid-3-col padding-x-responsive" style={{ marginTop: "2.5rem", marginBottom: "2rem" }}>
                 {products.slice(0, 3).map((product, index) => (
                    <div key={product.id} style={{ transform: index === 1 ? "translateY(-8px)" : "none", transition: "transform 0.3s" }}>
                       {renderProductCard(product, index, false, 0, true, false)}
@@ -277,32 +277,32 @@ const CatalogPage = () => {
                 ))}
              </div>
           ) : (
-             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "0.5rem" }}>
+             <div className="grid-4-col">
                 {products.map((product, index) => renderProductCard(product, index, false))}
              </div>
           )}
 
           {/* Row 2 Moved to Second: 4 Cards - Made taller and more compact */}
           {products.length >= 7 && (
-             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.5rem", marginBottom: "1rem" }}>
+             <div className="grid-4-col" style={{ marginBottom: "1rem" }}>
                 {products.slice(3, 7).map((product, index) => renderProductCard(product, index + 3, false))}
              </div>
           )}
 
           {/* Row 3 Moved to Third: Amazon-style Bento Boxes */}
           {allProducts.length >= 16 && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.2rem", margin: "1.5rem 0", padding: "1rem 0", backgroundColor: "transparent" }}>
-               {renderAmazonBentoBox("Electronics & Tech", allProducts.filter(p => p.category.toLowerCase().includes("electronic") || p.category.toLowerCase().includes("tech") || p.name.toLowerCase().includes("watch")).slice(0, 4), 0)}
-               {renderAmazonBentoBox("Home & Kitchen", allProducts.filter(p => p.category.toLowerCase().includes("home") || p.category.toLowerCase().includes("kitchen") || p.name.toLowerCase().includes("wardrobe")).slice(0, 4), 1)}
-               {renderAmazonBentoBox("New Arrivals under GHS 500", allProducts.filter(p => p.price < 500).slice(0, 4), 2)}
-               {renderAmazonBentoBox("Artisanal & Fashion", allProducts.filter(p => p.category.toLowerCase().includes("art") || p.category.toLowerCase().includes("cloth") || p.category.toLowerCase().includes("basket")).slice(0, 4), 3)}
-            </div>
+             <div className="grid-bento" style={{ margin: "1.5rem 0", padding: "1rem 0", backgroundColor: "transparent" }}>
+                {renderAmazonBentoBox("Electronics & Tech", allProducts.filter(p => p.category.toLowerCase().includes("electronic") || p.category.toLowerCase().includes("tech") || p.name.toLowerCase().includes("watch")).slice(0, 4), 0)}
+                {renderAmazonBentoBox("Home & Kitchen", allProducts.filter(p => p.category.toLowerCase().includes("home") || p.category.toLowerCase().includes("kitchen") || p.name.toLowerCase().includes("wardrobe")).slice(0, 4), 1)}
+                {renderAmazonBentoBox("New Arrivals under GHS 500", allProducts.filter(p => p.price < 500).slice(0, 4), 2)}
+                {renderAmazonBentoBox("Artisanal & Fashion", allProducts.filter(p => p.category.toLowerCase().includes("art") || p.category.toLowerCase().includes("cloth") || p.category.toLowerCase().includes("basket")).slice(0, 4), 3)}
+             </div>
           )}
         </div>
       )}
 
       {/* Top Promotional Grid (Hero moved to middle, just before World Class Picks) */}
-      <div style={{ display: "grid", gridTemplateColumns: "65% 1fr", gap: "1rem", marginBottom: "4rem" }}>
+      <div className="promo-grid" style={{ marginBottom: "4rem" }}>
         {/* Main Flash Sale Banner (65%) */}
         <div style={{ borderRadius: "24px", overflow: "hidden", position: "relative", height: "450px", cursor: "pointer", boxShadow: "0 10px 25px rgba(0,0,0,0.1)" }}>
           <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=1000" alt="Flash Sale" style={{ width: "100%", height: "100%", objectFit: "cover" }} />

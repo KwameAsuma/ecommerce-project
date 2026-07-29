@@ -119,35 +119,32 @@ const LoginPage = ({ isAdminLogin = false }) => {
         </div>
 
         {/* Right Panel - Illustration Area */}
-        <div className="hidden md:flex md:w-1/2 bg-surface-container-lowest flex-col relative overflow-hidden border-l border-outline-variant">
+        <div className="hidden md:block md:w-1/2 relative bg-black">
           
           {/* Header Links */}
-        <div className="absolute top-8 right-8 flex gap-6 z-20">
-          <Link to="/" className="text-on-surface-variant hover:text-primary text-base font-bold transition-colors">Home</Link>
-          <Link to="/" className="text-on-surface-variant hover:text-primary text-base font-bold transition-colors">Catalog</Link>
-          <Link to="/#about" className="text-on-surface-variant hover:text-primary text-base font-bold transition-colors">About Us</Link>
-        </div>
-
-          {/* Decorative Background Blob */}
-          <div className="absolute inset-0 z-0 flex items-center justify-center opacity-30">
-            <div className="w-[300px] h-[300px] rounded-full bg-primary/20 blur-[60px]"></div>
+          <div className="absolute top-8 right-8 flex gap-6 z-20">
+            <Link to="/" className="text-white/80 hover:text-white text-sm font-bold transition-colors">Home</Link>
+            <Link to="/" className="text-white/80 hover:text-white text-sm font-bold transition-colors">Catalog</Link>
+            <Link to="/#about" className="text-white/80 hover:text-white text-sm font-bold transition-colors">About Us</Link>
           </div>
 
-          {/* Illustration */}
-          <div className="flex-1 flex items-center justify-center z-10 p-6">
-            <img 
-              src="/checkout_illustration.png" 
-              alt="TradeHub Illustration" 
-              className="w-full max-w-[250px] object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-700" 
-            />
-          </div>
+          {/* Overlay to give brand tint */}
+          <div className="absolute inset-0 bg-primary/20 mix-blend-multiply z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10 z-10"></div>
+          
+          {/* Background Image */}
+          <img 
+            src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1000&q=80" 
+            alt="Commerce" 
+            className="absolute inset-0 w-full h-full object-cover"
+          />
 
-          {/* Bottom Text - Reinstated and shrunk */}
-          <div className="absolute bottom-8 left-8 right-8 z-10 text-center">
-            <h2 className="text-lg font-black text-on-surface leading-tight tracking-tight mb-1">
+          {/* Bottom Text */}
+          <div className="absolute bottom-8 left-8 right-8 z-20 text-white text-center">
+            <h2 className="text-2xl font-black leading-tight mb-2 drop-shadow-md">
               Empowering Ghanaian Commerce.
             </h2>
-            <p className="text-on-surface-variant text-xs font-medium leading-relaxed max-w-[280px] mx-auto">
+            <p className="text-white/90 text-sm font-medium leading-relaxed max-w-[280px] mx-auto drop-shadow-sm">
               Access premium export-quality goods from verified local merchants.
             </p>
           </div>

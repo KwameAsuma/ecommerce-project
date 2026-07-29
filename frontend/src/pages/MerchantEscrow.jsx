@@ -37,7 +37,7 @@ const MerchantEscrow = () => {
           acc[t].ids.push(order.id);
           acc[t].totalAmount += parseFloat(order.totalAmount);
           if (order.status === "SHIPPED") acc[t].status = "SHIPPED";
-          if (order.status === "DELIVERED_RELEASE_FUNDS") acc[t].status = "DELIVERED_RELEASE_FUNDS";
+          if (order.status === "DELIVERED") acc[t].status = "DELIVERED";
           return acc;
         }, {});
         const groupsArray = Object.values(groupsMap).sort((a, b) => b.timestamp - a.timestamp);
@@ -57,20 +57,20 @@ const MerchantEscrow = () => {
     .reduce((sum, o) => sum + o.totalAmount, 0);
 
   const totalReleased = orders
-    .filter(o => o.status === "DELIVERED_RELEASE_FUNDS")
+    .filter(o => o.status === "DELIVERED")
     .reduce((sum, o) => sum + o.totalAmount, 0);
 
   if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-primary)" }}>Loading Escrow Dashboard...</div>;
 
   return (
-    <div style={{ padding: "0 3rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+    <div className="padding-x-responsive">
+      <div className="mobile-col" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem", gap: "1rem" }}>
         <div style={{ marginTop: "0.5rem" }}>
           <h1 style={{ fontSize: "2rem", fontWeight: "900", color: "var(--text-primary)", marginBottom: "0.2rem", marginTop: 0 }}>Escrow Dashboard</h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "1rem", margin: 0 }}>Track your locked funds, monitor delivery verifications, and manage shipments.</p>
         </div>
 
-        <div style={{ backgroundColor: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", minWidth: "350px", marginTop: "0.5rem" }}>
+        <div style={{ backgroundColor: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", width: "100%", maxWidth: "350px", marginTop: "0.5rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
             <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Total in Escrow</div>
             <div style={{ width: "28px", height: "28px", borderRadius: "8px", backgroundColor: "rgba(245, 158, 11, 0.1)", color: "var(--brand-accent)", display: "flex", justifyContent: "center", alignItems: "center" }}>
@@ -134,7 +134,7 @@ const MerchantEscrow = () => {
                         <span className="material-symbols-outlined text-[14px]">local_shipping</span> IN TRANSIT
                       </span>
                     )}
-                    {group.status === "DELIVERED_RELEASE_FUNDS" && (
+                    {group.status === "DELIVERED" && (
                       <span style={{ padding: "0.4rem 0.8rem", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "var(--success)", borderRadius: "999px", fontSize: "0.75rem", fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
                         <span className="material-symbols-outlined text-[14px]">check_circle</span> FUNDS RECEIVED
                       </span>
@@ -147,7 +147,7 @@ const MerchantEscrow = () => {
                     {group.status === "SHIPPED" && (
                       <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Awaiting Buyer Confirmation</div>
                     )}
-                    {group.status === "DELIVERED_RELEASE_FUNDS" && (
+                    {group.status === "DELIVERED" && (
                       <div style={{ fontSize: "0.85rem", color: "var(--success)", fontWeight: "700" }}>Funds Received</div>
                     )}
                   </td>

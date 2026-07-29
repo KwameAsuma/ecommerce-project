@@ -21,11 +21,11 @@ const NavBar = ({ theme, toggleTheme }) => {
 
   return (
     <nav
+      className="nav-container"
       style={{
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "1rem 4rem",
         backgroundColor: bg,
         color: text,
         borderBottom: `1px solid ${borderColor}`,

@@ -80,7 +80,7 @@ const RegisterPage = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
           
           <img 
-            src="/hero_business.png" 
+            src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1000&q=80" 
             alt="Business professionals" 
             className="absolute inset-0 w-full h-full object-cover"
           />
