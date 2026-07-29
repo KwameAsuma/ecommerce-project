@@ -99,7 +99,7 @@ const AdminUsers = () => {
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{u.email}</div>
                 </td>
                 <td style={{ padding: '1rem 1.5rem' }}>
-                  <span style={{ padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: '700', backgroundColor: u.role === 'admin' ? 'var(--danger)' : u.role === 'merchant' ? 'var(--brand-gold)' : 'var(--brand-blue)', color: 'white', textTransform: 'uppercase' }}>
+                  <span style={{ padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: '700', backgroundColor: u.role === 'admin' ? 'var(--danger)' : u.role === 'merchant' ? 'var(--brand-accent)' : 'var(--brand-primary)', color: 'white', textTransform: 'uppercase' }}>
                     {u.role}
                   </span>
                 </td>
@@ -108,7 +108,7 @@ const AdminUsers = () => {
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Trust: {u.trustScore || 0}</div>
                 </td>
                 <td style={{ padding: '1rem 1.5rem' }}>
-                  <button onClick={() => openModal(u)} style={{ backgroundColor: 'var(--brand-blue)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseOver={e=>e.currentTarget.style.opacity='0.8'} onMouseOut={e=>e.currentTarget.style.opacity='1'}>
+                  <button onClick={() => openModal(u)} style={{ backgroundColor: 'var(--brand-primary)', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', transition: 'opacity 0.2s' }} onMouseOver={e=>e.currentTarget.style.opacity='0.8'} onMouseOut={e=>e.currentTarget.style.opacity='1'}>
                     God Mode
                   </button>
                 </td>
@@ -121,10 +121,10 @@ const AdminUsers = () => {
       {/* GOD MODE MODAL */}
       {selectedUser && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: 'var(--bg-panel)', padding: '2.5rem', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid var(--brand-blue)' }}>
+          <div style={{ backgroundColor: 'var(--bg-panel)', padding: '2.5rem', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '1px solid var(--brand-primary)' }}>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0, color: 'var(--brand-blue)', fontWeight: '900', fontSize: '1.5rem' }}>God Mode: {selectedUser.name}</h2>
+              <h2 style={{ margin: 0, color: 'var(--brand-primary)', fontWeight: '900', fontSize: '1.5rem' }}>God Mode: {selectedUser.name}</h2>
               <button onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><span className="material-symbols-outlined">close</span></button>
             </div>
 

@@ -21,11 +21,11 @@ const NavBar = ({ theme, toggleTheme }) => {
 
   return (
     <nav
+      className="nav-container"
       style={{
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "1rem 4rem",
         backgroundColor: bg,
         color: text,
         borderBottom: `1px solid ${borderColor}`,
@@ -54,9 +54,9 @@ const NavBar = ({ theme, toggleTheme }) => {
           Native Store ▾
           {activeDropdown === 'native' && (
             <div style={{ position: "absolute", top: "100%", left: 0, backgroundColor: dropdownBg, border: `1px solid ${borderColor}`, borderRadius: "8px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)", minWidth: "200px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              <Link to="/catalog" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Latest Arrivals</Link>
-              <Link to="/catalog" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Local Fabrics & Kente</Link>
-              <Link to="/catalog" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Premium Foods</Link>
+              <Link to="/" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Latest Arrivals</Link>
+              <Link to="/" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text, borderBottom: `1px solid ${borderColor}` }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Local Fabrics & Kente</Link>
+              <Link to="/" style={{ padding: "0.8rem 1rem", textDecoration: "none", color: text }} onMouseOver={(e) => e.target.style.backgroundColor = hoverBg} onMouseOut={(e) => e.target.style.backgroundColor = "transparent"}>Premium Foods</Link>
             </div>
           )}
         </div>

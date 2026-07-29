@@ -19,7 +19,6 @@ const SettingsPage = () => {
 
   // ── Preferences state (loaded from user context) ──
   const [currency, setCurrency] = useState(user?.currency || "GHS");
-  const [language, setLanguage] = useState(user?.language || "English (UK)");
   const [deliveryAddress, setDeliveryAddress] = useState(user?.deliveryAddress || "");
   const [orderUpdates, setOrderUpdates] = useState(user?.orderUpdates ?? true);
   const [promotions, setPromotions] = useState(user?.promotions ?? false);
@@ -41,7 +40,6 @@ const SettingsPage = () => {
   useEffect(() => {
     if (user) {
       setCurrency(user.currency || "GHS");
-      setLanguage(user.language || "English (UK)");
       setDeliveryAddress(user.deliveryAddress || "");
       if (typeof user.orderUpdates === "boolean") setOrderUpdates(user.orderUpdates);
       if (typeof user.promotions === "boolean") setPromotions(user.promotions);
@@ -54,7 +52,6 @@ const SettingsPage = () => {
     setIsSaving(true);
     const prefs = {
       currency,
-      language,
       deliveryAddress,
       orderUpdates,
       promotions,
@@ -83,10 +80,6 @@ const SettingsPage = () => {
 
   const handleCurrencyChange = (e) => {
     setCurrency(e.target.value);
-  };
-
-  const handleLanguageChange = (e) => {
-    setLanguage(e.target.value);
   };
 
   const handleOrderUpdatesToggle = () => {
@@ -160,7 +153,7 @@ const SettingsPage = () => {
             zIndex: 9999,
             padding: "1rem 1.5rem",
             borderRadius: "12px",
-            backgroundColor: toast.type === "success" ? "var(--brand-blue)" : "#ef4444",
+            backgroundColor: toast.type === "success" ? "var(--brand-primary)" : "#ef4444",
             color: "white",
             fontWeight: "700",
             fontSize: "0.9rem",
@@ -185,7 +178,7 @@ const SettingsPage = () => {
         }
       `}</style>
 
-      <button onClick={() => navigate("/profile")} style={{ background: "transparent", border: "none", color: "var(--brand-blue)", cursor: "pointer", fontWeight: "700", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <button onClick={() => navigate("/profile")} style={{ background: "transparent", border: "none", color: "var(--brand-primary)", cursor: "pointer", fontWeight: "700", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
         &larr; Back to Profile
       </button>
       <h1 style={{ fontSize: "2.5rem", fontWeight: "900", color: "var(--text-primary)", letterSpacing: "-1px", margin: "0 0 2rem 0" }}>
@@ -209,19 +202,6 @@ const SettingsPage = () => {
                 <option value="GHS">Ghana Cedi (GH₵)</option>
                 <option value="USD">US Dollar ($)</option>
                 <option value="EUR">Euro (€)</option>
-              </select>
-            </div>
-            
-            <div>
-              <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "700", marginBottom: "0.5rem" }}>Language</label>
-              <select 
-                value={language}
-                onChange={handleLanguageChange}
-                style={{ ...inputStyle, maxWidth: "300px" }}
-              >
-                <option value="English (UK)">English (UK)</option>
-                <option value="French (FR)">French (FR)</option>
-                <option value="Twi">Twi</option>
               </select>
             </div>
 
@@ -249,7 +229,7 @@ const SettingsPage = () => {
             </div>
             <div 
               onClick={handleOrderUpdatesToggle}
-              style={{ width: "44px", height: "24px", backgroundColor: orderUpdates ? "var(--brand-blue)" : "var(--border)", borderRadius: "12px", position: "relative", cursor: "pointer", transition: "all 0.3s" }}
+              style={{ width: "44px", height: "24px", backgroundColor: orderUpdates ? "var(--brand-primary)" : "var(--border)", borderRadius: "12px", position: "relative", cursor: "pointer", transition: "all 0.3s" }}
             >
               <div style={{ width: "20px", height: "20px", backgroundColor: "white", borderRadius: "50%", position: "absolute", top: "2px", left: orderUpdates ? "22px" : "2px", transition: "all 0.3s", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}></div>
             </div>
@@ -262,7 +242,7 @@ const SettingsPage = () => {
             </div>
             <div 
               onClick={handlePromotionsToggle}
-              style={{ width: "44px", height: "24px", backgroundColor: promotions ? "var(--brand-blue)" : "var(--border)", borderRadius: "12px", position: "relative", cursor: "pointer", transition: "all 0.3s" }}
+              style={{ width: "44px", height: "24px", backgroundColor: promotions ? "var(--brand-primary)" : "var(--border)", borderRadius: "12px", position: "relative", cursor: "pointer", transition: "all 0.3s" }}
             >
               <div style={{ width: "20px", height: "20px", backgroundColor: "white", borderRadius: "50%", position: "absolute", top: "2px", left: promotions ? "22px" : "2px", transition: "all 0.3s", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}></div>
             </div>
@@ -275,7 +255,7 @@ const SettingsPage = () => {
             </div>
             <div 
               onClick={handlePriceDropToggle}
-              style={{ width: "44px", height: "24px", backgroundColor: priceDropAlerts ? "var(--brand-blue)" : "var(--border)", borderRadius: "12px", position: "relative", cursor: "pointer", transition: "all 0.3s" }}
+              style={{ width: "44px", height: "24px", backgroundColor: priceDropAlerts ? "var(--brand-primary)" : "var(--border)", borderRadius: "12px", position: "relative", cursor: "pointer", transition: "all 0.3s" }}
             >
               <div style={{ width: "20px", height: "20px", backgroundColor: "white", borderRadius: "50%", position: "absolute", top: "2px", left: priceDropAlerts ? "22px" : "2px", transition: "all 0.3s", boxShadow: "0 2px 4px rgba(0,0,0,0.2)" }}></div>
             </div>
@@ -334,7 +314,7 @@ const SettingsPage = () => {
                     disabled={passwordLoading}
                     style={{ 
                       padding: "0.8rem 1.5rem", 
-                      backgroundColor: "var(--brand-blue)", 
+                      backgroundColor: "var(--brand-primary)", 
                       color: "white", 
                       border: "none", 
                       borderRadius: "8px", 
@@ -368,7 +348,7 @@ const SettingsPage = () => {
             disabled={isSaving}
             style={{ 
               padding: "1rem 2.5rem", 
-              backgroundColor: "var(--brand-blue)", 
+              backgroundColor: "var(--brand-primary)", 
               color: "white", 
               border: "none", 
               borderRadius: "8px", 

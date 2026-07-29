@@ -76,7 +76,7 @@ const AdminProducts = () => {
           <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--text-primary)', margin: '0 0 0.5rem 0', letterSpacing: '-1px' }}>Product Catalog</h1>
           <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '1.1rem' }}>God mode enabled. Manage all native store listings.</p>
         </div>
-        <button onClick={openCreateModal} style={{ backgroundColor: 'var(--brand-blue)', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background-color 0.2s' }} onMouseOver={e=>e.currentTarget.style.backgroundColor='#172554'} onMouseOut={e=>e.currentTarget.style.backgroundColor='var(--brand-blue)'}>
+        <button onClick={openCreateModal} style={{ backgroundColor: 'var(--brand-primary)', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background-color 0.2s' }} onMouseOver={e=>e.currentTarget.style.backgroundColor='#172554'} onMouseOut={e=>e.currentTarget.style.backgroundColor='var(--brand-primary)'}>
           <span className="material-symbols-outlined">add_circle</span> Inject Product
         </button>
       </div>
@@ -117,9 +117,9 @@ const AdminProducts = () => {
 
       {isModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: 'var(--bg-panel)', padding: '2.5rem', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: `1px solid var(--brand-blue)` }}>
+          <div style={{ backgroundColor: 'var(--bg-panel)', padding: '2.5rem', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: `1px solid var(--brand-primary)` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0, color: 'var(--brand-blue)', fontWeight: '900', fontSize: '1.5rem' }}>{modalMode === 'create' ? 'Inject Product' : 'Force Edit Product'}</h2>
+              <h2 style={{ margin: 0, color: 'var(--brand-primary)', fontWeight: '900', fontSize: '1.5rem' }}>{modalMode === 'create' ? 'Inject Product' : 'Force Edit Product'}</h2>
               <button onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><span className="material-symbols-outlined">close</span></button>
             </div>
 

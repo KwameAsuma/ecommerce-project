@@ -52,15 +52,15 @@ const AdminOrders = () => {
               <tr key={o.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background-color 0.2s' }} onMouseOver={e=>e.currentTarget.style.backgroundColor='var(--bg-base)'} onMouseOut={e=>e.currentTarget.style.backgroundColor='transparent'}>
                 <td style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontWeight: '600' }}>#{o.id}</td>
                 <td style={{ padding: '1rem 1.5rem' }}>
-                  <div style={{ fontWeight: '700', color: 'var(--brand-blue)' }}>C: {o.customer?.name}</div>
-                  <div style={{ fontWeight: '700', color: 'var(--brand-gold)' }}>V: {o.vendor?.name}</div>
+                  <div style={{ fontWeight: '700', color: 'var(--brand-primary)' }}>C: {o.customer?.name}</div>
+                  <div style={{ fontWeight: '700', color: 'var(--brand-accent)' }}>V: {o.vendor?.name}</div>
                 </td>
                 <td style={{ padding: '1rem 1.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>{o.product?.title}</td>
                 <td style={{ padding: '1rem 1.5rem', fontWeight: '700', color: 'var(--success)' }}>GH₵ {parseFloat(o.totalAmount).toFixed(2)}</td>
                 <td style={{ padding: '1rem 1.5rem' }}>
                   <span style={{ 
                     background: o.status === 'COMPLETED' ? 'var(--success-bg)' : o.status === 'CANCELLED' ? '#ffebee' : '#fff3e0',
-                    color: o.status === 'COMPLETED' ? 'var(--success)' : o.status === 'CANCELLED' ? 'var(--danger)' : 'var(--brand-gold)',
+                    color: o.status === 'COMPLETED' ? 'var(--success)' : o.status === 'CANCELLED' ? 'var(--danger)' : 'var(--brand-accent)',
                     padding: '0.3rem 0.6rem',
                     borderRadius: '4px',
                     fontSize: '0.8rem',

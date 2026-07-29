@@ -141,7 +141,7 @@ const AuctionsPage = () => {
                   {/* Content Overlay (Bottom Left) */}
                   <div style={{ position: "absolute", bottom: "40px", left: "40px", right: "200px", color: "white" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", marginBottom: "0.5rem" }}>
-                      <span style={{ backgroundColor: "var(--brand-blue)", color: "white", padding: "0.3rem 0.8rem", borderRadius: "20px", fontSize: "0.7rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <span style={{ backgroundColor: "var(--brand-primary)", color: "white", padding: "0.3rem 0.8rem", borderRadius: "20px", fontSize: "0.7rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                         <span style={{ width: "6px", height: "6px", backgroundColor: "white", borderRadius: "50%", animation: "pulse 1.5s infinite" }}></span> LIVE AUCTION
                       </span>
                       <span style={{ fontSize: "0.85rem", fontWeight: "600", opacity: 0.8 }}>Ends: {new Date(auction.endTime).toLocaleString()}</span>
@@ -152,7 +152,7 @@ const AuctionsPage = () => {
                       <span>|</span>
                       <span>Global</span>
                       <span>|</span>
-                      <span style={{ color: "var(--brand-gold)", fontWeight: "800" }}>Current Bid: GH₵ {parseFloat(auction.currentHighestBid || auction.basePrice || 0).toLocaleString()}</span>
+                      <span style={{ color: "var(--brand-accent)", fontWeight: "800" }}>Current Bid: GH₵ {parseFloat(auction.currentHighestBid || auction.basePrice || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -193,7 +193,7 @@ const AuctionsPage = () => {
                   <div style={{ marginTop: "auto" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "0.5rem" }}>
                       <span style={{ color: "var(--text-secondary)" }}>Current Bid</span>
-                      <span style={{ fontWeight: "800", color: "var(--brand-gold)" }}>GH₵ {parseFloat(auction.currentHighestBid || auction.basePrice || 0).toLocaleString()}</span>
+                      <span style={{ fontWeight: "800", color: "var(--brand-accent)" }}>GH₵ {parseFloat(auction.currentHighestBid || auction.basePrice || 0).toLocaleString()}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", marginBottom: "1rem" }}>
                       <span style={{ color: "var(--text-secondary)" }}>Ends</span>

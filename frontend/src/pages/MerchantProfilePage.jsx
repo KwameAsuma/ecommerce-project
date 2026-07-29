@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 const VerifiedIcon = () => (
-  <svg width="20" height="20" fill="none" stroke="var(--brand-gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="20" height="20" fill="none" stroke="var(--brand-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
   </svg>
 );
@@ -41,7 +41,7 @@ const MerchantProfilePage = () => {
         <p style={{ color: "var(--text-secondary)", marginBottom: "2rem" }}>{error}</p>
         <button 
           onClick={() => navigate("/merchants")}
-          style={{ padding: "0.8rem 2rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}
+          style={{ padding: "0.8rem 2rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}
         >
           Back to Verified Merchants
         </button>
@@ -52,11 +52,11 @@ const MerchantProfilePage = () => {
   return (
     <div style={{ animation: "fadeRoute 0.4s ease-out" }}>
       {/* Store Banner */}
-      <div style={{ width: "100%", height: "200px", backgroundColor: "var(--brand-blue)", borderRadius: "16px", marginBottom: "4rem", position: "relative", backgroundImage: merchant.storeBannerUrl ? `url(http://localhost:5001${merchant.storeBannerUrl})` : "linear-gradient(45deg, var(--brand-blue), var(--brand-blue-dark, #1e3a8a))", backgroundSize: "cover", backgroundPosition: "center" }}>
+      <div style={{ width: "100%", height: "200px", backgroundColor: "var(--brand-primary)", borderRadius: "16px", marginBottom: "4rem", position: "relative", backgroundImage: merchant.storeBannerUrl ? `url(http://localhost:5001${merchant.storeBannerUrl})` : "linear-gradient(45deg, var(--brand-primary), var(--brand-blue-dark, #1e3a8a))", backgroundSize: "cover", backgroundPosition: "center" }}>
         
         {/* Profile Image & Name (Overlapping) */}
         <div style={{ position: "absolute", bottom: "-40px", left: "2rem", display: "flex", alignItems: "flex-end", gap: "1.5rem" }}>
-          <div style={{ width: "120px", height: "120px", borderRadius: "16px", backgroundColor: "var(--bg-base)", border: "4px solid var(--bg-base)", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "3rem", fontWeight: "bold", color: "var(--brand-blue)", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 10, overflow: "hidden" }}>
+          <div style={{ width: "120px", height: "120px", borderRadius: "16px", backgroundColor: "var(--bg-base)", border: "4px solid var(--bg-base)", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "3rem", fontWeight: "bold", color: "var(--brand-primary)", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 10, overflow: "hidden" }}>
             {merchant.avatarUrl ? <img src={`http://localhost:5001${merchant.avatarUrl}`} alt={merchant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : merchant.name.charAt(0)}
           </div>
           <div style={{ paddingBottom: "0.5rem" }}>
@@ -73,7 +73,7 @@ const MerchantProfilePage = () => {
       {/* Stats Row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem", marginBottom: "3rem", padding: "0 2rem" }}>
         <div style={{ backgroundColor: "var(--bg-panel)", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span className="material-symbols-outlined" style={{ fontSize: "2rem", color: "var(--brand-gold)" }}>star</span>
+          <span className="material-symbols-outlined" style={{ fontSize: "2rem", color: "var(--brand-accent)" }}>star</span>
           <div>
             <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--text-primary)" }}>{merchant.averageRating.toFixed(1)}</div>
             <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Trust Rating</div>
@@ -87,7 +87,7 @@ const MerchantProfilePage = () => {
           </div>
         </div>
         <div style={{ backgroundColor: "var(--bg-panel)", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span className="material-symbols-outlined" style={{ fontSize: "2rem", color: "var(--brand-blue)" }}>inventory_2</span>
+          <span className="material-symbols-outlined" style={{ fontSize: "2rem", color: "var(--brand-primary)" }}>inventory_2</span>
           <div>
             <div style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--text-primary)" }}>{merchant.productCount}</div>
             <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Active Products</div>
@@ -125,7 +125,7 @@ const MerchantProfilePage = () => {
                   )}
                 </div>
                 <div style={{ padding: "1.5rem" }}>
-                  <div style={{ fontSize: "0.75rem", color: "var(--brand-blue)", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "0.5rem" }}>
+                  <div style={{ fontSize: "0.75rem", color: "var(--brand-primary)", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "0.5rem" }}>
                     {product.category || "General"}
                   </div>
                   <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 0.5rem 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

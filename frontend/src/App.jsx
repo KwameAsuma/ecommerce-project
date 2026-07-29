@@ -17,7 +17,6 @@ import PublicOnlyRoute from "./components/PublicOnlyRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import CheckoutPage from "./pages/CheckoutPage";
-import LandingPage from "./pages/LandingPage";
 import MerchantDashboard from "./pages/MerchantDashboard";
 import MerchantInventory from "./pages/MerchantInventory";
 import MerchantAuctions from "./pages/MerchantAuctions";
@@ -68,7 +67,7 @@ function App() {
             <ScrollToTop />
             <Routes>
               {/* Always Accessible Routes */}
-              <Route path="/" element={<LandingPage />} />
+              {/* Root route is now handled inside CustomerLayout */}
 
               {/* Guest Only Routes (Redirects if logged in) */}
               <Route element={<PublicOnlyRoute />}>
@@ -80,7 +79,7 @@ function App() {
               {/* Customer Ecosystem (Public + Protected) */}
               <Route element={<CustomerLayout />}>
                 {/* Public Catalog */}
-                <Route path="/catalog" element={<CatalogPage />} />
+                <Route path="/" element={<CatalogPage />} />
                 <Route path="/product/:id" element={<ProductDetailsPage />} />
                 <Route path="/merchants" element={<VerifiedMerchantsPage />} />
                 <Route path="/merchant-profile/:id" element={<MerchantProfilePage />} />

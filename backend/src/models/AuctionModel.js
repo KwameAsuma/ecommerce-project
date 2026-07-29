@@ -6,7 +6,7 @@ const prisma = require("../config/prisma");
 
 // CREATE AUCTION
 exports.createAuction = async (auctionData) => {
-  const { importerId, title, basePrice, endTime, imageUrl } = auctionData;
+  const { importerId, title, basePrice, endTime, imageUrl, brand, description, condition } = auctionData;
   try {
     const auction = await prisma.auction.create({
       data: {
@@ -17,6 +17,9 @@ exports.createAuction = async (auctionData) => {
         status: "active",
         endTime: new Date(endTime),
         imageUrl: imageUrl ?? null,
+        brand: brand ?? null,
+        description: description ?? null,
+        condition: condition ?? null,
       },
     });
     return auction;

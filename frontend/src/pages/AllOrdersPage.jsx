@@ -27,7 +27,7 @@ const AllOrdersPage = () => {
             acc[t].ids.push(order.id);
             acc[t].totalAmount += parseFloat(order.totalAmount);
             if (order.status === "SHIPPED") acc[t].status = "SHIPPED";
-            if (order.status === "DELIVERED_RELEASE_FUNDS") acc[t].status = "DELIVERED_RELEASE_FUNDS";
+            if (order.status === "DELIVERED") acc[t].status = "DELIVERED";
             return acc;
           }, {});
           const groupsArray = Object.values(groupsMap).sort((a, b) => b.timestamp - a.timestamp);
@@ -45,9 +45,9 @@ const AllOrdersPage = () => {
   const handleConfirmDelivery = async (group) => {
     try {
       await Promise.all(group.items.map(order => 
-        api.patch(`/orders/${order.id}/status`, { status: "DELIVERED_RELEASE_FUNDS" })
+        api.post(`/orders/${order.id}/release-escrow`)
       ));
-      setOrders(orders.map(o => o.timestamp === group.timestamp ? { ...o, status: "DELIVERED_RELEASE_FUNDS" } : o));
+      setOrders(orders.map(o => o.timestamp === group.timestamp ? { ...o, status: "DELIVERED" } : o));
     } catch (err) {
       console.error(err);
       alert("Failed to confirm delivery");
@@ -55,8 +55,8 @@ const AllOrdersPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "2rem" }}>
-      <button onClick={() => navigate("/profile")} style={{ background: "transparent", border: "none", color: "var(--brand-blue)", cursor: "pointer", fontWeight: "700", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div className="padding-responsive" style={{ maxWidth: "1300px", margin: "0 auto" }}>
+      <button onClick={() => navigate("/profile")} style={{ background: "transparent", border: "none", color: "var(--brand-primary)", cursor: "pointer", fontWeight: "700", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
         &larr; Back to Profile
       </button>
 
@@ -79,13 +79,13 @@ const AllOrdersPage = () => {
                 {group.items.map(item => (
                   <div key={item.id} style={{ fontWeight: "600", color: "var(--text-secondary)", marginBottom: "0.2rem", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "1rem" }}>
                     <span>{item.quantity}x {item.product.title} <span style={{fontSize: "0.8rem", color: "var(--text-muted)"}}>| Sold by {item.vendor.name}</span></span>
-                    {group.status === "DELIVERED_RELEASE_FUNDS" && (
+                    {group.status === "DELIVERED" && (
                       <button 
                         onClick={() => {
                           setSelectedReviewItem(item);
                           setReviewModalOpen(true);
                         }}
-                        style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "4px", fontSize: "0.75rem", cursor: "pointer", fontWeight: "bold" }}
+                        style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "4px", fontSize: "0.75rem", cursor: "pointer", fontWeight: "bold" }}
                       >
                         Leave Review
                       </button>
@@ -107,16 +107,16 @@ const AllOrdersPage = () => {
                 <div style={{ fontWeight: "900", color: "var(--text-primary)", fontSize: "1.2rem", marginBottom: "0.5rem" }}>GH₵ {group.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                 
                 {group.status === "HELD_IN_ESCROW" && (
-                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--brand-gold)", backgroundColor: "rgba(245, 158, 11, 0.1)", padding: "0.4rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--brand-accent)", backgroundColor: "rgba(245, 158, 11, 0.1)", padding: "0.4rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
                     Pending Shipment
                   </div>
                 )}
                 {group.status === "SHIPPED" && (
-                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--brand-blue)", backgroundColor: "rgba(37, 99, 235, 0.1)", padding: "0.4rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--brand-primary)", backgroundColor: "rgba(37, 99, 235, 0.1)", padding: "0.4rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
                     Shipped
                   </div>
                 )}
-                {group.status === "DELIVERED_RELEASE_FUNDS" && (
+                {group.status === "DELIVERED" && (
                   <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--success)", backgroundColor: "rgba(16, 185, 129, 0.1)", padding: "0.4rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
                     Delivered
                   </div>

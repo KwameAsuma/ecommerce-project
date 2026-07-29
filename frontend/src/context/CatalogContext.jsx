@@ -11,7 +11,7 @@ export const CatalogProvider = ({ children }) => {
   const [filters, setFilters] = useState({
     priceRange: "All Prices", // Max price
     region: "All Regions",
-    trustScore: 80,
+    trustScore: 0,
     category: "All Goods",
     searchQuery: ""
   });
@@ -35,7 +35,7 @@ export const CatalogProvider = ({ children }) => {
           reviews: Math.floor(Math.random() * 200) + 10,
           merchant: p.vendor?.name || "Verified Merchant",
           vendorId: p.vendor?.id || p.vendorId || p.vendor_id,
-          image: p.imageUrl ? `http://localhost:5001${p.imageUrl}` : "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80",
+          image: p.imageUrl ? (p.imageUrl.startsWith('http') ? p.imageUrl : `http://localhost:5001${p.imageUrl}`) : "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80",
           tags: (p.stockCount > 0 || p.stock_count > 0) ? ["In Stock"] : ["Out of Stock"],
           description: p.description || "No description provided."
         }));

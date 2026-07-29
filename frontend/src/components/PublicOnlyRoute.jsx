@@ -10,7 +10,7 @@ const PublicOnlyRoute = ({ children }) => {
   }
 
   if (user) {
-    let redirectPath = '/catalog';
+    let redirectPath = '/';
     if (user.role === 'merchant' || user.role === 'MERCHANT') redirectPath = '/merchant';
     if (user.role === 'admin' || user.role === 'ADMIN') redirectPath = '/admin';
     return <Navigate to={redirectPath} replace />;

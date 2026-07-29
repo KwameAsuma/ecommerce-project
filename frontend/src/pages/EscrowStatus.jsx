@@ -92,7 +92,7 @@ const EscrowStatus = () => {
       <div style={{ padding: "4rem", textAlign: "center", minHeight: "100vh", backgroundColor: "var(--bg-base)" }}>
         <h2 style={{ color: "var(--text-primary)" }}>No Active Escrow Orders</h2>
         <p style={{ color: "var(--text-secondary)", marginBottom: "2rem" }}>You don't have any orders currently in transit.</p>
-        <button onClick={() => navigate("/catalog")} style={{ padding: "0.8rem 1.5rem", backgroundColor: "var(--brand-blue)", color: "white", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: "700" }}>Shop Premium Goods</button>
+        <button onClick={() => navigate("/")} style={{ padding: "0.8rem 1.5rem", backgroundColor: "var(--brand-primary)", color: "white", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: "700" }}>Shop Premium Goods</button>
       </div>
     );
   }
@@ -103,10 +103,10 @@ const EscrowStatus = () => {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-base)" }}>
       <header style={{ backgroundColor: "var(--bg-panel)", padding: "1.5rem 4rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 onClick={() => navigate("/catalog")} style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--brand-blue)", margin: 0, cursor: "pointer" }}>
+        <h1 onClick={() => navigate("/")} style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--brand-primary)", margin: 0, cursor: "pointer" }}>
           TradeHub Ghana
         </h1>
-        <div style={{ display: "inline-block", backgroundColor: "rgba(245, 158, 11, 0.1)", padding: "0.8rem 1.5rem", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "800", color: "var(--brand-gold)" }}>
+        <div style={{ display: "inline-block", backgroundColor: "rgba(245, 158, 11, 0.1)", padding: "0.8rem 1.5rem", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "800", color: "var(--brand-accent)" }}>
           TOTAL IN ESCROW: GH₵ {totalInEscrow.toLocaleString(undefined, {minimumFractionDigits: 2})}
         </div>
       </header>
@@ -150,7 +150,7 @@ const EscrowStatus = () => {
                       Checkout Order ({new Date(group.timestamp).toLocaleTimeString()})
                     </h3>
                     <div style={{ color: "var(--text-secondary)", fontSize: "0.9rem", display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "1rem" }}>
-                      <span style={{ fontWeight: "600", color: "var(--brand-blue)" }}>{group.items.length} items in this shipment. Click to view details.</span>
+                      <span style={{ fontWeight: "600", color: "var(--brand-primary)" }}>{group.items.length} items in this shipment. Click to view details.</span>
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
@@ -209,7 +209,7 @@ const EscrowStatus = () => {
 
                 {/* Actions Box */}
                 {group.status === "HELD_IN_ESCROW" && (
-                  <div style={{ backgroundColor: "rgba(245, 158, 11, 0.1)", padding: "1.2rem", borderRadius: "8px", textAlign: "center", color: "var(--brand-gold)", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.8rem" }}>
+                  <div style={{ backgroundColor: "rgba(245, 158, 11, 0.1)", padding: "1.2rem", borderRadius: "8px", textAlign: "center", color: "var(--brand-accent)", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.8rem" }}>
                     <span className="material-symbols-outlined" style={{ animation: "spin 2s linear infinite" }}>sync</span>
                     <span style={{ fontWeight: "700", fontSize: "0.95rem" }}>Vendor is packing your item(s). Escrow will update automatically...</span>
                     <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
@@ -229,7 +229,7 @@ const EscrowStatus = () => {
                     {canConfirm && (
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleConfirmDelivery(group); }}
-                        style={{ padding: "0.8rem 1.5rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", cursor: "pointer", transition: "transform 0.2s" }}
+                        style={{ padding: "0.8rem 1.5rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", cursor: "pointer", transition: "transform 0.2s" }}
                         onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"}
                         onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}
                       >
@@ -264,7 +264,7 @@ const EscrowStatus = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 {selectedGroup.items.map(item => (
                   <div key={item.id} style={{ display: "flex", gap: "1rem", backgroundColor: "var(--bg-base)", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--border)" }}>
-                    <div style={{ width: "60px", height: "60px", backgroundColor: "var(--bg-panel)", borderRadius: "8px", display: "flex", justifyContent: "center", alignItems: "center", color: "var(--brand-blue)" }}>
+                    <div style={{ width: "60px", height: "60px", backgroundColor: "var(--bg-panel)", borderRadius: "8px", display: "flex", justifyContent: "center", alignItems: "center", color: "var(--brand-primary)" }}>
                       <span className="material-symbols-outlined">inventory_2</span>
                     </div>
                     <div>
