@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 
 const MerchantLayout = () => {
   const { logout, user } = useAuth();
@@ -11,6 +12,41 @@ const MerchantLayout = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  
+  const [orders, setOrders] = useState([]);
+  const [localSearchQuery, setLocalSearchQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      api.get("/orders/vendor").then(res => {
+        setOrders(res.data.orders || []);
+      }).catch(err => console.error("Failed to fetch merchant orders for search:", err));
+    }
+  }, [user]);
+
+  const getOrderSuggestions = () => {
+    if (!localSearchQuery.trim()) {
+      return orders.slice(0, 3); // Recent 3 orders
+    }
+    const query = localSearchQuery.toLowerCase();
+    
+    let matches = orders.filter(o => 
+      o.id.toString().startsWith(query) || 
+      (o.product && o.product.name && o.product.name.toLowerCase().startsWith(query)) ||
+      (o.customer && o.customer.name && o.customer.name.toLowerCase().startsWith(query))
+    );
+    
+    if (matches.length === 0) {
+      matches = orders.filter(o => 
+        o.id.toString().includes(query) || 
+        (o.product && o.product.name && o.product.name.toLowerCase().includes(query)) ||
+        (o.customer && o.customer.name && o.customer.name.toLowerCase().includes(query))
+      );
+    }
+    return matches.slice(0, 5);
+  };
+  const suggestions = getOrderSuggestions();
 
   const hoverTimeoutRef = useRef(null);
 
@@ -59,9 +95,51 @@ const MerchantLayout = () => {
           </Link>
         </div>
         <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center bg-surface-container-low border border-outline-variant rounded-full px-4 py-1.5 w-64 focus-within:border-primary transition-colors">
+          <div className="hidden md:flex items-center bg-surface-container-low border border-outline-variant rounded-xl px-4 py-1.5 w-80 focus-within:border-primary transition-colors relative">
             <span className="material-symbols-outlined text-on-surface-variant text-body-md" data-icon="search">search</span>
-            <input className="bg-transparent border-none focus:ring-0 text-label-md w-full ml-2 placeholder:text-on-surface-variant outline-none" placeholder="Search orders..." type="text" />
+            <input 
+              className="bg-transparent border-none focus:ring-0 text-label-md w-full ml-2 placeholder:text-on-surface-variant outline-none" 
+              placeholder="Search orders..." 
+              type="text" 
+              value={localSearchQuery}
+              onChange={(e) => setLocalSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+            />
+            {isSearchFocused && (
+              <div className="absolute top-[110%] left-0 w-full bg-surface-container-lowest rounded-xl border border-outline-variant shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                {!localSearchQuery.trim() && <div className="px-4 py-2 text-label-sm font-bold text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Recent Orders</div>}
+                
+                {localSearchQuery.trim() && suggestions.length === 0 && (
+                  <div className="px-4 py-6 text-body-md text-on-surface-variant text-center">
+                    Oops, we do not have the order you are looking for at the moment.
+                  </div>
+                )}
+
+                {suggestions.map((order, idx) => (
+                  <div 
+                    key={idx}
+                    onClick={() => {
+                      setLocalSearchQuery("");
+                      setIsSearchFocused(false);
+                      // Navigate to order detail if a page exists, or generic orders page
+                      navigate("/merchant");
+                    }}
+                    className="px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-surface-container-low transition-colors border-b border-outline-variant last:border-b-0"
+                  >
+                    <span className="material-symbols-outlined text-on-surface-variant text-body-lg">
+                      {localSearchQuery.trim() ? "search" : "history"}
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-body-md font-bold text-on-surface">Order #{order.id}</span>
+                      <span className="text-label-sm text-on-surface-variant line-clamp-1">
+                        {order.product?.name || "Product"} • {order.customer?.name || "Customer"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-4 relative">
             

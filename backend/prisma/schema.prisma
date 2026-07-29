@@ -78,6 +78,9 @@ model Auction {
   status            String   @default("active")
   endTime           DateTime @map("end_time")
   imageUrl          String?  @map("image_url")
+  brand             String?
+  description       String?
+  condition         String?
   createdAt         DateTime @default(now()) @map("created_at")
 
   bids              Bid[]

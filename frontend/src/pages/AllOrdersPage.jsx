@@ -56,7 +56,7 @@ const AllOrdersPage = () => {
 
   return (
     <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "2rem" }}>
-      <button onClick={() => navigate("/profile")} style={{ background: "transparent", border: "none", color: "var(--brand-blue)", cursor: "pointer", fontWeight: "700", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <button onClick={() => navigate("/profile")} style={{ background: "transparent", border: "none", color: "var(--brand-primary)", cursor: "pointer", fontWeight: "700", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
         &larr; Back to Profile
       </button>
 
@@ -85,7 +85,7 @@ const AllOrdersPage = () => {
                           setSelectedReviewItem(item);
                           setReviewModalOpen(true);
                         }}
-                        style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "4px", fontSize: "0.75rem", cursor: "pointer", fontWeight: "bold" }}
+                        style={{ padding: "0.3rem 0.6rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "4px", fontSize: "0.75rem", cursor: "pointer", fontWeight: "bold" }}
                       >
                         Leave Review
                       </button>
@@ -107,12 +107,12 @@ const AllOrdersPage = () => {
                 <div style={{ fontWeight: "900", color: "var(--text-primary)", fontSize: "1.2rem", marginBottom: "0.5rem" }}>GH₵ {group.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                 
                 {group.status === "HELD_IN_ESCROW" && (
-                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--brand-gold)", backgroundColor: "rgba(245, 158, 11, 0.1)", padding: "0.4rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--brand-accent)", backgroundColor: "rgba(245, 158, 11, 0.1)", padding: "0.4rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
                     Pending Shipment
                   </div>
                 )}
                 {group.status === "SHIPPED" && (
-                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--brand-blue)", backgroundColor: "rgba(37, 99, 235, 0.1)", padding: "0.4rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--brand-primary)", backgroundColor: "rgba(37, 99, 235, 0.1)", padding: "0.4rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
                     Shipped
                   </div>
                 )}

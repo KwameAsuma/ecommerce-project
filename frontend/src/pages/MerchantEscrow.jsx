@@ -73,7 +73,7 @@ const MerchantEscrow = () => {
         <div style={{ backgroundColor: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", minWidth: "350px", marginTop: "0.5rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
             <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "1px" }}>Total in Escrow</div>
-            <div style={{ width: "28px", height: "28px", borderRadius: "8px", backgroundColor: "rgba(245, 158, 11, 0.1)", color: "var(--brand-gold)", display: "flex", justifyContent: "center", alignItems: "center" }}>
+            <div style={{ width: "28px", height: "28px", borderRadius: "8px", backgroundColor: "rgba(245, 158, 11, 0.1)", color: "var(--brand-accent)", display: "flex", justifyContent: "center", alignItems: "center" }}>
               <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>lock</span>
             </div>
           </div>
@@ -125,12 +125,12 @@ const MerchantEscrow = () => {
                   </td>
                   <td style={{ padding: "1.2rem 1.5rem" }}>
                     {group.status === "HELD_IN_ESCROW" && (
-                      <span style={{ padding: "0.4rem 0.8rem", backgroundColor: "rgba(245, 158, 11, 0.1)", color: "var(--brand-gold)", borderRadius: "999px", fontSize: "0.75rem", fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                      <span style={{ padding: "0.4rem 0.8rem", backgroundColor: "rgba(245, 158, 11, 0.1)", color: "var(--brand-accent)", borderRadius: "999px", fontSize: "0.75rem", fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
                         <span className="material-symbols-outlined text-[14px]">lock</span> PROCESSING (FUNDS LOCKED)
                       </span>
                     )}
                     {group.status === "SHIPPED" && (
-                      <span style={{ padding: "0.4rem 0.8rem", backgroundColor: "rgba(37, 99, 235, 0.1)", color: "var(--brand-blue)", borderRadius: "999px", fontSize: "0.75rem", fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                      <span style={{ padding: "0.4rem 0.8rem", backgroundColor: "rgba(37, 99, 235, 0.1)", color: "var(--brand-primary)", borderRadius: "999px", fontSize: "0.75rem", fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
                         <span className="material-symbols-outlined text-[14px]">local_shipping</span> IN TRANSIT
                       </span>
                     )}
@@ -178,7 +178,7 @@ const MerchantEscrow = () => {
               <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 {selectedGroup.items.map(item => (
                   <div key={item.id} style={{ display: "flex", gap: "1rem", backgroundColor: "var(--bg-base)", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--border)" }}>
-                    <div style={{ width: "60px", height: "60px", backgroundColor: "var(--bg-panel)", borderRadius: "8px", display: "flex", justifyContent: "center", alignItems: "center", color: "var(--brand-blue)" }}>
+                    <div style={{ width: "60px", height: "60px", backgroundColor: "var(--bg-panel)", borderRadius: "8px", display: "flex", justifyContent: "center", alignItems: "center", color: "var(--brand-primary)" }}>
                       <span className="material-symbols-outlined">inventory_2</span>
                     </div>
                     <div>

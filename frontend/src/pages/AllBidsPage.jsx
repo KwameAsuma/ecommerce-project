@@ -39,7 +39,7 @@ const AllBidsPage = () => {
 
   return (
     <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "2rem" }}>
-      <button onClick={() => navigate("/profile")} style={{ background: "transparent", border: "none", color: "var(--brand-blue)", cursor: "pointer", fontWeight: "700", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <button onClick={() => navigate("/profile")} style={{ background: "transparent", border: "none", color: "var(--brand-primary)", cursor: "pointer", fontWeight: "700", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
         &larr; Back to Profile
       </button>
 
@@ -60,8 +60,8 @@ const AllBidsPage = () => {
                 <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>{new Date(bid.timestamp).toLocaleString()}</div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontWeight: "900", color: "var(--brand-blue)", fontSize: "1.2rem", marginBottom: "0.4rem" }}>GH₵ {parseFloat(bid.bidAmount || bid.bid_amount).toLocaleString()}</div>
-                <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--brand-gold)", backgroundColor: "rgba(251, 191, 36, 0.1)", padding: "0.3rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
+                <div style={{ fontWeight: "900", color: "var(--brand-primary)", fontSize: "1.2rem", marginBottom: "0.4rem" }}>GH₵ {parseFloat(bid.bidAmount || bid.bid_amount).toLocaleString()}</div>
+                <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--brand-accent)", backgroundColor: "rgba(251, 191, 36, 0.1)", padding: "0.3rem 0.8rem", borderRadius: "12px", display: "inline-block" }}>
                   Active Bid
                 </div>
               </div>

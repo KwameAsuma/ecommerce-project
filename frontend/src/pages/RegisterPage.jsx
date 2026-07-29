@@ -55,7 +55,7 @@ const RegisterPage = () => {
       await api.post("/auth/register", { name, email, phone, password, role, momo_number: momoNumber });
       const data = await login(email, password);
       const userRole = data?.user?.role || "customer";
-      navigate(userRole === "merchant" ? "/merchant" : "/catalog");
+      navigate(userRole === "merchant" ? "/merchant" : "/");
     } catch (err) {
       setError(err.response?.data?.error || "Registration failed");
     }
@@ -210,17 +210,6 @@ const RegisterPage = () => {
                   className={`w-full py-2 rounded-xl font-bold transition-all mt-3 ${!isStep1Valid ? 'bg-outline-variant/50 text-on-surface-variant/50 cursor-not-allowed' : `text-on-primary shadow-md hover:opacity-90 active:scale-[0.98] ${role === 'MERCHANT' ? 'bg-amber-500 shadow-amber-500/20' : 'bg-primary shadow-primary/20'}`}`}
                 >
                   {role === "MERCHANT" ? "Continue Setup →" : "Create an account"}
-                </button>
-
-                <div className="flex items-center gap-3 my-3">
-                  <div className="h-px bg-outline-variant flex-1"></div>
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Or</span>
-                  <div className="h-px bg-outline-variant flex-1"></div>
-                </div>
-
-                <button type="button" className="w-full flex items-center justify-center gap-2 border border-outline-variant rounded-xl py-2 hover:bg-surface-container-low transition-colors font-bold text-on-surface-variant text-sm active:scale-[0.98]">
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-4 h-4" alt="Google logo" />
-                  Sign up with Google
                 </button>
               </form>
             )}

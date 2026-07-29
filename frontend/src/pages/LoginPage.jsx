@@ -34,7 +34,7 @@ const LoginPage = ({ isAdminLogin = false }) => {
 
       if (role === "admin") navigate("/admin");
       else if (role === "merchant") navigate("/merchant");
-      else navigate("/catalog");
+      else navigate("/");
     } catch (err) {
       setError(err.response?.data?.error || err.response?.data?.message || "Invalid email or password");
     }
@@ -99,9 +99,6 @@ const LoginPage = ({ isAdminLogin = false }) => {
                 <input type="checkbox" className="rounded text-primary focus:ring-primary border-outline-variant w-4 h-4" />
                 <span className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Remember Me</span>
               </label>
-              <Link to="#" className="text-sm text-on-surface-variant hover:text-primary transition-colors font-medium">
-                Forgot Password?
-              </Link>
             </div>
 
             <div className="pt-4">
@@ -115,14 +112,6 @@ const LoginPage = ({ isAdminLogin = false }) => {
             </div>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-outline-variant flex flex-col sm:flex-row items-center gap-4 justify-center">
-            <span className="text-sm text-on-surface-variant font-medium">Or continue with</span>
-            <button className="flex items-center justify-center gap-2 border border-outline-variant rounded-xl py-2 px-4 hover:bg-surface-container-low transition-colors font-bold text-on-surface-variant text-sm active:scale-[0.98]">
-              <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-4 h-4" alt="Google logo" />
-              Google
-            </button>
-          </div>
-
           <div className="mt-4 text-center">
             <span className="text-on-surface-variant text-sm font-medium">Don't have an account? </span>
             <Link to="/register" className="text-primary font-bold hover:underline text-sm">Sign Up</Link>
@@ -135,7 +124,7 @@ const LoginPage = ({ isAdminLogin = false }) => {
           {/* Header Links */}
         <div className="absolute top-8 right-8 flex gap-6 z-20">
           <Link to="/" className="text-on-surface-variant hover:text-primary text-base font-bold transition-colors">Home</Link>
-          <Link to="/catalog" className="text-on-surface-variant hover:text-primary text-base font-bold transition-colors">Catalog</Link>
+          <Link to="/" className="text-on-surface-variant hover:text-primary text-base font-bold transition-colors">Catalog</Link>
           <Link to="/#about" className="text-on-surface-variant hover:text-primary text-base font-bold transition-colors">About Us</Link>
         </div>
 
