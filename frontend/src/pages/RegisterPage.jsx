@@ -52,12 +52,21 @@ const RegisterPage = () => {
     e.preventDefault();
     setError("");
     try {
-      await api.post("/auth/register", { name, email, phone, password, role, momo_number: momoNumber });
-      const data = await login(email, password);
-      const userRole = data?.user?.role || "customer";
+      const registerRes = await api.post("/auth/register", {
+        name,
+        email,
+        phone,
+        password,
+        role,
+        momo_number: momoNumber,
+      });
+
+      const loginRes = await login(email, password);
+      const userRole = loginRes?.user?.role || registerRes?.data?.user?.role || "customer";
       navigate(userRole === "merchant" ? "/merchant" : "/catalog");
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed");
+      const message = err?.response?.data?.error || err?.message || "Registration failed";
+      setError(message);
     }
   };
 

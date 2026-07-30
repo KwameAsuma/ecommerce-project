@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.DEV ? "http://localhost:5000/api" : "/api",
   withCredentials: true, // CRITICAL: This tells the browser to automatically attach the HttpOnly cookie
   headers: {
     "Content-Type": "application/json",

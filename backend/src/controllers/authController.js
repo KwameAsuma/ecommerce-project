@@ -16,8 +16,11 @@ const registerUser = async (req, res) => {
         .json({ error: "Name, email, phone, and password are required." });
     }
 
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedRole = String(role || "BUYER").trim().toUpperCase();
+
     const existingUser = await prisma.user.findUnique({
-      where: { email: email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -28,12 +31,12 @@ const registerUser = async (req, res) => {
 
     const newUser = await prisma.user.create({
       data: {
-        email: email,
-        phone: phone,
-        passwordHash: passwordHash, // Matches your schema exactly
-        name: name,
-        role: role || "BUYER",
-        momoNumber: momo_number || null, // Optional field
+        email: normalizedEmail,
+        phone: String(phone).trim(),
+        passwordHash: passwordHash,
+        name: String(name).trim(),
+        role: normalizedRole,
+        momoNumber: momo_number ? String(momo_number).trim() : null,
       },
     });
 
@@ -59,7 +62,9 @@ const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Registration error:", error);
-    return res.status(500).json({ error: "Registration failed." });
+    return res.status(500).json({
+      error: error?.message || "Registration failed.",
+    });
   }
 };
 
