@@ -112,49 +112,75 @@ const MerchantProductForm = () => {
       )}
 
       <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-8 mb-8">
-        <h3 className="font-headline-sm text-on-surface font-bold mb-4">Product Image</h3>
-        <div className="flex items-start gap-6">
-          <div className="w-40 h-40 bg-surface-container-high rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
+        <h3 className="font-headline-sm text-on-surface font-bold mb-4">Product Images</h3>
+        <div className="flex flex-col gap-6">
+          <div className="flex overflow-x-auto whitespace-nowrap pb-2 gap-4">
             {formData.imageUrl ? (
-              <img src={`http://localhost:5000${formData.imageUrl}`} alt="Product Preview" className="w-full h-full object-cover" />
+              formData.imageUrl.split(',').map((url, i) => (
+                <div key={i} className="w-40 h-40 bg-surface-container-high rounded-xl border border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
+                  <img src={url.startsWith('http') ? url : `http://localhost:5001${url}`} alt="Product Preview" className="w-full h-full object-cover" />
+                </div>
+              ))
             ) : (
-              <span className="material-symbols-outlined text-[48px] text-on-surface-variant/50">image</span>
+              <div className="w-40 h-40 bg-surface-container-high rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
+                <span className="material-symbols-outlined text-[48px] text-on-surface-variant/50">image</span>
+              </div>
             )}
           </div>
-          <div className="space-y-4 flex-1">
-            <p className="text-sm text-on-surface-variant">Upload a high-quality image of your product. Recommended size: 800x800px. Max size: 5MB.</p>
+          <div className="space-y-4">
+            <p className="text-sm text-on-surface-variant">Upload high-quality images of your product. Recommended size: 800x800px. Max size: 5MB per image.</p>
             <label className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold cursor-pointer transition-colors ${imageUploading ? "bg-surface-container border border-outline-variant text-on-surface-variant" : "bg-primary/10 text-primary hover:bg-primary/20"}`}>
               <span className="material-symbols-outlined text-[20px]">{imageUploading ? "hourglass_empty" : "upload"}</span>
               {imageUploading ? "Uploading..." : "Choose Image"}
               <input
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
                 disabled={imageUploading}
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (!file) return;
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files);
+                  if (files.length === 0) return;
                   setImageUploading(true);
                   setError(null);
                   
-                  const formDataPayload = new FormData();
-                  formDataPayload.append("image", file);
-                  
-                  api.post("/upload/image", formDataPayload, {
-                    headers: { "Content-Type": "multipart/form-data" }
-                  }).then(res => {
-                    if (res.data.status === "success") {
-                      setFormData({ ...formData, imageUrl: res.data.imageUrl });
+                  try {
+                    const uploadedUrls = [];
+                    for (const file of files) {
+                      const formDataPayload = new FormData();
+                      formDataPayload.append("image", file);
+                      
+                      const res = await api.post("/upload/image", formDataPayload, {
+                        headers: { "Content-Type": "multipart/form-data" }
+                      });
+                      if (res.data.status === "success") {
+                        uploadedUrls.push(res.data.imageUrl);
+                      }
                     }
-                  }).catch(err => {
+                    if (uploadedUrls.length > 0) {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        imageUrl: prev.imageUrl ? `${prev.imageUrl},${uploadedUrls.join(',')}` : uploadedUrls.join(',') 
+                      }));
+                    }
+                  } catch (err) {
                     console.error(err);
-                    setError("Failed to upload image. Image may be too large.");
-                  }).finally(() => {
+                    setError("Failed to upload some images. They may be too large.");
+                  } finally {
                     setImageUploading(false);
-                  });
+                  }
                 }}
               />
             </label>
+            {formData.imageUrl && (
+              <button 
+                type="button" 
+                onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                className="ml-4 text-sm font-bold text-error hover:underline"
+              >
+                Clear Images
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -184,6 +210,7 @@ const MerchantProductForm = () => {
               >
                 <option value="">Select a category</option>
                 <option value="Traditional Apparel">Traditional Apparel</option>
+                <option value="Clothes">Clothes</option>
                 <option value="Electronics">Electronics</option>
                 <option value="Food & Beverages">Food & Beverages</option>
                 <option value="Home Goods">Home Goods</option>

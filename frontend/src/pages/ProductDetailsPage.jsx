@@ -50,7 +50,7 @@ const ProductDetailsPage = () => {
     return (
       <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-primary)" }}>
         <h2>Product Not Found</h2>
-        <button onClick={() => navigate("/catalog")} style={{ padding: "0.8rem 1.5rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>Back to Catalog</button>
+        <button onClick={() => navigate("/")} style={{ padding: "0.8rem 1.5rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>Back to Catalog</button>
       </div>
     );
   }
@@ -70,7 +70,7 @@ const ProductDetailsPage = () => {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
           <div>
             <h1 style={{ fontSize: "2rem", fontWeight: "800", color: "var(--text-primary)", margin: "0 0 0.5rem 0" }}>{product.name}</h1>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--brand-gold)", fontSize: "1.1rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--brand-accent)", fontSize: "1.1rem" }}>
               ★ {averageRating ? averageRating.toFixed(1) : (product.rating ? product.rating.toFixed(1) : "0.0")} <span style={{ color: "var(--text-secondary)", fontSize: "0.9rem", fontWeight: "500" }}>({reviews.length} reviews)</span>
             </div>
           </div>
@@ -78,17 +78,17 @@ const ProductDetailsPage = () => {
 
         {/* Hero Image */}
         <div style={{ width: "100%", height: "450px", backgroundColor: "#f1f5f9", borderRadius: "12px", overflow: "hidden", marginBottom: "1rem" }}>
-          <img src={product.imageUrl ? `http://localhost:5000${product.imageUrl}` : product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={product.imageUrl ? `http://localhost:5001${product.imageUrl}` : product.image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
 
         {/* Thumbnails */}
         <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
-          <div style={{ width: "80px", height: "80px", borderRadius: "8px", overflow: "hidden", border: "2px solid var(--brand-blue)" }}>
-            <img src={product.imageUrl ? `http://localhost:5000${product.imageUrl}` : product.image} alt="Thumb" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <div style={{ width: "80px", height: "80px", borderRadius: "8px", overflow: "hidden", border: "2px solid var(--brand-primary)" }}>
+            <img src={product.imageUrl ? `http://localhost:5001${product.imageUrl}` : product.image} alt="Thumb" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
         </div>
 
-        <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#000", marginBottom: "2rem" }}>
+        <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "var(--brand-primary)", marginBottom: "2rem" }}>
           GH₵ {product.price.toLocaleString()}
         </div>
 
@@ -108,7 +108,7 @@ const ProductDetailsPage = () => {
           </div>
           <button 
             onClick={handleAddToCart}
-            style={{ flexGrow: 1, padding: "1.2rem", backgroundColor: "var(--bg-base)", color: "var(--brand-blue)", border: "2px solid var(--brand-blue)", borderRadius: "8px", fontWeight: "800", fontSize: "1.1rem", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", transition: "all 0.2s" }}
+            style={{ flexGrow: 1, padding: "1.2rem", backgroundColor: "var(--bg-base)", color: "var(--brand-primary)", border: "2px solid var(--brand-primary)", borderRadius: "8px", fontWeight: "800", fontSize: "1.1rem", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", transition: "all 0.2s" }}
             onMouseOver={e=>e.currentTarget.style.backgroundColor="rgba(37,99,235,0.05)"}
             onMouseOut={e=>e.currentTarget.style.backgroundColor="var(--bg-base)"}
           >
@@ -116,7 +116,7 @@ const ProductDetailsPage = () => {
           </button>
           <button 
             onClick={handleBuyNow}
-            style={{ flexGrow: 1, padding: "1.2rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "1.1rem", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}
+            style={{ flexGrow: 1, padding: "1.2rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "1.1rem", cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)" }}
           >
             Buy Now
           </button>
@@ -128,7 +128,7 @@ const ProductDetailsPage = () => {
             <h3 style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--text-primary)", margin: 0 }}>Customer Reviews</h3>
             <button 
               onClick={() => setReviewModalOpen(true)}
-              style={{ padding: "0.6rem 1.2rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}
+              style={{ padding: "0.6rem 1.2rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer" }}
             >
               Leave a Review
             </button>
@@ -142,7 +142,7 @@ const ProductDetailsPage = () => {
                 <div key={review.id} style={{ borderBottom: "1px solid var(--border)", paddingBottom: "1.5rem" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.5rem" }}>
                     <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{review.reviewer?.name || "Anonymous"}</div>
-                    <div style={{ color: "var(--brand-gold)", fontSize: "1rem" }}>
+                    <div style={{ color: "var(--brand-accent)", fontSize: "1rem" }}>
                       {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
                     </div>
                   </div>
@@ -163,7 +163,7 @@ const ProductDetailsPage = () => {
         <div style={{ backgroundColor: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", position: "sticky", top: "100px" }}>
           
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-            <div style={{ width: "60px", height: "60px", borderRadius: "50%", backgroundColor: "var(--brand-blue)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "1.5rem", fontWeight: "bold" }}>
+            <div style={{ width: "60px", height: "60px", borderRadius: "50%", backgroundColor: "var(--brand-primary)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "1.5rem", fontWeight: "bold" }}>
               {product.merchant.charAt(0)}
             </div>
             <div>
@@ -178,7 +178,7 @@ const ProductDetailsPage = () => {
             onClick={() => {
               navigate('/merchants');
             }}
-            style={{ width: "100%", padding: "0.8rem", backgroundColor: "transparent", color: "var(--brand-blue)", border: "1px solid var(--brand-blue)", borderRadius: "8px", fontWeight: "700", marginBottom: "2rem", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e=>e.currentTarget.style.backgroundColor="var(--bg-base)"} onMouseOut={e=>e.currentTarget.style.backgroundColor="transparent"}
+            style={{ width: "100%", padding: "0.8rem", backgroundColor: "transparent", color: "var(--brand-primary)", border: "1px solid var(--brand-primary)", borderRadius: "8px", fontWeight: "700", marginBottom: "2rem", cursor: "pointer", transition: "all 0.2s" }} onMouseOver={e=>e.currentTarget.style.backgroundColor="var(--bg-base)"} onMouseOut={e=>e.currentTarget.style.backgroundColor="transparent"}
           >
             View Vendor Profile
           </button>

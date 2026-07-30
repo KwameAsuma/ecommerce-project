@@ -31,7 +31,10 @@ const LiveAuctions = () => {
 
   const getImageUrl = (auction) => {
     if (!auction) return fallbackImages[0];
-    if (auction.imageUrl) return `http://localhost:5000${auction.imageUrl}`;
+    if (auction.imageUrl) {
+      const url = auction.imageUrl.split(',')[0];
+      return url.startsWith('http') ? url : `http://localhost:5001${url}`;
+    }
     const aid = auction.id || 0;
     return fallbackImages[aid % fallbackImages.length];
   };
@@ -125,7 +128,7 @@ const LiveAuctions = () => {
             
             {/* Header Section */}
             <div style={{ padding: '2.5rem', borderBottom: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: isLive ? 'linear-gradient(90deg, var(--brand-gold), var(--danger))' : 'var(--text-muted)' }}></div>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: isLive ? 'linear-gradient(90deg, var(--brand-accent), var(--danger))' : 'var(--text-muted)' }}></div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                 <div>
@@ -145,6 +148,15 @@ const LiveAuctions = () => {
                     </span>
                   </div>
                   <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--text-primary)', margin: 0, letterSpacing: '-1px' }}>{auction.title}</h1>
+                  {(auction.brand || auction.condition) && (
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                      {auction.brand && <span style={{ backgroundColor: 'var(--surface-container-highest)', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold' }}>Brand: {auction.brand}</span>}
+                      {auction.condition && <span style={{ backgroundColor: 'var(--surface-container-highest)', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold' }}>Condition: {auction.condition}</span>}
+                    </div>
+                  )}
+                  {auction.description && (
+                    <p style={{ marginTop: '1rem', color: 'var(--text-secondary)', lineHeight: '1.5', maxWidth: '600px' }}>{auction.description}</p>
+                  )}
                 </div>
               </div>
 
@@ -159,7 +171,7 @@ const LiveAuctions = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <div style={{ marginBottom: '1.5rem' }}>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Current Highest Bid</p>
-                    <h2 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--brand-gold)', margin: 0, lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <h2 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--brand-accent)', margin: 0, lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '1.5rem', color: 'var(--text-secondary)' }}>GH₵</span>
                       {currentHighest.toLocaleString(undefined, {minimumFractionDigits: 2})}
                     </h2>
@@ -194,13 +206,12 @@ const LiveAuctions = () => {
                           value={bidInput}
                           onChange={(e) => setBidInput(e.target.value)}
                           placeholder={(currentHighest + 10).toFixed(2)}
-                          min={currentHighest + 1}
                           step="0.01"
                           style={{
                             width: '100%', padding: '1.2rem 1.2rem 1.2rem 4.5rem', fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)',
                             borderRadius: '12px', border: '2px solid var(--border)', outline: 'none', transition: 'border-color 0.2s', backgroundColor: 'var(--bg-base)'
                           }}
-                          onFocus={e=>e.target.style.borderColor='var(--brand-gold)'}
+                          onFocus={e=>e.target.style.borderColor='var(--brand-accent)'}
                           onBlur={e=>e.target.style.borderColor='var(--border)'}
                           required
                         />
@@ -209,11 +220,11 @@ const LiveAuctions = () => {
                         type="submit"
                         disabled={isBidding}
                         style={{
-                          padding: '0 2.5rem', height: '65px', fontSize: '1.2rem', backgroundColor: 'var(--brand-gold)', color: 'white',
+                          padding: '0 2.5rem', height: '65px', fontSize: '1.2rem', backgroundColor: 'var(--brand-accent)', color: 'white',
                           border: 'none', borderRadius: '12px', cursor: isBidding ? 'not-allowed' : 'pointer', fontWeight: '900', transition: 'all 0.2s', opacity: isBidding ? 0.7 : 1, boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)'
                         }}
                         onMouseOver={e=>{if(!isBidding) e.currentTarget.style.backgroundColor='#d97706'}}
-                        onMouseOut={e=>{if(!isBidding) e.currentTarget.style.backgroundColor='var(--brand-gold)'}}
+                        onMouseOut={e=>{if(!isBidding) e.currentTarget.style.backgroundColor='var(--brand-accent)'}}
                       >
                         {isBidding ? "Placing..." : "Place Bid"}
                       </button>
@@ -251,9 +262,9 @@ const LiveAuctions = () => {
             {bids.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 {bids.map((bid, idx) => (
-                  <div key={bid.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: idx === 0 ? 'rgba(245, 158, 11, 0.05)' : 'var(--bg-base)', border: `1px solid ${idx === 0 ? 'var(--brand-gold)' : 'var(--border)'}`, borderRadius: '12px' }}>
+                  <div key={bid.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: idx === 0 ? 'rgba(245, 158, 11, 0.05)' : 'var(--bg-base)', border: `1px solid ${idx === 0 ? 'var(--brand-accent)' : 'var(--border)'}`, borderRadius: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: idx === 0 ? 'var(--brand-gold)' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : 'var(--bg-panel)', color: idx < 3 ? 'white' : 'var(--text-secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '0.9rem', border: idx >= 3 ? '1px solid var(--border)' : 'none' }}>
+                      <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: idx === 0 ? 'var(--brand-accent)' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : 'var(--bg-panel)', color: idx < 3 ? 'white' : 'var(--text-secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '0.9rem', border: idx >= 3 ? '1px solid var(--border)' : 'none' }}>
                         {idx + 1}
                       </div>
                       <div>
@@ -261,7 +272,7 @@ const LiveAuctions = () => {
                         <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(bid.timestamp).toLocaleTimeString()}</p>
                       </div>
                     </div>
-                    <span style={{ fontWeight: '800', color: idx === 0 ? 'var(--brand-gold)' : 'var(--text-primary)' }}>
+                    <span style={{ fontWeight: '800', color: idx === 0 ? 'var(--brand-accent)' : 'var(--text-primary)' }}>
                       GH₵ {parseFloat(bid.bidAmount || bid.bid_amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
                     </span>
                   </div>

@@ -22,12 +22,26 @@ const protect = async (req, res, next) => {
     }
 
     req.userId = user.id;
-    
+
     // Standardize role for easy checking
     req.user = {
       ...user,
-      role: user.role?.toUpperCase() === 'ADMIN' ? 'admin' : (user.role?.toUpperCase() === 'MERCHANT' ? 'merchant' : 'customer')
+      role: user.role?.toUpperCase() === 'ADMIN' ? 'admin' : ((user.role?.toUpperCase() === 'MERCHANT' || user.role?.toUpperCase() === 'VENDOR') ? 'merchant' : 'customer')
     };
+
+    // Rolling Session: Issue a fresh token on active requests
+    const newToken = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.cookie("token", newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
     
     next();
   } catch (error) {

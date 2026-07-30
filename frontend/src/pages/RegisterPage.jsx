@@ -52,6 +52,7 @@ const RegisterPage = () => {
     e.preventDefault();
     setError("");
     try {
+<<<<<<< HEAD
       const registerRes = await api.post("/auth/register", {
         name,
         email,
@@ -64,6 +65,12 @@ const RegisterPage = () => {
       const loginRes = await login(email, password);
       const userRole = loginRes?.user?.role || registerRes?.data?.user?.role || "customer";
       navigate(userRole === "merchant" ? "/merchant" : "/catalog");
+=======
+      await api.post("/auth/register", { name, email, phone, password, role, momo_number: momoNumber });
+      const data = await login(email, password);
+      const userRole = data?.user?.role || "customer";
+      navigate(userRole === "merchant" ? "/merchant" : "/");
+>>>>>>> 579df1b7c319ac8a22e7f9261c38c465339c8bbe
     } catch (err) {
       const message = err?.response?.data?.error || err?.message || "Registration failed";
       setError(message);
@@ -89,7 +96,7 @@ const RegisterPage = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
           
           <img 
-            src="/hero_business.png" 
+            src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1000&q=80" 
             alt="Business professionals" 
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -219,17 +226,6 @@ const RegisterPage = () => {
                   className={`w-full py-2 rounded-xl font-bold transition-all mt-3 ${!isStep1Valid ? 'bg-outline-variant/50 text-on-surface-variant/50 cursor-not-allowed' : `text-on-primary shadow-md hover:opacity-90 active:scale-[0.98] ${role === 'MERCHANT' ? 'bg-amber-500 shadow-amber-500/20' : 'bg-primary shadow-primary/20'}`}`}
                 >
                   {role === "MERCHANT" ? "Continue Setup →" : "Create an account"}
-                </button>
-
-                <div className="flex items-center gap-3 my-3">
-                  <div className="h-px bg-outline-variant flex-1"></div>
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Or</span>
-                  <div className="h-px bg-outline-variant flex-1"></div>
-                </div>
-
-                <button type="button" className="w-full flex items-center justify-center gap-2 border border-outline-variant rounded-xl py-2 hover:bg-surface-container-low transition-colors font-bold text-on-surface-variant text-sm active:scale-[0.98]">
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-4 h-4" alt="Google logo" />
-                  Sign up with Google
                 </button>
               </form>
             )}

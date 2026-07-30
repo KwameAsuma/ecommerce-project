@@ -183,9 +183,9 @@ const ProfilePage = () => {
         <div style={{ flex: "1 1 300px", backgroundColor: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "16px", padding: "2rem", display: "flex", flexDirection: "column", alignItems: "center", height: "max-content" }}>
           
           <div style={{ position: "relative", width: "120px", height: "120px", marginBottom: "1.5rem" }}>
-            <div style={{ width: "100%", height: "100%", borderRadius: "50%", backgroundColor: "var(--brand-blue)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "3rem", fontWeight: "900", boxShadow: "0 10px 25px rgba(30, 58, 138, 0.2)", overflow: "hidden" }}>
+            <div style={{ width: "100%", height: "100%", borderRadius: "50%", backgroundColor: "var(--brand-primary)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "3rem", fontWeight: "900", boxShadow: "0 10px 25px rgba(30, 58, 138, 0.2)", overflow: "hidden" }}>
               {user?.avatarUrl ? (
-                <img src={`http://localhost:5000${user.avatarUrl}`} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={`http://localhost:5001${user.avatarUrl}`} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               ) : (
                 user?.name?.charAt(0) || "K"
               )}
@@ -209,24 +209,24 @@ const ProfilePage = () => {
           
           <div style={{ width: "100%", padding: "1rem", backgroundColor: "var(--bg-base)", borderRadius: "8px", border: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
             <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Account Role</span>
-            <span style={{ fontSize: "0.85rem", color: "var(--brand-gold)", fontWeight: "800", textTransform: "uppercase" }}>{user?.role || "Consumer"}</span>
+            <span style={{ fontSize: "0.85rem", color: "var(--brand-accent)", fontWeight: "800", textTransform: "uppercase" }}>{user?.role || "Consumer"}</span>
           </div>
 
           <div style={{ width: "100%", padding: "1rem", backgroundColor: "var(--bg-base)", borderRadius: "8px", border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "2rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Wallet Balance</span>
-              <span style={{ fontSize: "1rem", color: "var(--brand-blue)", fontWeight: "800" }}>GH₵ {Number(walletBalance).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              <span style={{ fontSize: "1rem", color: "var(--brand-primary)", fontWeight: "800" }}>GH₵ {Number(walletBalance).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
             </div>
             <button 
               onClick={() => setIsDepositModalOpen(true)}
-              style={{ width: "100%", padding: "0.6rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "6px", fontWeight: "700", cursor: "pointer", marginTop: "0.5rem" }}
+              style={{ width: "100%", padding: "0.6rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "6px", fontWeight: "700", cursor: "pointer", marginTop: "0.5rem" }}
             >
               Load Funds
             </button>
           </div>
 
           <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <button onClick={() => navigate("/profile")} style={{ display: "flex", alignItems: "center", gap: "1rem", width: "100%", padding: "1rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "8px", fontWeight: "700", cursor: "pointer", textAlign: "left" }}>
+            <button onClick={() => navigate("/profile")} style={{ display: "flex", alignItems: "center", gap: "1rem", width: "100%", padding: "1rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "8px", fontWeight: "700", cursor: "pointer", textAlign: "left" }}>
               <span className="material-symbols-outlined">dashboard</span>
               Overview
             </button>
@@ -258,11 +258,11 @@ const ProfilePage = () => {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
               <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--text-primary)", margin: 0 }}>Shipping Details</h3>
               {!isEditing ? (
-                <button onClick={() => setIsEditing(true)} style={{ backgroundColor: "transparent", border: "none", color: "var(--brand-blue)", fontWeight: "700", cursor: "pointer", fontSize: "0.9rem" }}>Edit</button>
+                <button onClick={() => setIsEditing(true)} style={{ backgroundColor: "transparent", border: "none", color: "var(--brand-primary)", fontWeight: "700", cursor: "pointer", fontSize: "0.9rem" }}>Edit</button>
               ) : (
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <button onClick={() => setIsEditing(false)} style={{ backgroundColor: "transparent", border: "none", color: "var(--text-secondary)", fontWeight: "700", cursor: "pointer", fontSize: "0.9rem" }}>Cancel</button>
-                  <button onClick={handleSavePreferences} style={{ backgroundColor: "var(--brand-blue)", border: "none", color: "white", padding: "0.4rem 1rem", borderRadius: "6px", fontWeight: "700", cursor: "pointer", fontSize: "0.9rem" }}>Save</button>
+                  <button onClick={handleSavePreferences} style={{ backgroundColor: "var(--brand-primary)", border: "none", color: "white", padding: "0.4rem 1rem", borderRadius: "6px", fontWeight: "700", cursor: "pointer", fontSize: "0.9rem" }}>Save</button>
                 </div>
               )}
             </div>
@@ -319,8 +319,8 @@ const ProfilePage = () => {
                       <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{new Date(bid.timestamp).toLocaleDateString()}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontWeight: "800", color: "var(--brand-blue)", marginBottom: "0.2rem" }}>GH₵ {parseFloat(bid.bidAmount || bid.bid_amount).toLocaleString()}</div>
-                      <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--brand-gold)", backgroundColor: "rgba(251, 191, 36, 0.1)", padding: "0.2rem 0.6rem", borderRadius: "12px", display: "inline-block" }}>
+                      <div style={{ fontWeight: "800", color: "var(--brand-primary)", marginBottom: "0.2rem" }}>GH₵ {parseFloat(bid.bidAmount || bid.bid_amount).toLocaleString()}</div>
+                      <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--brand-accent)", backgroundColor: "rgba(251, 191, 36, 0.1)", padding: "0.2rem 0.6rem", borderRadius: "12px", display: "inline-block" }}>
                         Active
                       </div>
                     </div>
@@ -355,8 +355,8 @@ const ProfilePage = () => {
                       <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{group.items.length} item(s)</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontWeight: "800", color: "var(--brand-blue)", marginBottom: "0.2rem" }}>GH₵ {group.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
-                      <div style={{ fontSize: "0.75rem", fontWeight: "700", color: group.status === "DELIVERED_RELEASE_FUNDS" ? "var(--success)" : "var(--brand-blue)", backgroundColor: "var(--bg-base)", padding: "0.2rem 0.6rem", borderRadius: "12px", display: "inline-block" }}>
+                      <div style={{ fontWeight: "800", color: "var(--brand-primary)", marginBottom: "0.2rem" }}>GH₵ {group.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                      <div style={{ fontSize: "0.75rem", fontWeight: "700", color: group.status === "DELIVERED_RELEASE_FUNDS" ? "var(--success)" : "var(--brand-primary)", backgroundColor: "var(--bg-base)", padding: "0.2rem 0.6rem", borderRadius: "12px", display: "inline-block" }}>
                         {group.status === "HELD_IN_ESCROW" ? "Pending" : group.status === "SHIPPED" ? "Shipped" : "Delivered"}
                       </div>
                     </div>
@@ -406,7 +406,7 @@ const ProfilePage = () => {
               onClick={handleDeposit}
               disabled={isDepositing || !depositAmount || Number(depositAmount) <= 0}
               style={{ 
-                width: "100%", padding: "1rem", backgroundColor: "var(--brand-blue)", color: "white", 
+                width: "100%", padding: "1rem", backgroundColor: "var(--brand-primary)", color: "white", 
                 border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "1rem", cursor: "pointer",
                 opacity: (isDepositing || !depositAmount || Number(depositAmount) <= 0) ? 0.5 : 1
               }}

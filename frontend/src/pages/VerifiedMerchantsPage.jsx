@@ -4,7 +4,7 @@ import api from "../services/api";
 
 const ChevronLeftIcon = () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>;
 const ChevronRightIcon = () => <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
-const VerifiedIcon = () => <svg width="16" height="16" fill="none" stroke="var(--brand-blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+const VerifiedIcon = () => <svg width="16" height="16" fill="none" stroke="var(--brand-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
 
 const VerifiedMerchantsPage = () => {
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ const VerifiedMerchantsPage = () => {
               
               <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
                 <div style={{ width: "60px", height: "60px", borderRadius: "50%", backgroundColor: "var(--border)", overflow: "hidden" }}>
-                   <div style={{width:"100%", height:"100%", backgroundColor:"var(--brand-blue)", display:"flex", justifyContent:"center", alignItems:"center", color:"white", fontSize:"1.5rem", fontWeight:"bold"}}>
+                   <div style={{width:"100%", height:"100%", backgroundColor:"var(--brand-primary)", display:"flex", justifyContent:"center", alignItems:"center", color:"white", fontSize:"1.5rem", fontWeight:"bold"}}>
                       {merchant.name.charAt(0)}
                    </div>
                 </div>
@@ -107,7 +107,7 @@ const VerifiedMerchantsPage = () => {
 
               <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
                 <div style={{ flex: 1, backgroundColor: "var(--bg-base)", padding: "1rem", borderRadius: "8px", textAlign: "center" }}>
-                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--brand-gold)" }}>★ {merchant.averageRating ? merchant.averageRating.toFixed(1) : (merchant.trustScore / 20).toFixed(1)}</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--brand-accent)" }}>★ {merchant.averageRating ? merchant.averageRating.toFixed(1) : (merchant.trustScore / 20).toFixed(1)}</div>
                   <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600", marginTop: "0.2rem" }}>Avg Rating</div>
                 </div>
                 <div style={{ flex: 1, backgroundColor: "var(--bg-base)", padding: "1rem", borderRadius: "8px", textAlign: "center" }}>
@@ -129,7 +129,7 @@ const VerifiedMerchantsPage = () => {
                 {merchant.recentReviews && merchant.recentReviews.length > 0 ? (
                   merchant.recentReviews.map(r => (
                     <div key={r.id} style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.5rem", borderLeft: "2px solid var(--border)", paddingLeft: "0.5rem" }}>
-                      <div style={{color: "var(--brand-gold)"}}>{"★".repeat(r.rating)}</div>
+                      <div style={{color: "var(--brand-accent)"}}>{"★".repeat(r.rating)}</div>
                       "{r.comment}" - {r.reviewer?.name}
                     </div>
                   ))
@@ -141,7 +141,7 @@ const VerifiedMerchantsPage = () => {
               <div style={{ display: "flex", gap: "0.5rem", width: "100%", marginTop: "auto" }}>
                 <button 
                   onClick={() => navigate(`/merchant-profile/${merchant.id}`)}
-                  style={{ flex: 1, padding: "0.8rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", transition: "all 0.2s" }}
+                  style={{ flex: 1, padding: "0.8rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", transition: "all 0.2s" }}
                 >
                   View Storefront
                 </button>

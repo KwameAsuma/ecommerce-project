@@ -9,6 +9,7 @@ router.use(protect);
 // Customer Routes
 router.post("/", orderController.createOrder);
 router.get("/customer", orderController.getCustomerOrders);
+router.post("/:orderId/release-escrow", orderController.releaseEscrow);
 
 // Vendor Routes
 router.get("/vendor", orderController.getVendorOrders);

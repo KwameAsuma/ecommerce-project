@@ -26,7 +26,7 @@ const AdminLayout = () => {
       style={{ 
         display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.2rem', 
         borderRadius: '12px', textDecoration: 'none', 
-        backgroundColor: isActive(to) ? 'var(--brand-blue)' : 'transparent', 
+        backgroundColor: isActive(to) ? 'var(--brand-primary)' : 'transparent', 
         color: isActive(to) ? '#fff' : 'var(--text-primary)', 
         fontWeight: '600', transition: 'all 0.2s', marginBottom: '0.5rem'
       }}
@@ -46,7 +46,7 @@ const AdminLayout = () => {
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '3rem', cursor: 'pointer' }} onClick={() => navigate('/admin')}>
           <img src="/app_icon.png" alt="Logo" style={{ width: '36px', height: '36px', borderRadius: '8px' }} />
-          <h2 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--brand-blue)', margin: 0, letterSpacing: '-0.5px', textTransform: 'uppercase' }}>Admin Hub</h2>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--brand-primary)', margin: 0, letterSpacing: '-0.5px', textTransform: 'uppercase' }}>Admin Hub</h2>
         </div>
 
         <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>

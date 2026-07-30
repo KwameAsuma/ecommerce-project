@@ -4,7 +4,10 @@ const uploadImage = async (req, res) => {
       return res.status(400).json({ error: "No image file provided" });
     }
 
-    const urlPath = `/uploads/general/${req.file.filename}`;
+    const type = req.query.type || "general";
+    const allowedTypes = ["profiles", "products", "documents", "general"];
+    const folder = allowedTypes.includes(type) ? type : "general";
+    const urlPath = `/uploads/${folder}/${req.file.filename}`;
 
     res.status(200).json({
       status: "success",

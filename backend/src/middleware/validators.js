@@ -38,6 +38,9 @@ exports.validateAuctionCreate = [
   body("title").notEmpty().withMessage("title is required"),
   body("basePrice").isFloat({ gt: 0 }).withMessage("basePrice must be positive"),
   body("endTime").isISO8601().withMessage("endTime must be ISO8601 timestamp"),
+  body("brand").optional().isString(),
+  body("description").optional().isString(),
+  body("condition").optional().isString(),
   handleValidation,
 ];
 

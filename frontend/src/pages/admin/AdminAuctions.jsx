@@ -76,7 +76,7 @@ const AdminAuctions = () => {
           <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--text-primary)', margin: '0 0 0.5rem 0', letterSpacing: '-1px' }}>Auction Pools</h1>
           <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '1.1rem' }}>God mode enabled. Manage and override demand pools.</p>
         </div>
-        <button onClick={openCreateModal} style={{ backgroundColor: 'var(--brand-gold)', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background-color 0.2s' }} onMouseOver={e=>e.currentTarget.style.backgroundColor='#d97706'} onMouseOut={e=>e.currentTarget.style.backgroundColor='var(--brand-gold)'}>
+        <button onClick={openCreateModal} style={{ backgroundColor: 'var(--brand-accent)', color: 'white', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background-color 0.2s' }} onMouseOver={e=>e.currentTarget.style.backgroundColor='#d97706'} onMouseOut={e=>e.currentTarget.style.backgroundColor='var(--brand-accent)'}>
           <span className="material-symbols-outlined">add_circle</span> Inject Auction
         </button>
       </div>
@@ -106,7 +106,7 @@ const AdminAuctions = () => {
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>ID: {a.importerId}</div>
                 </td>
                 <td style={{ padding: '1rem 1.5rem' }}>
-                  <div style={{ fontWeight: '700', color: 'var(--brand-gold)' }}>Top: GH₵ {parseFloat(a.currentHighestBid || a.basePrice).toFixed(2)}</div>
+                  <div style={{ fontWeight: '700', color: 'var(--brand-accent)' }}>Top: GH₵ {parseFloat(a.currentHighestBid || a.basePrice).toFixed(2)}</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Base: GH₵ {parseFloat(a.basePrice).toFixed(2)}</div>
                 </td>
                 <td style={{ padding: '1rem 1.5rem', fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
@@ -114,7 +114,7 @@ const AdminAuctions = () => {
                 </td>
                 <td style={{ padding: '1rem 1.5rem', display: 'flex', gap: '0.5rem' }}>
                   {a.status === 'active' && (
-                    <button onClick={() => handleForceClose(a.id)} style={{ background: 'var(--brand-blue)', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Close Now</button>
+                    <button onClick={() => handleForceClose(a.id)} style={{ background: 'var(--brand-primary)', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Close Now</button>
                   )}
                   <button onClick={() => handleDelete(a.id)} style={{ background: 'var(--danger)', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>Wipe</button>
                 </td>
@@ -127,9 +127,9 @@ const AdminAuctions = () => {
 
       {isModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: 'var(--bg-panel)', padding: '2.5rem', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: `1px solid var(--brand-gold)` }}>
+          <div style={{ backgroundColor: 'var(--bg-panel)', padding: '2.5rem', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: `1px solid var(--brand-accent)` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0, color: 'var(--brand-gold)', fontWeight: '900', fontSize: '1.5rem' }}>Inject Demand Pool</h2>
+              <h2 style={{ margin: 0, color: 'var(--brand-accent)', fontWeight: '900', fontSize: '1.5rem' }}>Inject Demand Pool</h2>
               <button onClick={closeModal} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><span className="material-symbols-outlined">close</span></button>
             </div>
 
@@ -151,7 +151,7 @@ const AdminAuctions = () => {
                 <input type="datetime-local" required value={formData.endTime} onChange={e=>setFormData({...formData, endTime: e.target.value})} style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)' }} />
               </div>
               
-              <button type="submit" style={{ marginTop: '1rem', width: '100%', backgroundColor: 'var(--brand-gold)', color: 'white', border: 'none', padding: '1rem', borderRadius: '8px', fontWeight: '800', cursor: 'pointer' }}>
+              <button type="submit" style={{ marginTop: '1rem', width: '100%', backgroundColor: 'var(--brand-accent)', color: 'white', border: 'none', padding: '1rem', borderRadius: '8px', fontWeight: '800', cursor: 'pointer' }}>
                 Create Auction Pool
               </button>
             </form>

@@ -54,7 +54,7 @@ const registerUser = async (req, res) => {
     });
 
     const { passwordHash: _, ...safeUser } = newUser;
-    safeUser.role = newUser.role?.toUpperCase() === "ADMIN" ? "admin" : newUser.role?.toUpperCase() === "MERCHANT" ? "merchant" : "customer";
+    safeUser.role = newUser.role?.toUpperCase() === "ADMIN" ? "admin" : (newUser.role?.toUpperCase() === "MERCHANT" || newUser.role?.toUpperCase() === "VENDOR") ? "merchant" : "customer";
 
     return res.status(201).json({
       message: "Registration successful",
@@ -100,7 +100,7 @@ const loginUser = async (req, res) => {
     });
 
     const { passwordHash: _, ...safeUser } = user;
-    safeUser.role = user.role?.toUpperCase() === "ADMIN" ? "admin" : user.role?.toUpperCase() === "MERCHANT" ? "merchant" : "customer";
+    safeUser.role = user.role?.toUpperCase() === "ADMIN" ? "admin" : (user.role?.toUpperCase() === "MERCHANT" || user.role?.toUpperCase() === "VENDOR") ? "merchant" : "customer";
 
     res.status(200).json({
       status: "success",
@@ -126,7 +126,7 @@ const getMe = async (req, res) => {
     }
 
     const { passwordHash: _, ...safeUser } = user;
-    safeUser.role = user.role?.toUpperCase() === "ADMIN" ? "admin" : user.role?.toUpperCase() === "MERCHANT" ? "merchant" : "customer";
+    safeUser.role = user.role?.toUpperCase() === "ADMIN" ? "admin" : (user.role?.toUpperCase() === "MERCHANT" || user.role?.toUpperCase() === "VENDOR") ? "merchant" : "customer";
 
     return res.status(200).json({
       status: "success",

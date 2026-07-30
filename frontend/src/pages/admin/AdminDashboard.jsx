@@ -52,8 +52,8 @@ const AdminDashboard = () => {
       
       {/* Top Stats Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <StatCard title="Total Registered Users" value={stats.userCount} icon="group" color="var(--brand-blue)" />
-        <StatCard title="Total Escrow Orders" value={stats.orderCount} icon="receipt_long" color="var(--brand-gold)" />
+        <StatCard title="Total Registered Users" value={stats.userCount} icon="group" color="var(--brand-primary)" />
+        <StatCard title="Total Escrow Orders" value={stats.orderCount} icon="receipt_long" color="var(--brand-accent)" />
         <StatCard title="Platform Volume (GH₵)" value={parseFloat(stats.totalOrderAmount || 0).toLocaleString(undefined, {minimumFractionDigits: 2})} icon="payments" color="var(--success)" />
       </div>
 
@@ -72,7 +72,7 @@ const AdminDashboard = () => {
               <div key={i} style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', height: '100%' }}>
                 <div style={{ flexGrow: 1, display: 'flex', alignItems: 'flex-end', width: '100%', position: 'relative' }}>
                   {/* Grid Lines Concept */}
-                  <div style={{ width: '100%', height: `${(data.value / data.max) * 100}%`, backgroundColor: i === 6 ? 'var(--brand-gold)' : 'var(--brand-blue)', borderRadius: '6px 6px 0 0', position: 'relative', transition: 'height 1s ease-out' }}>
+                  <div style={{ width: '100%', height: `${(data.value / data.max) * 100}%`, backgroundColor: i === 6 ? 'var(--brand-accent)' : 'var(--brand-primary)', borderRadius: '6px 6px 0 0', position: 'relative', transition: 'height 1s ease-out' }}>
                     <div style={{ position: 'absolute', top: '-30px', left: '50%', transform: 'translateX(-50%)', opacity: 0, transition: 'opacity 0.2s', backgroundColor: 'var(--text-primary)', color: 'var(--bg-base)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold' }} className="chart-tooltip">
                       {parseFloat(data.value).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
                     </div>
@@ -91,7 +91,7 @@ const AdminDashboard = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', backgroundColor: 'var(--bg-base)', borderRadius: '12px', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                  <span className="material-symbols-outlined" style={{ color: 'var(--brand-gold)' }}>shield_person</span>
+                  <span className="material-symbols-outlined" style={{ color: 'var(--brand-accent)' }}>shield_person</span>
                   <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>Active Admins</span>
                 </div>
                 <span style={{ fontWeight: '800', color: 'var(--text-primary)' }}>1</span>

@@ -219,7 +219,11 @@ const MerchantInventory = () => {
                   <td className="p-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-surface-variant overflow-hidden border border-outline-variant flex-shrink-0 flex items-center justify-center text-primary font-bold text-lg">
-                        {item.title.charAt(0)}
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl.startsWith('http') ? item.imageUrl.split(',')[0] : `http://localhost:5001${item.imageUrl.split(',')[0]}`} alt={item.title} className="w-full h-full object-cover" />
+                        ) : (
+                          item.title.charAt(0)
+                        )}
                       </div>
                       <div>
                         <p className="font-label-md font-bold text-on-surface group-hover:text-primary transition-colors cursor-pointer">{item.title}</p>
@@ -260,6 +264,9 @@ const MerchantInventory = () => {
                   </td>
                   <td className="p-4 text-center">
                     <div className="flex items-center justify-center gap-2">
+                      <button onClick={() => navigate(`/product/${item.id}`)} className="text-on-surface-variant hover:text-primary p-2 transition-colors rounded-full hover:bg-surface-container" title="View Product">
+                        <span className="material-symbols-outlined text-[20px]" data-icon="visibility">visibility</span>
+                      </button>
                       <button onClick={() => navigate(`/merchant/products/${item.id}/edit`)} className="text-on-surface-variant hover:text-primary p-2 transition-colors rounded-full hover:bg-surface-container" title="Edit Product">
                         <span className="material-symbols-outlined text-[20px]" data-icon="edit">edit</span>
                       </button>

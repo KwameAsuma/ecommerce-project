@@ -38,6 +38,9 @@ const MerchantAuctions = () => {
   const [newBasePrice, setNewBasePrice] = useState("");
   const [newEndTime, setNewEndTime] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [newBrand, setNewBrand] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newCondition, setNewCondition] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -72,12 +75,18 @@ const MerchantAuctions = () => {
         basePrice: parseFloat(newBasePrice),
         endTime: new Date(newEndTime).toISOString(),
         imageUrl: newImageUrl || null,
+        brand: newBrand || null,
+        description: newDescription || null,
+        condition: newCondition || null,
       });
       setShowCreateModal(false);
       setNewTitle("");
       setNewBasePrice("");
       setNewEndTime("");
       setNewImageUrl("");
+      setNewBrand("");
+      setNewDescription("");
+      setNewCondition("");
       fetchAuctions();
     } catch (err) {
       const errorMsg = err.response?.data?.errors?.[0]?.msg || err.response?.data?.error || "Failed to create auction.";
@@ -329,48 +338,71 @@ const MerchantAuctions = () => {
                 <div className="bg-error/10 border border-error text-error px-4 py-3 rounded-xl text-sm font-medium">{createError}</div>
               )}
 
-              <div className="flex items-start gap-4">
-                <div className="w-20 h-20 bg-surface-container-high rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="flex flex-col gap-4">
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Auction Images</label>
+                <div className="flex overflow-x-auto whitespace-nowrap pb-2 gap-4">
                   {newImageUrl ? (
-                    <img src={`http://localhost:5000${newImageUrl}`} alt="Auction Preview" className="w-full h-full object-cover" />
+                    newImageUrl.split(',').map((url, i) => (
+                      <div key={i} className="w-20 h-20 bg-surface-container-high rounded-xl border border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <img src={url.startsWith('http') ? url : `http://localhost:5001${url}`} alt="Auction Preview" className="w-full h-full object-cover" />
+                      </div>
+                    ))
                   ) : (
-                    <span className="material-symbols-outlined text-[24px] text-on-surface-variant/50">image</span>
+                    <div className="w-20 h-20 bg-surface-container-high rounded-xl border-2 border-dashed border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <span className="material-symbols-outlined text-[24px] text-on-surface-variant/50">image</span>
+                    </div>
                   )}
                 </div>
-                <div className="space-y-2 flex-1">
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Auction Image</label>
+                <div className="space-y-2">
                   <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold cursor-pointer transition-colors ${imageUploading ? "bg-surface-container text-on-surface-variant" : "bg-primary/10 text-primary hover:bg-primary/20"}`}>
                     <span className="material-symbols-outlined text-[16px]">{imageUploading ? "hourglass_empty" : "upload"}</span>
-                    {imageUploading ? "Uploading..." : "Upload Image"}
+                    {imageUploading ? "Uploading..." : "Upload Images"}
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       className="hidden"
                       disabled={imageUploading}
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (!file) return;
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files);
+                        if (files.length === 0) return;
                         setImageUploading(true);
                         setCreateError("");
                         
-                        const formDataPayload = new FormData();
-                        formDataPayload.append("image", file);
-                        
-                        api.post("/upload/image", formDataPayload, {
-                          headers: { "Content-Type": "multipart/form-data" }
-                        }).then(res => {
-                          if (res.data.status === "success") {
-                            setNewImageUrl(res.data.imageUrl);
+                        try {
+                          const uploadedUrls = [];
+                          for (const file of files) {
+                            const formDataPayload = new FormData();
+                            formDataPayload.append("image", file);
+                            
+                            const res = await api.post("/upload/image", formDataPayload, {
+                              headers: { "Content-Type": "multipart/form-data" }
+                            });
+                            if (res.data.status === "success") {
+                              uploadedUrls.push(res.data.imageUrl);
+                            }
                           }
-                        }).catch(err => {
+                          if (uploadedUrls.length > 0) {
+                            setNewImageUrl(prev => prev ? `${prev},${uploadedUrls.join(',')}` : uploadedUrls.join(','));
+                          }
+                        } catch (err) {
                           console.error(err);
-                          setCreateError("Failed to upload image. Image may be too large.");
-                        }).finally(() => {
+                          setCreateError("Failed to upload some images.");
+                        } finally {
                           setImageUploading(false);
-                        });
+                        }
                       }}
                     />
                   </label>
+                  {newImageUrl && (
+                    <button 
+                      type="button" 
+                      onClick={() => setNewImageUrl("")}
+                      className="ml-4 text-sm font-bold text-error hover:underline"
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -398,6 +430,42 @@ const MerchantAuctions = () => {
                   placeholder="e.g. 500.00"
                   className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/50 text-sm"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Brand</label>
+                <input
+                  type="text"
+                  value={newBrand}
+                  onChange={(e) => setNewBrand(e.target.value)}
+                  placeholder="e.g. Samsung"
+                  className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/50 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Condition</label>
+                <select
+                  value={newCondition}
+                  onChange={(e) => setNewCondition(e.target.value)}
+                  className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface text-sm bg-surface"
+                >
+                  <option value="">Select condition</option>
+                  <option value="New">New</option>
+                  <option value="Refurbished">Refurbished</option>
+                  <option value="Used">Used</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Description</label>
+                <textarea
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  rows="3"
+                  placeholder="Describe your auction item..."
+                  className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/50 text-sm resize-y"
+                ></textarea>
               </div>
 
               <div>

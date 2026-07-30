@@ -118,7 +118,7 @@ const CheckoutPage = () => {
       
       {/* Sticky Header Container (Removed to use CustomerLayout) */}
 
-      <main style={{ flexGrow: 1, padding: "3rem", display: "flex", justifyContent: "center" }} onClick={() => {}}>
+      <main className="padding-responsive" style={{ flexGrow: 1, display: "flex", justifyContent: "center" }} onClick={() => {}}>
         <div key="checkout-route" className="responsive-flex" style={{ animation: "fadeRoute 0.4s ease-out", maxWidth: "1300px", width: "100%" }}>
           
           {/* Left Column */}
@@ -126,7 +126,7 @@ const CheckoutPage = () => {
             
             <div className="glass-panel premium-card">
               <h2 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "1rem", margin: "0 0 2rem 0" }}>
-                <span style={{ backgroundColor: "var(--brand-blue)", color: "white", width: "32px", height: "32px", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "1.1rem" }}>1</span>
+                <span style={{ backgroundColor: "var(--brand-primary)", color: "white", width: "32px", height: "32px", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "1.1rem" }}>1</span>
                 Order Summary
               </h2>
 
@@ -134,18 +134,18 @@ const CheckoutPage = () => {
                 <div style={{ color: "var(--text-secondary)", textAlign: "center", padding: "3rem 0", backgroundColor: "var(--bg-base)", borderRadius: "12px", border: "1px dashed var(--border)" }}>
                   <span className="material-symbols-outlined text-[48px]" style={{ opacity: 0.3, marginBottom: "1rem" }}>shopping_cart</span><br/>
                   <span style={{ fontSize: "1.1rem", fontWeight: "600" }}>Nothing to checkout.</span> <br/>
-                  <button onClick={() => navigate("/catalog")} style={{ marginTop: "1.5rem", padding: "0.8rem 1.5rem", backgroundColor: "var(--brand-blue)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "700" }}>Explore Catalog</button>
+                  <button onClick={() => navigate("/")} style={{ marginTop: "1.5rem", padding: "0.8rem 1.5rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "700" }}>Explore Catalog</button>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                   {checkoutItems.map((item, idx) => (
-                    <div key={idx} style={{ display: "flex", alignItems: "center", gap: "1.5rem", padding: "1.5rem", backgroundColor: "var(--bg-base)", borderRadius: "12px", border: "1px solid var(--border)", transition: "all 0.2s" }} onMouseOver={e=>e.currentTarget.style.borderColor="var(--brand-blue)"} onMouseOut={e=>e.currentTarget.style.borderColor="var(--border)"}>
+                    <div key={idx} style={{ display: "flex", alignItems: "center", gap: "1.5rem", padding: "1.5rem", backgroundColor: "var(--bg-base)", borderRadius: "12px", border: "1px solid var(--border)", transition: "all 0.2s" }} onMouseOver={e=>e.currentTarget.style.borderColor="var(--brand-primary)"} onMouseOut={e=>e.currentTarget.style.borderColor="var(--border)"}>
                       <div style={{ width: "80px", height: "80px", borderRadius: "8px", overflow: "hidden", backgroundColor: "#f1f5f9", flexShrink: 0 }}>
                         <img src={item.image} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       </div>
                       <div style={{ flexGrow: 1 }}>
                         <h3 style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--text-primary)", margin: "0 0 0.3rem 0" }}>{item.name}</h3>
-                        <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "500" }}>{item.category} • Sold by <span style={{ color: "var(--brand-blue)" }}>{item.merchant}</span></div>
+                        <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "500" }}>{item.category} • Sold by <span style={{ color: "var(--brand-primary)" }}>{item.merchant}</span></div>
                         <div style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "1.5rem" }}>
                           {buyNowId ? (
                             <div style={{ fontSize: "0.95rem", color: "var(--text-secondary)", fontWeight: "600" }}>
@@ -176,7 +176,7 @@ const CheckoutPage = () => {
 
             <div className="glass-panel premium-card">
               <h2 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "1rem", margin: "0 0 2rem 0" }}>
-                <span style={{ backgroundColor: "var(--brand-blue)", color: "white", width: "32px", height: "32px", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "1.1rem" }}>2</span>
+                <span style={{ backgroundColor: "var(--brand-primary)", color: "white", width: "32px", height: "32px", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "1.1rem" }}>2</span>
                 Delivery Details
               </h2>
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -204,13 +204,13 @@ const CheckoutPage = () => {
 
             <div className="glass-panel premium-card">
               <h2 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "1rem", margin: "0 0 2rem 0" }}>
-                <span style={{ backgroundColor: "var(--brand-blue)", color: "white", width: "32px", height: "32px", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "1.1rem" }}>3</span>
+                <span style={{ backgroundColor: "var(--brand-primary)", color: "white", width: "32px", height: "32px", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "1.1rem" }}>3</span>
                 Payment Method
               </h2>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
-                <div onClick={() => setPaymentMethod("momo")} style={{ backgroundColor: paymentMethod === "momo" ? "rgba(245, 158, 11, 0.05)" : "var(--bg-base)", border: paymentMethod === "momo" ? "2px solid var(--brand-gold)" : "1px solid var(--border)", padding: "1.5rem", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", cursor: "pointer", transition: "all 0.2s", position: "relative" }}>
-                  {paymentMethod === "momo" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "10px", right: "10px", color: "var(--brand-gold)", fontSize: "20px" }}>check_circle</span>}
+                <div onClick={() => setPaymentMethod("momo")} style={{ backgroundColor: paymentMethod === "momo" ? "rgba(245, 158, 11, 0.05)" : "var(--bg-base)", border: paymentMethod === "momo" ? "2px solid var(--brand-accent)" : "1px solid var(--border)", padding: "1.5rem", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", cursor: "pointer", transition: "all 0.2s", position: "relative" }}>
+                  {paymentMethod === "momo" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "10px", right: "10px", color: "var(--brand-accent)", fontSize: "20px" }}>check_circle</span>}
                   <div style={{ width: "48px", height: "48px", backgroundColor: "#f59e0b", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", color: "white", fontSize: "1.5rem", fontWeight: "800" }}>M</div>
                   <span style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1rem" }}>MTN MoMo</span>
                 </div>
@@ -221,9 +221,9 @@ const CheckoutPage = () => {
                   <span style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1rem" }}>Telecel Cash</span>
                 </div>
 
-                <div onClick={() => setPaymentMethod("at")} style={{ backgroundColor: paymentMethod === "at" ? "rgba(37, 99, 235, 0.05)" : "var(--bg-base)", border: paymentMethod === "at" ? "2px solid var(--brand-blue)" : "1px solid var(--border)", padding: "1.5rem", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", cursor: "pointer", transition: "all 0.2s", position: "relative" }}>
-                  {paymentMethod === "at" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "10px", right: "10px", color: "var(--brand-blue)", fontSize: "20px" }}>check_circle</span>}
-                  <div style={{ width: "48px", height: "48px", backgroundColor: "var(--brand-blue)", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", color: "white", fontSize: "1.5rem", fontWeight: "800" }}>A</div>
+                <div onClick={() => setPaymentMethod("at")} style={{ backgroundColor: paymentMethod === "at" ? "rgba(37, 99, 235, 0.05)" : "var(--bg-base)", border: paymentMethod === "at" ? "2px solid var(--brand-primary)" : "1px solid var(--border)", padding: "1.5rem", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", cursor: "pointer", transition: "all 0.2s", position: "relative" }}>
+                  {paymentMethod === "at" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "10px", right: "10px", color: "var(--brand-primary)", fontSize: "20px" }}>check_circle</span>}
+                  <div style={{ width: "48px", height: "48px", backgroundColor: "var(--brand-primary)", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", color: "white", fontSize: "1.5rem", fontWeight: "800" }}>A</div>
                   <span style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1rem" }}>AT Money</span>
                 </div>
 
@@ -281,7 +281,7 @@ const CheckoutPage = () => {
                   <span style={{ color: "var(--text-primary)", fontWeight: "700" }}>GH₵ {deliveryFee.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2rem", color: "var(--text-secondary)", fontSize: "1rem", fontWeight: "500" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>Escrow Service Fee <span className="material-symbols-outlined text-[16px]" style={{ color: "var(--brand-gold)" }}>info</span></span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>Escrow Service Fee <span className="material-symbols-outlined text-[16px]" style={{ color: "var(--brand-accent)" }}>info</span></span>
                   <span style={{ color: "var(--text-primary)", fontWeight: "700" }}>GH₵ {escrowFee.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
 
@@ -290,7 +290,7 @@ const CheckoutPage = () => {
                     <div style={{ fontSize: "1.2rem", fontWeight: "900", color: "var(--text-primary)", marginBottom: "0.2rem" }}>Total to Pay</div>
                     <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "600" }}>Includes taxes and fees</div>
                   </div>
-                  <div style={{ fontSize: "2.2rem", fontWeight: "900", color: "var(--brand-blue)", letterSpacing: "-1px" }}>
+                  <div style={{ fontSize: "2.2rem", fontWeight: "900", color: "var(--brand-primary)", letterSpacing: "-1px" }}>
                     GH₵ {totalToPay.toLocaleString(undefined, {minimumFractionDigits: 2})}
                   </div>
                 </div>
@@ -303,7 +303,7 @@ const CheckoutPage = () => {
                   style={{ 
                     width: "100%", 
                     padding: "1.2rem", 
-                    backgroundColor: (checkoutItems.length === 0 || isProcessing) ? "var(--border)" : "var(--brand-blue)", 
+                    backgroundColor: (checkoutItems.length === 0 || isProcessing) ? "var(--border)" : "var(--brand-primary)", 
                     color: "white", 
                     border: "none", 
                     borderRadius: "12px", 
@@ -330,7 +330,7 @@ const CheckoutPage = () => {
                 </button>
                 <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
                 <div style={{ textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "1.5rem", fontWeight: "500", lineHeight: "1.5" }}>
-                  By confirming, you agree to our <span style={{ color: "var(--brand-blue)", cursor: "pointer", fontWeight: "700" }}>Merchant Terms</span> & <span style={{ color: "var(--brand-blue)", cursor: "pointer", fontWeight: "700" }}>Escrow Security Protocol</span>.
+                  By confirming, you agree to our <span style={{ color: "var(--brand-primary)", cursor: "pointer", fontWeight: "700" }}>Merchant Terms</span> & <span style={{ color: "var(--brand-primary)", cursor: "pointer", fontWeight: "700" }}>Escrow Security Protocol</span>.
                 </div>
               </div>
             </div>
