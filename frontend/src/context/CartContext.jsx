@@ -4,15 +4,18 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+  const [addedItemModal, setAddedItemModal] = useState(null);
 
-  const addToCart = (product) => {
+  const addToCart = (product, customQty = 1) => {
+    const qtyToAdd = (typeof customQty === "number" && customQty > 0) ? customQty : (product.qty || 1);
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+        return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + qtyToAdd } : item);
       }
-      return [...prev, { ...product, qty: 1 }];
+      return [...prev, { ...product, qty: qtyToAdd }];
     });
+    setAddedItemModal({ ...product, addedQty: qtyToAdd });
   };
 
   const removeFromCart = (productId) => {
@@ -35,7 +38,7 @@ export const CartProvider = ({ children }) => {
   const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, decreaseQuantity, clearCart, cartTotal, cartCount }}>
+    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, decreaseQuantity, clearCart, cartTotal, cartCount, addedItemModal, setAddedItemModal }}>
       {children}
     </CartContext.Provider>
   );

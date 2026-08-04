@@ -147,6 +147,9 @@ const ProfilePage = () => {
 
   const handleSavePreferences = async () => {
     try {
+      if (editForm.deliveryAddress) {
+        localStorage.setItem("defaultDeliveryAddress", editForm.deliveryAddress);
+      }
       await api.patch("/users/profile", editForm);
       window.location.reload();
     } catch (err) {
@@ -207,22 +210,9 @@ const ProfilePage = () => {
             {user?.email || "kwame.asuma@tradehub.com"}
           </p>
           
-          <div style={{ width: "100%", padding: "1rem", backgroundColor: "var(--bg-base)", borderRadius: "8px", border: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <div style={{ width: "100%", padding: "1rem", backgroundColor: "var(--bg-base)", borderRadius: "8px", border: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
             <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Account Role</span>
-            <span style={{ fontSize: "0.85rem", color: "var(--brand-accent)", fontWeight: "800", textTransform: "uppercase" }}>{user?.role || "Consumer"}</span>
-          </div>
-
-          <div style={{ width: "100%", padding: "1rem", backgroundColor: "var(--bg-base)", borderRadius: "8px", border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "2rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Wallet Balance</span>
-              <span style={{ fontSize: "1rem", color: "var(--brand-primary)", fontWeight: "800" }}>GH₵ {Number(walletBalance).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
-            </div>
-            <button 
-              onClick={() => setIsDepositModalOpen(true)}
-              style={{ width: "100%", padding: "0.6rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "6px", fontWeight: "700", cursor: "pointer", marginTop: "0.5rem" }}
-            >
-              Load Funds
-            </button>
+            <span style={{ fontSize: "0.85rem", color: "var(--brand-primary)", fontWeight: "800", textTransform: "uppercase" }}>{user?.role || "Consumer"}</span>
           </div>
 
           <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -279,7 +269,7 @@ const ProfilePage = () => {
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <label style={{ display: "block", fontSize: "0.75rem", color: "var(--text-secondary)", textTransform: "uppercase", fontWeight: "700", marginBottom: "0.4rem" }}>Delivery Address</label>
-                  <div style={{ fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: "500" }}>{user?.deliveryAddress || "No delivery address saved. Click Edit to add one."}</div>
+                  <div style={{ fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: "500" }}>{user?.deliveryAddress || localStorage.getItem("defaultDeliveryAddress") || "No delivery address saved. Click Edit to add one."}</div>
                 </div>
               </div>
             ) : (
@@ -376,47 +366,6 @@ const ProfilePage = () => {
 
         </div>
       </div>
-
-      {isDepositModalOpen && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
-          <div style={{ backgroundColor: "var(--bg-panel)", borderRadius: "16px", padding: "2rem", width: "100%", maxWidth: "400px", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--text-primary)", margin: 0 }}>Load Funds</h2>
-              <button onClick={() => setIsDepositModalOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}>
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            
-            <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem", fontSize: "0.9rem" }}>
-              Enter the amount you wish to add to your escrow wallet.
-            </p>
-            
-            <div style={{ marginBottom: "1.5rem" }}>
-              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "0.5rem", textTransform: "uppercase" }}>Amount (GH₵)</label>
-              <input 
-                type="number" 
-                value={depositAmount} 
-                onChange={(e) => setDepositAmount(e.target.value)}
-                placeholder="0.00"
-                style={{ width: "100%", padding: "1rem", borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "var(--bg-base)", color: "var(--text-primary)", fontSize: "1.2rem", fontWeight: "700" }} 
-              />
-            </div>
-            
-            <button 
-              onClick={handleDeposit}
-              disabled={isDepositing || !depositAmount || Number(depositAmount) <= 0}
-              style={{ 
-                width: "100%", padding: "1rem", backgroundColor: "var(--brand-primary)", color: "white", 
-                border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "1rem", cursor: "pointer",
-                opacity: (isDepositing || !depositAmount || Number(depositAmount) <= 0) ? 0.5 : 1
-              }}
-            >
-              {isDepositing ? "Processing..." : "Confirm Deposit"}
-            </button>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };

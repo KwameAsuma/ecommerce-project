@@ -16,7 +16,7 @@ const CheckoutPage = () => {
   const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState("momo");
   const [walletBalance, setWalletBalance] = useState(0);
-  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState(() => localStorage.getItem("defaultDeliveryAddress") || "124 Independence Avenue, Ridge, Accra");
   const [orderComments, setOrderComments] = useState("");
   const [momoNumber, setMomoNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -32,6 +32,10 @@ const CheckoutPage = () => {
           setWalletBalance(res.data.balances.availableBalance || 0);
         } catch (err) {
           console.error("Failed to load wallet", err);
+        }
+        if (user.deliveryAddress) {
+          setDeliveryAddress(user.deliveryAddress);
+          localStorage.setItem("defaultDeliveryAddress", user.deliveryAddress);
         }
       }
     };
@@ -57,12 +61,8 @@ const CheckoutPage = () => {
       setError("Please enter a delivery address.");
       return;
     }
-    if (paymentMethod !== "wallet" && momoNumber.length < 9) {
+    if (momoNumber.length < 9) {
       setError("Please enter a valid Mobile Money number.");
-      return;
-    }
-    if (paymentMethod === "wallet" && walletBalance < totalToPay) {
-      setError("Insufficient wallet balance.");
       return;
     }
     setError(null);
@@ -181,7 +181,23 @@ const CheckoutPage = () => {
               </h2>
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div>
-                  <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Delivery Address</label>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                    <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Delivery Address</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.setItem("defaultDeliveryAddress", deliveryAddress);
+                        if (user?.id) {
+                          api.patch("/users/profile", { deliveryAddress }).then(() => alert("Saved! This is now your default address across your profile and orders.")).catch(() => alert("Default address saved locally!"));
+                        } else {
+                          alert("Default delivery address saved!");
+                        }
+                      }}
+                      style={{ background: "none", border: "none", color: "var(--brand-primary)", fontWeight: "800", fontSize: "0.82rem", cursor: "pointer", textDecoration: "underline", display: "flex", alignItems: "center", gap: "0.2rem" }}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">save</span> Save as Default for Profile
+                    </button>
+                  </div>
                   <input 
                     type="text"
                     value={deliveryAddress}
@@ -226,35 +242,24 @@ const CheckoutPage = () => {
                   <div style={{ width: "48px", height: "48px", backgroundColor: "var(--brand-primary)", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", color: "white", fontSize: "1.5rem", fontWeight: "800" }}>A</div>
                   <span style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1rem" }}>AT Money</span>
                 </div>
-
-                <div onClick={() => setPaymentMethod("wallet")} style={{ backgroundColor: paymentMethod === "wallet" ? "rgba(34, 197, 94, 0.05)" : "var(--bg-base)", border: paymentMethod === "wallet" ? "2px solid #22c55e" : "1px solid var(--border)", padding: "1.5rem", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", cursor: "pointer", transition: "all 0.2s", position: "relative" }}>
-                  {paymentMethod === "wallet" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "10px", right: "10px", color: "#22c55e", fontSize: "20px" }}>check_circle</span>}
-                  <div style={{ width: "48px", height: "48px", backgroundColor: "#22c55e", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", color: "white", fontSize: "1.5rem", fontWeight: "800" }}>
-                    <span className="material-symbols-outlined">account_balance_wallet</span>
-                  </div>
-                  <span style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1rem" }}>TradeHub Wallet</span>
-                  <span style={{ fontSize: "0.85rem", fontWeight: "700", color: walletBalance >= totalToPay ? "var(--success)" : "var(--danger)" }}>Balance: GH₵ {Number(walletBalance).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
-                </div>
               </div>
 
-              {paymentMethod !== "wallet" && (
-                <div>
-                  <label style={{ display: "block", marginBottom: "0.8rem", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Mobile Money Number</label>
-                  <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", backgroundColor: "var(--bg-base)" }}>
-                    <div style={{ padding: "1rem 1.5rem", borderRight: "1px solid var(--border)", fontWeight: "800", color: "var(--text-primary)", backgroundColor: "var(--bg-panel)", display: "flex", alignItems: "center" }}>+233</div>
-                    <input 
-                      type="text" 
-                      placeholder="XX XXX XXXX" 
-                      value={momoNumber}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/\D/g, ""); // Only allow digits
-                        if (val.length <= 10) setMomoNumber(val);
-                      }}
-                      style={{ flexGrow: 1, padding: "1rem 1.5rem", border: "none", outline: "none", fontSize: "1.1rem", backgroundColor: "transparent", color: "var(--text-primary)", fontWeight: "600", letterSpacing: "1px" }} 
-                    />
-                  </div>
+              <div>
+                <label style={{ display: "block", marginBottom: "0.8rem", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Mobile Money Number</label>
+                <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", backgroundColor: "var(--bg-base)" }}>
+                  <div style={{ padding: "1rem 1.5rem", borderRight: "1px solid var(--border)", fontWeight: "800", color: "var(--text-primary)", backgroundColor: "var(--bg-panel)", display: "flex", alignItems: "center" }}>+233</div>
+                  <input 
+                    type="text" 
+                    placeholder="XX XXX XXXX" 
+                    value={momoNumber}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, ""); // Only allow digits
+                      if (val.length <= 10) setMomoNumber(val);
+                    }}
+                    style={{ flexGrow: 1, padding: "1rem 1.5rem", border: "none", outline: "none", fontSize: "1.1rem", backgroundColor: "transparent", color: "var(--text-primary)", fontWeight: "600", letterSpacing: "1px" }} 
+                  />
                 </div>
-              )}
+              </div>
             </div>
 
           </div>
@@ -263,10 +268,10 @@ const CheckoutPage = () => {
           <div style={{ flex: "1 1 400px" }}>
             <div className="glass-panel premium-card" style={{ position: "sticky", top: "120px", padding: 0 }}>
               
-              <div style={{ padding: "2rem", borderBottom: "1px solid var(--border)", backgroundColor: "var(--bg-base)" }}>
-                <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "var(--text-primary)" }}>Order Summary</h3>
-                <p style={{ margin: "0.3rem 0 0 0", color: "var(--text-secondary)", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                  <span className="material-symbols-outlined text-[16px]" style={{ color: "var(--success)" }}>verified_user</span> 
+              <div style={{ padding: "2rem", borderBottom: "1px solid rgba(255,255,255,0.15)", background: "linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #4338ca 100%)", color: "#ffffff", borderTopLeftRadius: "16px", borderTopRightRadius: "16px", boxShadow: "0 4px 15px rgba(30, 58, 138, 0.25)" }}>
+                <h3 style={{ margin: 0, fontSize: "1.35rem", fontWeight: "900", color: "#ffffff", letterSpacing: "-0.5px" }}>Order Summary</h3>
+                <p style={{ margin: "0.4rem 0 0 0", color: "rgba(255, 255, 255, 0.88)", fontSize: "0.88rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span className="material-symbols-outlined text-[18px]" style={{ color: "#4ade80" }}>verified_user</span> 
                   Protected by TradeHub Escrow
                 </p>
               </div>

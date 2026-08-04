@@ -15,7 +15,7 @@ const defaultPreferences = {
 const SettingsPage = () => {
   const navigate = useNavigate();
 
-  const { user, setUser } = useAuth();
+  const { user, setUser, logout } = useAuth();
 
   // ── Preferences state (loaded from user context) ──
   const [currency, setCurrency] = useState(user?.currency || "GHS");
@@ -124,6 +124,20 @@ const SettingsPage = () => {
       showToast(msg, "error");
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  // ── Delete account handler ──
+  const handleDeleteAccount = async () => {
+    if (window.confirm("Are you sure you want to permanently delete your account? This action cannot be undone.")) {
+      try {
+        await api.delete("/users/profile");
+        await logout();
+        navigate("/login");
+      } catch (err) {
+        console.error("Failed to delete account", err);
+        showToast("Failed to delete account", "error");
+      }
     }
   };
 
@@ -361,6 +375,27 @@ const SettingsPage = () => {
             }}
           >
             {isSaving ? "Saving Changes..." : "Save Preferences"}
+          </button>
+        </div>
+
+        {/* Danger Zone / Delete Account */}
+        <div style={{ backgroundColor: "rgba(239, 68, 68, 0.04)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "16px", padding: "2rem", marginTop: "1.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+            <span className="material-symbols-outlined" style={{ color: "#ef4444" }}>warning</span>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "#ef4444", margin: 0 }}>Danger Zone</h3>
+          </div>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: "0 0 1.5rem 0", maxWidth: "600px" }}>
+            Permanently delete your account and all associated personal preferences and records from TradeHub. This action is irreversible.
+          </p>
+          <button 
+            onClick={handleDeleteAccount}
+            type="button"
+            style={{ padding: "0.8rem 1.8rem", backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "8px", fontWeight: "700", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "0.5rem", boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)" }}
+            onMouseOver={e => e.currentTarget.style.backgroundColor = "#dc2626"}
+            onMouseOut={e => e.currentTarget.style.backgroundColor = "#ef4444"}
+          >
+            <span className="material-symbols-outlined text-[18px]">delete_forever</span>
+            Delete Account
           </button>
         </div>
 

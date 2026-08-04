@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useCatalog } from "../context/CatalogContext";
 
 const LoginPage = ({ isAdminLogin = false }) => {
   const [email, setEmail] = useState("");
@@ -9,6 +10,7 @@ const LoginPage = ({ isAdminLogin = false }) => {
   const [showPassword, setShowPassword] = useState(false);
   
   const { login, logout, isLoading } = useAuth();
+  const { resetFilters } = useCatalog();
   const navigate = useNavigate();
 
   const isFormValid = email.trim() !== '' && password.trim() !== '';
@@ -34,7 +36,10 @@ const LoginPage = ({ isAdminLogin = false }) => {
 
       if (role === "admin") navigate("/admin");
       else if (role === "merchant") navigate("/merchant");
-      else navigate("/");
+      else {
+        resetFilters();
+        navigate("/", { replace: true });
+      }
     } catch (err) {
       setError(err.response?.data?.error || err.response?.data?.message || "Invalid email or password");
     }

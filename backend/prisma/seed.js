@@ -70,6 +70,14 @@ async function main() {
         stockCount: 3,
         category: 'Electronics',
         imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=800&auto=format&fit=crop',
+      },
+      {
+        title: 'Rolex Submariner Date (m126610lv-0002)',
+        description: 'Authentic Rolex Submariner Date with classic green Cerachrom bezel (Kermit/Starbucks). Full box and verification papers included.',
+        price: 165000.00,
+        stockCount: 1,
+        category: 'Electronics',
+        imageUrl: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop',
       }
     ];
 
@@ -104,6 +112,15 @@ async function main() {
         brand: 'Ashanti Crafts',
         condition: 'Used',
         description: 'Authentic Ashanti wooden stool with intricate Adinkra symbols.'
+      },
+      {
+        title: 'Rolex Submariner Date (m126610lv-0002)',
+        basePrice: 165000.00,
+        endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        imageUrl: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop',
+        brand: 'Rolex',
+        condition: 'New / Unworn',
+        description: 'Authentic Rolex Submariner Date with classic green Cerachrom bezel (Kermit/Starbucks). Full box and verification papers included.'
       }
     ];
 

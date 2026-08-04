@@ -37,6 +37,13 @@ exports.getActiveAuctions = async () => {
         endTime: { gt: new Date() },
       },
       orderBy: { endTime: "asc" },
+      include: {
+        bids: {
+          orderBy: [{ bidAmount: "desc" }, { timestamp: "desc" }],
+          include: { user: { select: { id: true, name: true, email: true } } }
+        },
+        importer: { select: { id: true, name: true, email: true } }
+      }
     });
     return auctions;
   } catch (error) {
@@ -49,6 +56,13 @@ exports.getAuctionById = async (auctionId) => {
   try {
     const auction = await prisma.auction.findUnique({
       where: { id: Number(auctionId) },
+      include: {
+        bids: {
+          orderBy: [{ bidAmount: "desc" }, { timestamp: "desc" }],
+          include: { user: { select: { id: true, name: true, email: true } } }
+        },
+        importer: { select: { id: true, name: true, email: true } }
+      }
     });
     return auction;
   } catch (error) {
@@ -66,6 +80,7 @@ exports.createBid = async (bidData) => {
         userId: Number(userId),
         bidAmount: bidAmount?.toString?.() ?? String(bidAmount),
       },
+      include: { user: { select: { id: true, name: true, email: true } } }
     });
 
     // Update auction current highest bid
@@ -86,6 +101,7 @@ exports.getBidsForAuction = async (auctionId) => {
     const bids = await prisma.bid.findMany({
       where: { auctionId: Number(auctionId) },
       orderBy: [{ bidAmount: "desc" }, { timestamp: "desc" }],
+      include: { user: { select: { id: true, name: true, email: true } } }
     });
     return bids;
   } catch (error) {
@@ -99,6 +115,7 @@ exports.getHighestBid = async (auctionId) => {
     const bid = await prisma.bid.findFirst({
       where: { auctionId: Number(auctionId) },
       orderBy: [{ bidAmount: "desc" }, { timestamp: "desc" }],
+      include: { user: { select: { id: true, name: true, email: true } } }
     });
     return bid;
   } catch (error) {

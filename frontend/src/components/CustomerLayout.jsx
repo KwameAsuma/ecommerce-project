@@ -6,10 +6,29 @@ import { useCart } from "../context/CartContext";
 
 const CustomerLayout = () => {
   const { user, logout } = useAuth();
-  const { filters, updateFilter, allProducts } = useCatalog();
+  const { filters, updateFilter, allProducts, smartMatch } = useCatalog();
   
   const [localSearchQuery, setLocalSearchQuery] = useState(filters.searchQuery || "");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("recentSearches") || "[]");
+      return Array.isArray(saved) ? saved.slice(0, 2) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const addRecentSearch = (query) => {
+    if (!query || !query.trim()) return;
+    const q = query.trim();
+    setRecentSearches(prev => {
+      const filtered = prev.filter(item => item.toLowerCase() !== q.toLowerCase());
+      const updated = [q, ...filtered].slice(0, 2);
+      localStorage.setItem("recentSearches", JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   useEffect(() => {
     setLocalSearchQuery(filters.searchQuery || "");
@@ -21,21 +40,12 @@ const CustomerLayout = () => {
     }
     if (!allProducts) return [];
     
-    const query = localSearchQuery.toLowerCase();
+    const query = localSearchQuery.toLowerCase().trim();
     
-    // Exact startsWith first
-    let matches = allProducts.filter(p => 
-      p.name.toLowerCase().startsWith(query) || 
-      p.category.toLowerCase().startsWith(query)
+    // Strictly find matching items by smartMatch or direct name check
+    const matches = allProducts.filter(p => 
+      typeof smartMatch === 'function' ? smartMatch(p, query) : p.name.toLowerCase().includes(query)
     );
-    
-    // Fallback to includes if no exact startsWith matches
-    if (matches.length === 0) {
-      matches = allProducts.filter(p => 
-        p.name.toLowerCase().includes(query) || 
-        p.category.toLowerCase().includes(query)
-      );
-    }
     
     const uniqueMatches = [];
     const seen = new Set();
@@ -44,7 +54,7 @@ const CustomerLayout = () => {
         seen.add(match.name);
         uniqueMatches.push(match.name);
       }
-      if (uniqueMatches.length >= 5) break;
+      if (uniqueMatches.length >= 6) break;
     }
     return uniqueMatches;
   };
@@ -66,10 +76,24 @@ const CustomerLayout = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Force Admin to stay in Admin Ecosystem
   useEffect(() => {
-    if (user && (user.role === 'admin' || user.role === 'ADMIN')) {
-      navigate('/admin');
+    const handleClickOutside = (e) => {
+      if (filterOpen && !e.target.closest('.filter-popup-container')) {
+        setFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [filterOpen]);
+
+  // Force Admin and Merchant accounts to stay inside their dedicated portals
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin' || user.role === 'ADMIN') {
+        navigate('/admin', { replace: true });
+      } else if (user.role === 'merchant' || user.role === 'MERCHANT' || user.role === 'vendor' || user.role === 'VENDOR') {
+        navigate('/merchant', { replace: true });
+      }
     }
   }, [user, navigate]);
 
@@ -148,24 +172,25 @@ const CustomerLayout = () => {
         }
       `}</style>
       
-      {/* Sticky Header Container */}
+      {/* Header Container (Static on Product Details page, Sticky elsewhere) */}
       <div style={{ 
-        position: "sticky", 
-        top: 0, 
+        position: location.pathname.startsWith("/product/") ? "static" : "sticky",
+        top: 0,
         zIndex: 50, 
-        backgroundColor: "var(--bg-panel)",
-        boxShadow: scrolled ? "0 10px 30px -10px rgba(0,0,0,0.15)" : "none",
-        transition: "box-shadow 0.3s ease"
+        backgroundColor: "#4343C7",
+        boxShadow: scrolled ? "0 10px 30px -10px rgba(0,0,0,0.25)" : "0 4px 20px rgba(67, 67, 199, 0.2)",
+        transition: "all 0.3s ease",
+        color: "#ffffff"
       }}>
         {/* Top Header */}
         <header className="customer-header" style={{ 
-          padding: "0.2rem 5%", 
+          padding: "0.7rem 1.5%", 
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center",
           flexWrap: "wrap",
-          gap: "1rem",
-          minHeight: "50px"
+          gap: "1.2rem",
+          minHeight: "70px"
         }}>
         
         {/* Left: Hamburger & Brand */}
@@ -174,39 +199,176 @@ const CustomerLayout = () => {
           {/* Click Toggle Sidebar Menu */}
           <div 
             onClick={() => setNavOpen(!navOpen)}
-            style={{ position: "relative", cursor: "pointer", color: "var(--text-primary)", display: "flex", alignItems: "center" }}
+            style={{ position: "relative", cursor: "pointer", color: "#ffffff", display: "flex", alignItems: "center", transition: "color 0.2s" }}
+            onMouseOver={e=>e.currentTarget.style.color="var(--brand-accent)"}
+            onMouseOut={e=>e.currentTarget.style.color="#ffffff"}
           >
-            <span className="material-symbols-outlined text-[24px]">menu</span>
+            <span className="material-symbols-outlined text-[26px]">menu</span>
           </div>
 
-          <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
-            <img src="/app_icon.png" alt="TradeHub Logo" style={{ height: "30px", width: "auto", objectFit: "contain" }} />
+          <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "12px" }}>
+            <img 
+              src="/app_icon.png" 
+              alt="TradeHub Logo Icon" 
+              style={{ width: "40px", height: "40px", borderRadius: "10px", objectFit: "contain", backgroundColor: "rgba(255,255,255,0.1)", padding: "2px", border: "1.5px solid #D4F613", boxShadow: "0 0 15px rgba(212, 246, 19, 0.45)" }} 
+            />
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "1.35rem", fontWeight: "900", color: "#ffffff", letterSpacing: "-0.5px", lineHeight: "1" }}>Trade<span style={{ color: "#D4F613" }}>Hub</span></span>
+            </div>
           </Link>
         </div>
 
+        {/* Dominant Mode Switcher Capsule */}
+        <div style={{
+          display: "flex",
+          backgroundColor: "rgba(0, 0, 0, 0.22)",
+          padding: "4px",
+          borderRadius: "999px",
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+          boxShadow: "inset 0 2px 5px rgba(0,0,0,0.18)",
+          margin: "0 0.5rem"
+        }} className="max-md:order-3 max-md:w-full max-md:justify-center">
+          <button 
+            onClick={() => navigate("/")}
+            style={{ 
+              padding: "0.55rem 1.5rem", 
+              border: "none", 
+              borderRadius: "999px",
+              backgroundColor: isActive("/") ? "#D4F613" : "transparent", 
+              color: isActive("/") ? "#000000" : "rgba(255,255,255,0.88)", 
+              fontWeight: isActive("/") ? "900" : "700", 
+              fontSize: "0.92rem", 
+              cursor: "pointer", 
+              transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              boxShadow: isActive("/") ? "0 4px 15px rgba(212, 246, 19, 0.35)" : "none",
+              letterSpacing: "-0.2px"
+            }}
+          >
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: isActive("/") ? "'FILL' 1" : "'FILL' 0", color: isActive("/") ? "#000000" : "rgba(255,255,255,0.85)" }}>storefront</span>
+            Native Store
+          </button>
+          <button 
+            onClick={() => navigate("/auctions")}
+            style={{ 
+              padding: "0.55rem 1.5rem", 
+              border: "none", 
+              borderRadius: "999px",
+              backgroundColor: isActive("/auctions") ? "#D4F613" : "transparent", 
+              color: isActive("/auctions") ? "#000000" : "rgba(255,255,255,0.88)", 
+              fontWeight: isActive("/auctions") ? "900" : "700", 
+              fontSize: "0.92rem", 
+              cursor: "pointer", 
+              transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              boxShadow: isActive("/auctions") ? "0 4px 15px rgba(212, 246, 19, 0.35)" : "none",
+              letterSpacing: "-0.2px"
+            }}
+          >
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: isActive("/auctions") ? "'FILL' 1" : "'FILL' 0", color: isActive("/auctions") ? "#000000" : "rgba(255,255,255,0.85)" }}>flight_takeoff</span>
+            Consolidated Imports
+          </button>
+        </div>
+
         {/* Center: Search & Unified Filter */}
-        <div className="search-container" style={{ display: "flex", alignItems: "center", gap: "1rem", flex: "1 1 300px", maxWidth: "600px" }}>
+        <div className="search-container" style={{ display: "flex", alignItems: "center", gap: "0.8rem", flex: "1 1 250px", maxWidth: "480px" }}>
           <div style={{ position: "relative", flexGrow: 1 }}>
-            <span className="material-symbols-outlined" style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: "20px" }}>search</span>
+            <span className="material-symbols-outlined" style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "rgba(255, 255, 255, 0.8)", fontSize: "20px" }}>search</span>
             <input 
               type="text" 
               placeholder="Search premium goods..." 
               value={localSearchQuery}
-              onChange={(e) => setLocalSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setLocalSearchQuery(val);
+                if (val === "") {
+                  updateFilter("searchQuery", "");
+                }
+              }}
+              onFocus={() => { setIsSearchFocused(true); setFilterOpen(false); }}
+              onClick={() => setFilterOpen(false)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  updateFilter("searchQuery", localSearchQuery);
+                  updateFilter("searchQuery", localSearchQuery.trim());
+                  addRecentSearch(localSearchQuery.trim());
                   setIsSearchFocused(false);
-                  navigate("/");
+                  if (location.pathname !== "/" && location.pathname !== "/auctions") {
+                    navigate("/");
+                  }
                 }
               }}
-              style={{ width: "100%", padding: "0.7rem 1rem 0.7rem 2.8rem", borderRadius: "999px", border: "1px solid var(--border)", backgroundColor: "var(--bg-base)", fontSize: "0.9rem", outline: "none", transition: "all 0.2s", color: "var(--text-primary)" }}
+              style={{ width: "100%", padding: "0.7rem 2.6rem 0.7rem 2.8rem", borderRadius: "999px", border: "1px solid rgba(255, 255, 255, 0.25)", backgroundColor: "rgba(255, 255, 255, 0.15)", fontSize: "0.95rem", outline: "none", transition: "all 0.2s", color: "#ffffff" }}
             />
+            {localSearchQuery && (
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setLocalSearchQuery("");
+                  updateFilter("searchQuery", "");
+                  setIsSearchFocused(false);
+                  if (location.pathname === "/" || location.pathname === "/auctions") {
+                    // Stay on current page, refreshed cleanly
+                  } else {
+                    navigate("/");
+                  }
+                }}
+                style={{
+                  position: "absolute",
+                  right: "0.8rem",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  color: "rgba(255, 255, 255, 0.8)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "0.2rem"
+                }}
+                title="Clear Search"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>close</span>
+              </button>
+            )}
             {isSearchFocused && (
-              <div style={{ position: "absolute", top: "100%", left: 0, width: "100%", marginTop: "0.5rem", backgroundColor: "var(--bg-panel)", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 10px 25px rgba(0,0,0,0.1)", zIndex: 100, overflow: "hidden" }}>
-                {!localSearchQuery.trim() && <div style={{ padding: "0.8rem 1rem", fontSize: "0.8rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid var(--border)" }}>Trending Searches</div>}
+              <div style={{ position: "absolute", top: "100%", left: 0, width: "100%", marginTop: "0.5rem", backgroundColor: "var(--bg-panel)", color: "var(--text-primary)", borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", zIndex: 100, overflow: "hidden" }}>
+                {!localSearchQuery.trim() && recentSearches.length > 0 && (
+                  <div>
+                    <div style={{ padding: "0.6rem 1rem", fontSize: "0.75rem", fontWeight: "800", color: "var(--brand-primary)", textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid var(--border)", backgroundColor: "var(--bg-base)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <span className="material-symbols-outlined text-[16px]">history</span> Recent Searches
+                    </div>
+                    {recentSearches.map((rec, rIdx) => (
+                      <div
+                        key={`rec-${rIdx}`}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setLocalSearchQuery(rec);
+                          updateFilter("searchQuery", rec);
+                          addRecentSearch(rec);
+                          setIsSearchFocused(false);
+                          if (location.pathname !== "/" && location.pathname !== "/auctions") {
+                            navigate("/");
+                          }
+                        }}
+                        style={{ padding: "0.75rem 1rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.6rem", borderBottom: "1px solid var(--border)", fontWeight: "700", fontSize: "0.92rem", color: "var(--text-primary)", transition: "background-color 0.15s" }}
+                        onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-base)"}
+                        onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "var(--text-muted)" }}>schedule</span>
+                        <span>{rec}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {!localSearchQuery.trim() && <div style={{ padding: "0.7rem 1rem", fontSize: "0.78rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "0.4rem" }}><span className="material-symbols-outlined text-[16px]">trending_up</span> Trending Searches</div>}
                 
                 {localSearchQuery.trim() && suggestions.length === 0 && (
                   <div style={{ padding: "1.5rem 1rem", color: "var(--text-secondary)", fontSize: "0.95rem", textAlign: "center" }}>
@@ -217,17 +379,19 @@ const CustomerLayout = () => {
                 {suggestions.map((suggestion, idx) => (
                   <div 
                     key={idx}
-                    onClick={() => {
+                    onMouseDown={(e) => {
+                      e.preventDefault();
                       setLocalSearchQuery(suggestion);
                       updateFilter("searchQuery", suggestion);
+                      addRecentSearch(suggestion);
                       setIsSearchFocused(false);
                       navigate("/");
                     }}
-                    style={{ padding: "0.8rem 1rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.8rem", color: "var(--text-primary)", fontSize: "0.95rem", transition: "background 0.2s" }}
+                    style={{ padding: "0.8rem 1rem", display: "flex", alignItems: "center", gap: "0.8rem", color: "var(--text-primary)", fontSize: "0.9rem", cursor: "pointer", transition: "background 0.15s", borderBottom: "1px solid var(--bg-base)" }}
                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = "var(--bg-base)"}
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "var(--text-muted)" }}>
+                    <span className="material-symbols-outlined" style={{ color: "var(--text-muted)", fontSize: "18px" }}>
                       {localSearchQuery.trim() ? "search" : "trending_up"}
                     </span>
                     {suggestion}
@@ -238,17 +402,17 @@ const CustomerLayout = () => {
           </div>
 
           {/* Unified Filter Button */}
-          <div style={{ position: "relative" }}>
+          <div className="filter-popup-container" style={{ position: "relative" }}>
             <button 
               onClick={() => setFilterOpen(!filterOpen)} 
-              style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.5rem 1rem", borderRadius: "999px", border: "1px solid var(--border)", backgroundColor: "var(--bg-panel)", color: "var(--text-primary)", fontSize: "0.85rem", cursor: "pointer", fontWeight: "600", transition: "all 0.2s" }}
-              onMouseOver={e => e.currentTarget.style.borderColor = "var(--brand-primary)"}
-              onMouseOut={e => e.currentTarget.style.borderColor = "var(--border)"}
+              style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.65rem 1.1rem", borderRadius: "999px", border: "none", backgroundColor: "var(--brand-accent)", color: "#000000", fontSize: "0.85rem", cursor: "pointer", fontWeight: "800", transition: "all 0.2s", boxShadow: "0 4px 12px rgba(212, 246, 19, 0.3)" }}
+              onMouseOver={e => e.currentTarget.style.filter = "brightness(1.1)"}
+              onMouseOut={e => e.currentTarget.style.filter = "brightness(1)"}
             >
               Filter <span className="material-symbols-outlined text-[20px]">expand_more</span>
             </button>
             {filterOpen && (
-              <div style={{ position: "absolute", top: "120%", right: "0", width: "450px", backgroundColor: "var(--bg-panel)", border: "1px solid var(--border)", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 20px 40px rgba(0,0,0,0.15)", zIndex: 100, display: "flex", gap: "2rem" }}>
+              <div style={{ position: "absolute", top: "120%", right: "0", width: "450px", backgroundColor: "var(--bg-panel)", color: "var(--text-primary)", border: "1px solid var(--border)", borderRadius: "16px", padding: "1.5rem", boxShadow: "0 20px 40px rgba(0,0,0,0.15)", zIndex: 100, display: "flex", gap: "2rem", textAlign: "left" }}>
                 
                 {/* Price Options Column */}
                 <div style={{ flex: 1 }}>
@@ -292,15 +456,12 @@ const CustomerLayout = () => {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Right: Icons / Auth */}
+        </div>        {/* Right: Icons / Auth */}
         <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-          
-          <div className="custom-tooltip-container" style={{ cursor: "pointer", position: "relative", color: "var(--text-secondary)", display: "flex", alignItems: "center", transition: "color 0.2s" }} onMouseOver={e=>e.currentTarget.style.color="var(--brand-primary)"} onMouseOut={e=>e.currentTarget.style.color="var(--text-secondary)"} onClick={() => navigate("/checkout")}>
-            <span className="material-symbols-outlined text-[24px]">shopping_cart</span>
+            <div className="custom-tooltip-container" style={{ cursor: "pointer", position: "relative", color: "#ffffff", display: "flex", alignItems: "center", transition: "color 0.2s" }} onMouseOver={e=>e.currentTarget.style.color="var(--brand-accent)"} onMouseOut={e=>e.currentTarget.style.color="#ffffff"} onClick={() => navigate("/checkout")}>
+            <span className="material-symbols-outlined text-[26px]">shopping_cart</span>
             {cartCount > 0 && (
-              <span style={{ position: "absolute", top: -6, right: -8, backgroundColor: "var(--brand-accent)", color: "#000", fontSize: "0.7rem", fontWeight: "800", width: "18px", height: "18px", display: "flex", justifyContent: "center", alignItems: "center", borderRadius: "50%" }}>
+              <span style={{ position: "absolute", top: -6, right: -10, backgroundColor: "var(--brand-accent)", color: "#000000", fontSize: "0.72rem", fontWeight: "900", width: "19px", height: "19px", display: "flex", justifyContent: "center", alignItems: "center", borderRadius: "50%", boxShadow: "0 2px 6px rgba(0,0,0,0.4)" }}>
                 {cartCount}
               </span>
             )}
@@ -309,8 +470,8 @@ const CustomerLayout = () => {
           
           {user ? (
             <>
-              <div className="custom-tooltip-container" style={{ cursor: "pointer", color: "var(--text-secondary)", display: "flex", alignItems: "center", transition: "color 0.2s" }} onMouseOver={e=>e.currentTarget.style.color="var(--brand-primary)"} onMouseOut={e=>e.currentTarget.style.color="var(--text-secondary)"} onClick={() => navigate("/profile")}>
-                <span className="material-symbols-outlined text-[24px]">account_circle</span>
+              <div className="custom-tooltip-container" style={{ cursor: "pointer", color: "#ffffff", display: "flex", alignItems: "center", transition: "color 0.2s" }} onMouseOver={e=>e.currentTarget.style.color="var(--brand-accent)"} onMouseOut={e=>e.currentTarget.style.color="#ffffff"} onClick={() => navigate("/profile")}>
+                <span className="material-symbols-outlined text-[26px]">account_circle</span>
                 <span className="custom-tooltip">User Profile</span>
               </div>
               
@@ -321,60 +482,14 @@ const CustomerLayout = () => {
             </>
           ) : (
             <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-              <button onClick={() => navigate("/login")} style={{ backgroundColor: "transparent", border: "none", color: "var(--text-secondary)", fontWeight: "700", cursor: "pointer", fontSize: "0.9rem" }}>Login</button>
-              <button onClick={() => navigate("/register")} style={{ backgroundColor: "var(--brand-primary)", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: "8px", fontWeight: "700", cursor: "pointer", fontSize: "0.9rem" }}>Sign Up</button>
+              <button onClick={() => navigate("/login")} style={{ backgroundColor: "transparent", border: "none", color: "#ffffff", fontWeight: "700", cursor: "pointer", fontSize: "0.95rem", transition: "color 0.2s" }} onMouseOver={e=>e.currentTarget.style.color="var(--brand-accent)"} onMouseOut={e=>e.currentTarget.style.color="#ffffff"}>Login</button>
+              <button onClick={() => navigate("/register")} style={{ backgroundColor: "var(--brand-accent)", color: "#000000", border: "none", padding: "0.5rem 1.2rem", borderRadius: "8px", fontWeight: "800", cursor: "pointer", fontSize: "0.95rem", transition: "all 0.2s", boxShadow: "0 4px 12px rgba(212, 246, 19, 0.3)" }} onMouseOver={e=>e.currentTarget.style.filter="brightness(1.1)"} onMouseOut={e=>e.currentTarget.style.filter="brightness(1)"}>Sign Up</button>
             </div>
           )}
           
         </div>
         </header>
-
-        {/* Secondary Navigation (Ecosystem Tabs) */}
-        <div className="secondary-nav" style={{ padding: "0 2rem", display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: "1rem" }}>
-        <div style={{ display: "flex", gap: "2rem" }}>
-          <button 
-            onClick={() => navigate("/")}
-            style={{ 
-              padding: "0.3rem 0", 
-              border: "none", 
-              backgroundColor: "transparent", 
-              color: isActive("/") ? "var(--brand-primary)" : "var(--text-secondary)", 
-              fontWeight: isActive("/") ? "800" : "600", 
-              fontSize: "0.95rem", 
-              cursor: "pointer", 
-              borderBottom: isActive("/") ? "3px solid var(--brand-primary)" : "3px solid transparent",
-              transition: "all 0.2s",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem"
-            }}
-          >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: isActive("/") ? "'FILL' 1" : "'FILL' 0" }}>storefront</span>
-            Native Store
-          </button>
-          <button 
-            onClick={() => navigate("/auctions")}
-            style={{ 
-              padding: "0.3rem 0", 
-              border: "none", 
-              backgroundColor: "transparent", 
-              color: isActive("/auctions") ? "var(--brand-accent)" : "var(--text-secondary)", 
-              fontWeight: isActive("/auctions") ? "800" : "600", 
-              fontSize: "0.95rem", 
-              cursor: "pointer", 
-              borderBottom: isActive("/auctions") ? "3px solid var(--brand-accent)" : "3px solid transparent",
-              transition: "all 0.2s",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem"
-            }}
-          >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: isActive("/auctions") ? "'FILL' 1" : "'FILL' 0" }}>flight_takeoff</span>
-            Consolidated Imports
-          </button>
-        </div>
       </div>
-    </div>
 
       {/* Sidebar Drawer - Premium Redesign */}
       {navOpen && (
@@ -430,12 +545,11 @@ const CustomerLayout = () => {
       )}
 
       {/* Main Full-Width Content Area */}
-      <main className="main-content" style={{ flexGrow: 1, padding: "1.5rem 5%" }} onClick={() => setFilterOpen(false)}>
+      <main className="main-content" style={{ flexGrow: 1, padding: "1.2rem 1.5%" }} onClick={() => setFilterOpen(false)}>
         <div key={location.pathname} style={{ animation: "fadeRoute 0.4s ease-out" }}>
           <Outlet />
         </div>
       </main>
-      
     </div>
   );
 };

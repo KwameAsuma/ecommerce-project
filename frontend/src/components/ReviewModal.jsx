@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import api from '../services/api';
 
 const ReviewModal = ({ isOpen, onClose, merchantId, productId, onSubmit }) => {
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -11,6 +11,10 @@ const ReviewModal = ({ isOpen, onClose, merchantId, productId, onSubmit }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (rating === 0) {
+      setError('Please select a star rating.');
+      return;
+    }
     setLoading(true);
     setError(null);
 

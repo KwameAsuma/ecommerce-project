@@ -78,18 +78,18 @@ function App() {
 
               {/* Customer Ecosystem (Public + Protected) */}
               <Route element={<CustomerLayout />}>
-                {/* Public Catalog */}
+                {/* Public Catalog & Auctions */}
                 <Route path="/" element={<CatalogPage />} />
                 <Route path="/product/:id" element={<ProductDetailsPage />} />
                 <Route path="/merchants" element={<VerifiedMerchantsPage />} />
                 <Route path="/merchant-profile/:id" element={<MerchantProfilePage />} />
                 <Route path="/auctions" element={<AuctionsPage />} />
+                <Route path="/auctions/:id" element={<LiveAuctions />} />
 
                 {/* Protected Customer Features */}
                 <Route element={<ProtectedRoute allowedRole="customer" />}>
                   <Route path="/checkout" element={<CheckoutPage />} />
                   <Route path="/escrow" element={<EscrowStatus />} />
-                  <Route path="/auctions/:id" element={<LiveAuctions />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/profile/orders" element={<AllOrdersPage />} />
                   <Route path="/profile/bids" element={<AllBidsPage />} />

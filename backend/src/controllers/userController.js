@@ -205,4 +205,27 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = { getDashboard, getMerchants, getUserById, getMerchantProfile, updateProfile };
+const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.userId;
+    try {
+      await prisma.user.delete({ where: { id: userId } });
+    } catch (dbError) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          email: `deleted_${userId}_${Date.now()}@deleted.com`,
+          name: "Deleted User",
+          passwordHash: "deleted_account",
+        },
+      });
+    }
+    res.clearCookie("token");
+    res.status(200).json({ status: "success", message: "Account deleted successfully." });
+  } catch (error) {
+    console.error("deleteAccount error:", error);
+    res.status(500).json({ error: "Failed to delete account." });
+  }
+};
+
+module.exports = { getDashboard, getMerchants, getUserById, getMerchantProfile, updateProfile, deleteAccount };

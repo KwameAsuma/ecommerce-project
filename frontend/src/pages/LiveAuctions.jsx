@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useSocket from "../hooks/useSocket";
 import api from "../services/api";
@@ -10,8 +10,7 @@ const LiveAuctions = () => {
   const { id } = useParams();
   const AUCTION_ID = parseInt(id, 10);
   const navigate = useNavigate();
-  const { socket, liveBid, error } = useSocket(AUCTION_ID);
-
+  const { socket, liveBid, error, watchers } = useSocket(AUCTION_ID);
   const { user } = useAuth();
 
   const [auction, setAuction] = useState(null);
@@ -20,36 +19,47 @@ const LiveAuctions = () => {
   const [bidInput, setBidInput] = useState("");
   const [isBidding, setIsBidding] = useState(false);
   const [bidError, setBidError] = useState("");
+  const [timeRemaining, setTimeRemaining] = useState("04:23:02");
+  const [selectedTab, setSelectedTab] = useState("description");
+  const [activeThumbIndex, setActiveThumbIndex] = useState(0);
 
   const fallbackImages = [
-    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=800&auto=format&fit=crop", // Watch
-    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800&auto=format&fit=crop", // Headphones
-    "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=800&auto=format&fit=crop", // Camera
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop", // Shoes
-    "https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?q=80&w=800&auto=format&fit=crop"  // iPhone
+    "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1000&auto=format&fit=crop"
   ];
 
-  const getImageUrl = (auction) => {
-    if (!auction) return fallbackImages[0];
-    if (auction.imageUrl) {
-      const url = auction.imageUrl.split(',')[0];
-      return url.startsWith('http') ? url : `http://localhost:5001${url}`;
+  const productImages = useMemo(() => {
+    if (!auction) return fallbackImages;
+    const title = (auction.title || auction.name || "").toLowerCase();
+    const rawUrl = (auction.imageUrl || auction.image || "").toLowerCase();
+    if (title.includes("rolex") || title.includes("submariner") || rawUrl.includes("rolex") || rawUrl.includes("google.com/url") || rawUrl.includes("m126610lv")) {
+      return ["https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop"];
     }
-    const aid = auction.id || 0;
-    return fallbackImages[aid % fallbackImages.length];
-  };
+    if (auction.imageUrl) {
+      const urls = auction.imageUrl.split(',').map(u => {
+        const url = u.trim();
+        return url.startsWith('http') ? url : `http://localhost:5000${url}`;
+      }).filter(Boolean);
+      return urls.length ? urls : fallbackImages;
+    }
+    return fallbackImages;
+  }, [auction]);
 
   const fetchAuctionData = async () => {
     try {
       const res = await api.get(`/auctions/${AUCTION_ID}`);
-      setAuction(res.data.auction);
-      setCurrentHighest(parseFloat(res.data.auction.currentHighestBid || res.data.auction.current_highest_bid || res.data.auction.basePrice));
+      const loadedAuction = res.data.auction;
+      setAuction(loadedAuction);
       
-      // Also fetch bids leaderboard
+      const baseOrHighest = parseFloat(loadedAuction.currentHighestBid || loadedAuction.current_highest_bid || loadedAuction.basePrice || 0);
+      setCurrentHighest(baseOrHighest);
+      if (!bidInput) setBidInput((baseOrHighest + 100).toString());
+
+      // Fetch bids leaderboard (pure real user bids)
       const bidRes = await api.get(`/auctions/${AUCTION_ID}/bids`);
-      setBids(bidRes.data.bids || []);
+      const fetchedBids = bidRes.data.bids || [];
+      setBids(fetchedBids);
     } catch (err) {
-      console.error("Failed to load auction", err);
+      console.error("Failed to load auction VIP room", err);
     }
   };
 
@@ -58,12 +68,34 @@ const LiveAuctions = () => {
     // eslint-disable-next-line
   }, [AUCTION_ID]);
 
-  // Automatically update the UI when the WebSocket hears a new bid
+  useEffect(() => {
+    if (!auction?.endTime) return;
+    const updateTimer = () => {
+      const diff = new Date(auction.endTime) - new Date();
+      if (diff <= 0) {
+        setTimeRemaining("00:00:00 - CLOSED");
+        return;
+      }
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeRemaining(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    };
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
+  }, [auction]);
+
   useEffect(() => {
     if (liveBid) {
-      setCurrentHighest(parseFloat(liveBid.bid_amount || liveBid.bidAmount));
-      // Refresh the leaderboard to get the new bid details
-      api.get(`/auctions/${AUCTION_ID}/bids`).then(res => setBids(res.data.bids || []));
+      const newBidAmount = parseFloat(liveBid.bid_amount || liveBid.bidAmount);
+      setCurrentHighest(newBidAmount);
+      setBidInput((newBidAmount + 100).toString());
+      api.get(`/auctions/${AUCTION_ID}/bids`).then(res => {
+        if (res.data.bids && res.data.bids.length > 0) {
+          setBids(res.data.bids);
+        }
+      });
     }
   }, [liveBid, AUCTION_ID]);
 
@@ -72,20 +104,18 @@ const LiveAuctions = () => {
     setBidError("");
 
     if (!user) {
-      setBidError("You must be logged in to place a bid.");
+      setBidError("Please log in to submit verified financial bids.");
       return;
     }
     
     const bidAmount = parseFloat(bidInput);
-    if (bidAmount <= currentHighest) {
-      setBidError(`Your bid must be higher than GH₵ ${currentHighest.toFixed(2)}`);
+    if (isNaN(bidAmount) || bidAmount <= currentHighest) {
+      setBidError(`Your bid must exceed GHS ${currentHighest.toLocaleString()}`);
       return;
     }
 
     setIsBidding(true);
-
     try {
-      // Send through HTTP as primary, socket as secondary broadcast
       await api.post(`/auctions/${AUCTION_ID}/bids`, {
         userId: user.id,
         bidAmount: bidAmount,
@@ -99,192 +129,329 @@ const LiveAuctions = () => {
         });
       }
 
-      setBidInput("");
-      fetchAuctionData(); // Refresh UI immediately
+      setBidInput((bidAmount + 100).toString());
+      await fetchAuctionData();
     } catch (err) {
-      setBidError(err.response?.data?.error || "Failed to place bid. Please try again.");
+      setBidError(err.response?.data?.error || "Failed to transmit bid. Please retry.");
     } finally {
       setIsBidding(false);
     }
   };
 
-  if (!auction) return <LoadingOverlay message="Connecting to Live Demand Pool..." />;
+  if (!auction) return <LoadingOverlay message="Loading Auction Engine Event Room..." />;
 
   const isLive = auction.status === 'active' && new Date(auction.endTime) > new Date();
+  const topBidderName = String(bids[0]?.user?.name || bids[0]?.userId || "None (Be first!)");
+  const titleStr = String(auction.title || auction.name || "");
+  const isTech = titleStr.toLowerCase().includes("macbook") || titleStr.toLowerCase().includes("ipad") || titleStr.toLowerCase().includes("sony");
+
+  const specPillars = isTech ? [
+    { label: "PROCESSOR", value: "M3 Max Chip" },
+    { label: "UNIFIED RAM", value: "36GB LPDDR5x" },
+    { label: "BATTERY HEALTH", value: "100% (24 Cycles)" },
+    { label: "WARRANTY", value: "Active (Feb 2026)" }
+  ] : [
+    { label: "BRAND / MAKER", value: auction.brand || "TradeHub Heritage" },
+    { label: "ORIGIN & BUILD", value: "Ghana Export / Authentic" },
+    { label: "INSPECTION GRADE", value: auction.condition || "Grade A+ Certified" },
+    { label: "ESCROW STATUS", value: "100% Fully Protected" }
+  ];
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem", animation: 'fadeRoute 0.4s ease-out' }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-base)", color: "#111827", padding: "0 0 6rem 0", fontFamily: "'Inter', sans-serif" }}>
       
-      <button onClick={() => navigate('/auctions')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', color: 'var(--text-secondary)', fontWeight: '700', cursor: 'pointer', marginBottom: '2rem', padding: 0 }}>
-        <span className="material-symbols-outlined">arrow_back</span> Back to Auctions
-      </button>
-
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: "2rem", alignItems: "start" }}>
+      <div style={{ width: "100%", maxWidth: "1920px", margin: "0 auto" }}>
         
-        {/* Main Content Area */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+        {/* Top Breadcrumb Bar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", borderBottom: "1px solid #e2e8f0", paddingBottom: "1rem" }}>
+          <button onClick={() => navigate('/auctions')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', color: '#64748b', fontWeight: '700', fontSize: "0.9rem", cursor: 'pointer', padding: 0 }}>
+            <span className="material-symbols-outlined text-[20px]">arrow_back</span> Back to Auction Engine
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700" }}>ID: #AUC-{AUCTION_ID}924</span>
+            <span style={{ backgroundColor: "#ecfdf5", color: "#059669", padding: "0.25rem 0.75rem", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "800", border: "1px solid #a7f3d0" }}>
+              🔒 MoMo Escrow Verified
+            </span>
+          </div>
+        </div>
+
+        {/* Realistic Split Architecture */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.65fr 1fr", gap: "3rem", alignItems: "start" }} className="max-lg:grid-cols-1">
           
-          <div style={{ backgroundColor: 'var(--bg-panel)', borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--border)', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)' }}>
+          {/* LEFT COLUMN: REALISTIC HERO, THUMBNAILS & SPECS */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "2.2rem" }}>
             
-            {/* Header Section */}
-            <div style={{ padding: '2.5rem', borderBottom: '1px solid var(--border)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: isLive ? 'linear-gradient(90deg, var(--brand-accent), var(--danger))' : 'var(--text-muted)' }}></div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.8rem' }}>
-                    {isLive ? (
-                      <span style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ width: '8px', height: '8px', backgroundColor: 'var(--danger)', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></span>
-                        LIVE AUCTION
-                      </span>
-                    ) : (
-                      <span style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-secondary)', padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '800' }}>
-                        AUCTION CLOSED
-                      </span>
-                    )}
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
-                      Ends: {new Date(auction.endTime).toLocaleString()}
-                    </span>
-                  </div>
-                  <h1 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--text-primary)', margin: 0, letterSpacing: '-1px' }}>{auction.title}</h1>
-                  {(auction.brand || auction.condition) && (
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                      {auction.brand && <span style={{ backgroundColor: 'var(--surface-container-highest)', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold' }}>Brand: {auction.brand}</span>}
-                      {auction.condition && <span style={{ backgroundColor: 'var(--surface-container-highest)', padding: '0.3rem 0.8rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold' }}>Condition: {auction.condition}</span>}
-                    </div>
-                  )}
-                  {auction.description && (
-                    <p style={{ marginTop: '1rem', color: 'var(--text-secondary)', lineHeight: '1.5', maxWidth: '600px' }}>{auction.description}</p>
-                  )}
+            {/* Product Gallery Section */}
+            <div>
+              {/* Main Photo Container */}
+              <div style={{ position: "relative", borderRadius: "20px", overflow: "hidden", border: "1px solid #e2e8f0", backgroundColor: "#ffffff", height: "420px", marginBottom: "1rem", boxShadow: "0 4px 15px rgba(0,0,0,0.04)" }}>
+                <img src={productImages[activeThumbIndex] || productImages[0]} alt={auction.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                
+                {/* Badges Overlay */}
+                <div style={{ position: "absolute", top: "20px", left: "20px", right: "20px", display: "flex", justifyContent: "space-between", pointerEvents: "none" }}>
+                  <span style={{ backgroundColor: "#1e3a8a", color: "#ffffff", padding: "0.35rem 0.9rem", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "900", letterSpacing: "0.5px" }}>
+                    AUCTION LIVE
+                  </span>
+                  <span style={{ backgroundColor: "#fbbf24", color: "#111827", padding: "0.35rem 0.9rem", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "900", textTransform: "uppercase" }}>
+                    CONDITION: {auction.condition || "LIKE NEW"}
+                  </span>
                 </div>
               </div>
 
-              {/* Hero Image & Price Display */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', backgroundColor: 'var(--bg-base)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
-                {/* Image Placeholder */}
-                <div style={{ backgroundColor: '#f1f5f9', borderRadius: '12px', height: '200px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-                  <img src={getImageUrl(auction)} alt={auction.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              {/* Thumbnails Strip (Only show if item genuinely has multiple images) */}
+              {productImages.length > 1 && (
+                <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(productImages.length, 4)}, 1fr)`, gap: "1rem" }}>
+                  {productImages.slice(0, 4).map((img, idx) => (
+                    <div 
+                      key={idx} 
+                      onClick={() => setActiveThumbIndex(idx)}
+                      style={{ 
+                        position: "relative", height: "90px", borderRadius: "12px", overflow: "hidden", 
+                        border: activeThumbIndex === idx ? "2px solid #4343C7" : "1px solid #e2e8f0", 
+                        cursor: "pointer", backgroundColor: "#ffffff", transition: "all 0.2s"
+                      }}
+                    >
+                      <img src={img} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: activeThumbIndex === idx ? 1 : 0.7 }} />
+                    </div>
+                  ))}
                 </div>
+              )}
+            </div>
 
-                {/* Price Details */}
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ marginBottom: '1.5rem' }}>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 0.5rem 0' }}>Current Highest Bid</p>
-                    <h2 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'var(--brand-accent)', margin: 0, lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '1.5rem', color: 'var(--text-secondary)' }}>GH₵</span>
-                      {currentHighest.toLocaleString(undefined, {minimumFractionDigits: 2})}
-                    </h2>
-                  </div>
-                  <div style={{ display: 'flex', gap: '2rem', padding: '1rem', backgroundColor: 'var(--bg-panel)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                    <div>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 0.3rem 0', textTransform: 'uppercase' }}>Base Price</p>
-                      <p style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>GH₵ {parseFloat(auction.basePrice || auction.base_price).toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+            {/* Title & Headline Summary */}
+            <div>
+              <h1 style={{ fontSize: "2.2rem", fontWeight: "900", color: "#111827", margin: "0 0 0.8rem 0", letterSpacing: "-0.5px", lineHeight: "1.2" }}>
+                {auction.title}
+              </h1>
+              <p style={{ color: "#4b5563", fontSize: "1.05rem", lineHeight: "1.6", margin: 0, fontWeight: "500" }}>
+                {auction.description || "16-inch, 14-core CPU, 30-core GPU, 36GB Unified Memory, 1TB SSD Storage. Space Black finish. Pristine condition with original packaging and official warranty remaining."}
+              </p>
+            </div>
+
+            {/* 4 SPEC PILLARS (Exactly like Screenshot 1) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }} className="max-sm:grid-cols-2">
+              {specPillars.map((pillar, idx) => (
+                <div key={idx} style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "1.2rem", display: "flex", flexDirection: "column", justifyContent: "space-between", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
+                  <div>
+                    <div style={{ color: "#4343C7", marginBottom: "0.6rem" }}>
+                      <span className="material-symbols-outlined text-[24px]">
+                        {idx === 0 ? "memory" : idx === 1 ? "storage" : idx === 2 ? "battery_charging_full" : "verified"}
+                      </span>
                     </div>
-                    <div>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '700', margin: '0 0 0.3rem 0', textTransform: 'uppercase' }}>Total Bids</p>
-                      <p style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>{bids.length}</p>
-                    </div>
+                    <div style={{ fontSize: "0.68rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "0.4rem" }}>{pillar.label}</div>
                   </div>
+                  <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#111827", lineHeight: "1.3" }}>{pillar.value}</div>
                 </div>
+              ))}
+            </div>
+
+            {/* REALISTIC TABS SECTION */}
+            <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "2rem" }}>
+              <div style={{ display: "flex", borderBottom: "2px solid #e2e8f0", gap: "2.5rem", marginBottom: "2rem", overflowX: "auto" }}>
+                {[
+                  { id: "description", label: "Product Description" },
+                  { id: "shipping", label: "Shipping & Inspection" },
+                  { id: "reviews", label: "Merchant Reviews (4.9★)" }
+                ].map(tab => (
+                  <button 
+                    key={tab.id}
+                    onClick={() => setSelectedTab(tab.id)}
+                    style={{ 
+                      background: "none", border: "none", padding: "0 0 0.8rem 0", fontSize: "0.95rem", 
+                      fontWeight: selectedTab === tab.id ? "800" : "600", 
+                      color: selectedTab === tab.id ? "#4343C7" : "#64748b", 
+                      borderBottom: selectedTab === tab.id ? "2px solid #4343C7" : "2px solid transparent",
+                      marginBottom: "-2px", cursor: "pointer", transition: "all 0.2s" 
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ color: "#4b5563", fontSize: "0.95rem", lineHeight: "1.7", fontWeight: "500" }}>
+                {selectedTab === "description" && (
+                  <div>
+                    <h4 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#111827", margin: "0 0 0.8rem 0" }}>Unleash Pro Power</h4>
+                    <p style={{ marginBottom: "1.2rem" }}>
+                      The M3 Max chip brings massive performance for the most demanding workflows. Featuring a 14-core CPU and 30-core GPU, it's built for everything from hardware-accelerated ray tracing to massive 3D rendering projects.
+                    </p>
+                    <ul style={{ listStyleType: "disc", paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem", color: "#4b5563" }}>
+                      <li>Space Black anodized finish reduces fingerprints.</li>
+                      <li>MagSafe 3, three Thunderbolt 4 ports, SDXC card slot, and HDMI port.</li>
+                      <li>Backlit Magic Keyboard with Touch ID.</li>
+                      <li>Six-speaker sound system with force-cancelling woofers.</li>
+                    </ul>
+                  </div>
+                )}
+                {selectedTab === "shipping" && (
+                  <div>
+                    <h4 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#111827", margin: "0 0 0.8rem 0" }}>Customs Clearance & Logistics</h4>
+                    <p>
+                      All auction items undergo formal physical verification at our designated regional logistics terminal prior to dispatch. Once your winning bid is finalized, an express courier tracking identifier is assigned within 24 hours. Your payment remains secured in MoMo Escrow until you physically inspect the item at delivery and sign off.
+                    </p>
+                  </div>
+                )}
+                {selectedTab === "reviews" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                    <div style={{ padding: "1.2rem", backgroundColor: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                        <span style={{ fontWeight: "800", color: "#111827" }}>Kwame A. (Verified Level 4 Merchant)</span>
+                        <span style={{ color: "#eab308", fontWeight: "800" }}>★★★★★ 5.0</span>
+                      </div>
+                      <p style={{ color: "#4b5563", margin: 0, fontSize: "0.9rem" }}>"Flawless transaction through the Auction Engine. The item arrived sealed in original packaging with official verification documents as promised!"</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Bidding Section */}
-            {isLive ? (
-              <div style={{ padding: '2.5rem', backgroundColor: 'var(--bg-panel)' }}>
-                {error && <ErrorMessage message={error} />}
-                {bidError && <ErrorMessage message={bidError} />}
+          </div>
+
+          {/* RIGHT COLUMN: THE REALISTIC BIDDING CONSOLE & HISTORY */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", position: "sticky", top: "25px" }}>
+            
+            {/* TERMINAL BOX */}
+            <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "20px", overflow: "hidden", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.06)" }}>
+              
+              {/* Top Indigo Header Banner */}
+              <div style={{ backgroundColor: "#1e3a8a", padding: "1rem 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#ffffff", fontWeight: "800", fontSize: "0.85rem" }}>
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#ef4444", animation: "pulse 1.5s infinite" }}></span>
+                  LIVE AUCTION
+                </span>
+                <span style={{ backgroundColor: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", color: "#ffffff", padding: "0.25rem 0.75rem", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "700" }}>
+                  👁️ {watchers} {watchers === 1 ? "User" : "Users"} Watching
+                </span>
+              </div>
+
+              {/* Main Console Body */}
+              <div style={{ padding: "2rem 1.8rem" }}>
                 
-                {user ? (
+                {/* Current Bid Display */}
+                <div style={{ textAlign: "center", marginBottom: "1.8rem" }}>
+                  <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "0.4rem" }}>
+                    CURRENT HIGHEST BID
+                  </div>
+                  <div style={{ fontSize: "2.8rem", fontWeight: "900", color: "#1d4ed8", lineHeight: "1.1", marginBottom: "1rem" }}>
+                    <span style={{ fontSize: "1.5rem", color: "#475569", marginRight: "0.4rem" }}>GHS</span>
+                    {currentHighest.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+                  </div>
+                  <div style={{ display: "inline-block", padding: "0.3rem 1.2rem", backgroundColor: "#d1fae5", border: "1px solid #a7f3d0", borderRadius: "20px", color: "#065f46", fontSize: "0.8rem", fontWeight: "800" }}>
+                    👑 Highest Bidder: {topBidderName}
+                  </div>
+                </div>
+
+                {/* Ends In & Bids Placed (Side-by-side grey cards) */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.8rem" }}>
+                  <div style={{ backgroundColor: "#f1f5f9", padding: "1rem", borderRadius: "12px", textAlign: "center" }}>
+                    <div style={{ fontSize: "0.7rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", marginBottom: "0.2rem" }}>ENDS IN</div>
+                    <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "#111827", fontFamily: "monospace" }}>{timeRemaining}</div>
+                  </div>
+                  <div style={{ backgroundColor: "#f1f5f9", padding: "1rem", borderRadius: "12px", textAlign: "center" }}>
+                    <div style={{ fontSize: "0.7rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", marginBottom: "0.2rem" }}>BIDS PLACED</div>
+                    <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "#111827" }}>{bids.length}</div>
+                  </div>
+                </div>
+
+                {error && <ErrorMessage message={error} />}
+                {bidError && <div style={{ marginBottom: "1.5rem" }}><ErrorMessage message={bidError} /></div>}
+
+                {/* Bidding Input Form */}
+                {isLive ? (
                   <form onSubmit={handlePlaceBid}>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                      <div style={{ position: 'relative', flexGrow: 1 }}>
-                        <span style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', fontWeight: '800', color: 'var(--text-secondary)', fontSize: '1.2rem', pointerEvents: 'none' }}>GH₵</span>
+                    <div style={{ marginBottom: "0.6rem" }}>
+                      <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#4b5563", marginBottom: "0.4rem" }}>Your Bid Amount (GHS)</label>
+                      <div style={{ position: "relative" }}>
+                        <span style={{ position: "absolute", left: "1.2rem", top: "50%", transform: "translateY(-50%)", fontWeight: "800", color: "#64748b", fontSize: "1.05rem" }}>GHS</span>
                         <input
                           type="number"
                           value={bidInput}
                           onChange={(e) => setBidInput(e.target.value)}
-                          placeholder={(currentHighest + 10).toFixed(2)}
-                          step="0.01"
-                          style={{
-                            width: '100%', padding: '1.2rem 1.2rem 1.2rem 4.5rem', fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)',
-                            borderRadius: '12px', border: '2px solid var(--border)', outline: 'none', transition: 'border-color 0.2s', backgroundColor: 'var(--bg-base)'
-                          }}
-                          onFocus={e=>e.target.style.borderColor='var(--brand-accent)'}
-                          onBlur={e=>e.target.style.borderColor='var(--border)'}
+                          placeholder={(currentHighest + 100).toString()}
+                          step="10"
+                          style={{ width: "100%", padding: "0.85rem 1rem 0.85rem 3.8rem", backgroundColor: "#ffffff", border: "2px solid #cbd5e1", borderRadius: "10px", fontSize: "1.25rem", fontWeight: "800", color: "#111827", outline: "none" }}
                           required
                         />
                       </div>
-                      <button
-                        type="submit"
-                        disabled={isBidding}
-                        style={{
-                          padding: '0 2.5rem', height: '65px', fontSize: '1.2rem', backgroundColor: 'var(--brand-accent)', color: 'white',
-                          border: 'none', borderRadius: '12px', cursor: isBidding ? 'not-allowed' : 'pointer', fontWeight: '900', transition: 'all 0.2s', opacity: isBidding ? 0.7 : 1, boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)'
-                        }}
-                        onMouseOver={e=>{if(!isBidding) e.currentTarget.style.backgroundColor='#d97706'}}
-                        onMouseOut={e=>{if(!isBidding) e.currentTarget.style.backgroundColor='var(--brand-accent)'}}
-                      >
-                        {isBidding ? "Placing..." : "Place Bid"}
-                      </button>
                     </div>
+                    <div style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: "1.5rem" }}>
+                      Min. Increment: GHS 100. TradeHub fee: GHS 25 (applied on win).
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      disabled={isBidding}
+                      style={{ width: "100%", padding: "1rem", backgroundColor: "#1e3a8a", color: "#ffffff", border: "none", borderRadius: "12px", fontWeight: "800", fontSize: "1.05rem", cursor: isBidding ? "not-allowed" : "pointer", transition: "background-color 0.2s", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.6rem", boxShadow: "0 4px 12px rgba(30, 58, 138, 0.2)" }}
+                      onMouseOver={e=>{if(!isBidding) e.currentTarget.style.backgroundColor="#172554"}}
+                      onMouseOut={e=>{if(!isBidding) e.currentTarget.style.backgroundColor="#1e3a8a"}}
+                    >
+                      <span className="material-symbols-outlined text-[22px]">gavel</span>
+                      <span>{isBidding ? "Submitting Offer..." : "Place Bid"}</span>
+                    </button>
                   </form>
                 ) : (
-                  <div style={{ textAlign: "center", padding: "2rem", backgroundColor: "var(--bg-base)", borderRadius: "12px", border: "1px dashed var(--border)" }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: '40px', color: 'var(--text-muted)', marginBottom: '1rem' }}>lock</span>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>Authentication Required</h3>
-                    <p style={{ color: 'var(--text-secondary)', margin: '0 0 1.5rem 0' }}>You must be securely logged in to participate in the demand pool.</p>
-                    <button onClick={() => navigate('/login')} style={{ backgroundColor: 'var(--text-primary)', color: 'white', border: 'none', padding: '0.8rem 2rem', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>Login to Bid</button>
+                  <div style={{ textAlign: "center", padding: "1.5rem", backgroundColor: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0", color: "#64748b" }}>
+                    <p style={{ margin: 0, fontWeight: "700" }}>This auction pool is concluded.</p>
                   </div>
                 )}
               </div>
-            ) : (
-              <div style={{ padding: '2.5rem', backgroundColor: 'var(--bg-base)', textAlign: 'center' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--text-muted)', marginBottom: '1rem' }}>gavel</span>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>Auction Concluded</h3>
-                <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '1.1rem' }}>This demand pool is no longer accepting bids.</p>
-              </div>
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* Sidebar: Leaderboard */}
-        <div style={{ backgroundColor: 'var(--bg-panel)', borderRadius: '24px', border: '1px solid var(--border)', overflow: 'hidden', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', height: '100%', maxHeight: '600px' }}>
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', backgroundColor: 'var(--bg-base)' }}>
-            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span className="material-symbols-outlined text-primary">leaderboard</span>
-              Bid Leaderboard
-            </h3>
-          </div>
-          
-          <div style={{ flexGrow: 1, overflowY: 'auto', padding: '1rem' }}>
-            {bids.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                {bids.map((bid, idx) => (
-                  <div key={bid.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: idx === 0 ? 'rgba(245, 158, 11, 0.05)' : 'var(--bg-base)', border: `1px solid ${idx === 0 ? 'var(--brand-accent)' : 'var(--border)'}`, borderRadius: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: idx === 0 ? 'var(--brand-accent)' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : 'var(--bg-panel)', color: idx < 3 ? 'white' : 'var(--text-secondary)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '0.9rem', border: idx >= 3 ? '1px solid var(--border)' : 'none' }}>
-                        {idx + 1}
+            {/* LIVE BID HISTORY SECTION */}
+            <div style={{ backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "20px", padding: "1.5rem", boxShadow: "0 4px 15px rgba(0,0,0,0.03)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.2rem", borderBottom: "1px solid #f1f5f9", paddingBottom: "0.8rem" }}>
+                <span style={{ fontSize: "1.05rem", fontWeight: "900", color: "#111827" }}>Live Bid History</span>
+                <span style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "800", cursor: "pointer" }}>See All</span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "260px", overflowY: "auto" }}>
+                {bids.length === 0 ? (
+                  <div style={{ textAlign: "center", color: "#64748b", padding: "1.5rem 0", fontWeight: "600", fontSize: "0.9rem" }}>
+                    No bids recorded yet. Be the first to place a bid!
+                  </div>
+                ) : (
+                  bids.map((b, i) => (
+                    <div key={b.id || i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
+                        <div style={{ width: "34px", height: "34px", borderRadius: "50%", backgroundColor: i === 0 ? "#eff6ff" : "#f1f5f9", color: i === 0 ? "#1d4ed8" : "#64748b", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", fontSize: "0.8rem", border: i === 0 ? "1px solid #bfdbfe" : "none" }}>
+                          {String(b.user?.name || b.userId || "U").charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#111827" }}>{String(b.user?.name || b.userId || `Registered User`)}</div>
+                          <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{b.timestamp ? new Date(b.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}</div>
+                        </div>
                       </div>
-                      <div>
-                        <p style={{ margin: 0, fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.95rem' }}>{bid.user?.name || `Bidder #${bid.userId || bid.user_id}`}</p>
-                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(bid.timestamp).toLocaleTimeString()}</p>
+                      <div style={{ fontSize: "0.95rem", fontWeight: "900", color: i === 0 ? "#059669" : "#111827" }}>
+                        GHS {parseFloat(b.bidAmount || b.bid_amount || 0).toLocaleString()}
                       </div>
                     </div>
-                    <span style={{ fontWeight: '800', color: idx === 0 ? 'var(--brand-accent)' : 'var(--text-primary)' }}>
-                      GH₵ {parseFloat(bid.bidAmount || bid.bid_amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
-                    </span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                <p style={{ margin: 0 }}>No bids placed yet.</p>
-                <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Be the first to bid!</p>
+            </div>
+
+            {/* REASSURANCE WIDGET CARDS (Exactly like Screenshot 1) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div style={{ padding: "1.2rem", backgroundColor: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: "16px", display: "flex", gap: "1rem", alignItems: "start" }}>
+                <span className="material-symbols-outlined text-[24px]" style={{ color: "#059669", flexShrink: 0 }}>verified_user</span>
+                <div>
+                  <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#065f46", marginBottom: "0.2rem" }}>MoMo Escrow Protected</div>
+                  <div style={{ fontSize: "0.78rem", color: "#047857", lineHeight: "1.4", fontWeight: "500" }}>Funds only released to merchant after you confirm receipt.</div>
+                </div>
               </div>
-            )}
+
+              <div style={{ padding: "1.2rem", backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "16px", display: "flex", gap: "1rem", alignItems: "start" }}>
+                <span className="material-symbols-outlined text-[24px]" style={{ color: "#1d4ed8", flexShrink: 0 }}>verified</span>
+                <div>
+                  <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#1e3a8a", marginBottom: "0.2rem" }}>TradeHub Guarantee</div>
+                  <div style={{ fontSize: "0.78rem", color: "#1e40af", lineHeight: "1.4", fontWeight: "500" }}>100% Money-back if item isn't exactly as described.</div>
+                </div>
+              </div>
+            </div>
+
           </div>
+
         </div>
 
       </div>

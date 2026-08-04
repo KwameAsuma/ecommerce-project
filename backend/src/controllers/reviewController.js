@@ -65,7 +65,7 @@ exports.getMerchantReviews = async (req, res) => {
     });
 
     const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
-    const averageRating = reviews.length > 0 ? (totalRating / reviews.length).toFixed(1) : 0;
+    const averageRating = reviews.length > 0 ? parseFloat((totalRating / reviews.length).toFixed(1)) : 0;
 
     res.status(200).json({ reviews, averageRating, totalCount: reviews.length });
   } catch (error) {
@@ -89,7 +89,7 @@ exports.getProductReviews = async (req, res) => {
         });
 
         const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
-        const averageRating = reviews.length > 0 ? (totalRating / reviews.length).toFixed(1) : 0;
+        const averageRating = reviews.length > 0 ? parseFloat((totalRating / reviews.length).toFixed(1)) : 0;
 
         res.status(200).json({ reviews, averageRating, totalCount: reviews.length });
     } catch (error) {

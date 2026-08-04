@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
+import { useCatalog } from "../context/CatalogContext";
 
 const VerifiedIcon = () => (
   <svg width="20" height="20" fill="none" stroke="var(--brand-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -11,9 +12,30 @@ const VerifiedIcon = () => (
 const MerchantProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { allProducts } = useCatalog();
   const [merchant, setMerchant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const getProductImage = (product) => {
+    const title = (product.title || product.name || "").toLowerCase();
+    const rawUrl = (product.imageUrl || product.image || "").toLowerCase();
+    if (title.includes("rolex") || title.includes("submariner") || rawUrl.includes("rolex") || rawUrl.includes("google.com/url") || rawUrl.includes("m126610lv")) {
+      return "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop";
+    }
+    if (product.imageUrl || product.image) {
+      const url = (product.imageUrl || product.image).split(',')[0].trim();
+      if (url.startsWith('http') || url.startsWith('data:')) return url;
+      return `http://localhost:5001${url}`;
+    }
+    const fallbacks = [
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=800&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop"
+    ];
+    return fallbacks[(product.id || 0) % fallbacks.length];
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -60,7 +82,7 @@ const MerchantProfilePage = () => {
             {merchant.avatarUrl ? <img src={`http://localhost:5001${merchant.avatarUrl}`} alt={merchant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : merchant.name.charAt(0)}
           </div>
           <div style={{ paddingBottom: "0.5rem" }}>
-            <h1 style={{ fontSize: "2.5rem", fontWeight: "900", color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem", textShadow: "0 2px 4px rgba(255,255,255,0.8)" }}>
+            <h1 style={{ fontSize: "2.5rem", fontWeight: "900", color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
               {merchant.name} <VerifiedIcon />
             </h1>
             <p style={{ color: "var(--text-secondary)", fontSize: "1rem", margin: "0.2rem 0 0 0", fontWeight: "600" }}>
@@ -106,9 +128,11 @@ const MerchantProfilePage = () => {
       <div style={{ padding: "0 2rem" }}>
         <h2 style={{ fontSize: "1.8rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "1.5rem" }}>Store Inventory</h2>
         
-        {merchant.products && merchant.products.length > 0 ? (
+        {(() => {
+          const displayProducts = (merchant.products && merchant.products.length > 0) ? merchant.products : (allProducts || []).filter(p => Number(p.vendorId || p.merchantId) === Number(id) || Number(p.vendor?.id) === Number(id));
+          return displayProducts.length > 0 ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "2rem" }}>
-            {merchant.products.map(product => (
+            {displayProducts.map(product => (
               <div 
                 key={product.id} 
                 onClick={() => navigate(`/product/${product.id}`)}
@@ -117,8 +141,8 @@ const MerchantProfilePage = () => {
                 onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
               >
                 <div style={{ height: "200px", width: "100%", backgroundColor: "var(--border)", position: "relative" }}>
-                  <img src={`https://source.unsplash.com/random/400x300/?${product.category || 'product'}&sig=${product.id}`} alt={product.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  {product.stockCount <= 5 && (
+                  <img src={getProductImage(product)} alt={product.title || product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  {product.stockCount !== undefined && product.stockCount <= 5 && (
                     <div style={{ position: "absolute", top: "10px", right: "10px", backgroundColor: "var(--brand-red, #ef4444)", color: "white", padding: "0.3rem 0.6rem", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold" }}>
                       Only {product.stockCount} left
                     </div>
@@ -129,10 +153,10 @@ const MerchantProfilePage = () => {
                     {product.category || "General"}
                   </div>
                   <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--text-primary)", margin: "0 0 0.5rem 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {product.title}
+                    {product.title || product.name}
                   </h3>
                   <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "var(--text-primary)", marginTop: "1rem" }}>
-                    GH₵ {parseFloat(product.price).toFixed(2)}
+                    GH₵ {parseFloat(product.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
               </div>
@@ -144,7 +168,8 @@ const MerchantProfilePage = () => {
             <h3 style={{ fontSize: "1.2rem", color: "var(--text-primary)", margin: "0 0 0.5rem 0" }}>No Products Available</h3>
             <p style={{ color: "var(--text-secondary)", margin: 0 }}>This merchant currently has no active listings.</p>
           </div>
-        )}
+        );
+        })()}
       </div>
 
     </div>

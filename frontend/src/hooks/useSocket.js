@@ -5,6 +5,7 @@ const useSocket = (auctionId) => {
   const [socket, setSocket] = useState(null);
   const [liveBid, setLiveBid] = useState(null);
   const [error, setError] = useState(null);
+  const [watchers, setWatchers] = useState(1);
 
   useEffect(() => {
     // Connect to the NGINX proxy (which routes to the backend WebSocket engine)
@@ -19,6 +20,11 @@ const useSocket = (auctionId) => {
       setLiveBid(bidData);
     });
 
+    // Listen for real-time room viewer updates
+    newSocket.on('update_watchers', (count) => {
+      setWatchers(count || 1);
+    });
+
     // Listen for any errors (like invalid bid amounts)
     newSocket.on('bid_error', (err) => {
       setError(err.error);
@@ -26,10 +32,13 @@ const useSocket = (auctionId) => {
     });
 
     // Cleanup: Disconnect when the user leaves the page
-    return () => newSocket.disconnect();
+    return () => {
+      newSocket.emit('leave_auction', auctionId);
+      newSocket.disconnect();
+    };
   }, [auctionId]);
 
-  return { socket, liveBid, error };
+  return { socket, liveBid, error, watchers };
 };
 
 export default useSocket;

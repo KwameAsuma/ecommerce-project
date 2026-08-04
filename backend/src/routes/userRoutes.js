@@ -1,5 +1,5 @@
 const express = require("express");
-const { getDashboard, getMerchants, getUserById, getMerchantProfile, updateProfile } = require("../controllers/userController");
+const { getDashboard, getMerchants, getUserById, getMerchantProfile, updateProfile, deleteAccount } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -8,8 +8,8 @@ const router = express.Router();
 router.get("/merchants", getMerchants);
 router.get("/merchant/:id", getMerchantProfile);
 
-// Apply protect middleware so only authenticated users can access this route
 router.patch("/profile", protect, updateProfile);
+router.delete("/profile", protect, deleteAccount);
 router.get("/dashboard", protect, getDashboard);
 router.get("/:id", protect, getUserById);
 

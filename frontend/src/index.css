@@ -136,8 +136,8 @@ body {
   --text-muted: #9ca3af;
   
   /* Brand Colors */
-  --brand-primary: #0f2b5b; /* Deep Trust Navy */
-  --brand-accent: #f68b1e; /* High-Converting Orange */
+  --brand-primary: #4343C7; /* Royal Electric Indigo (#4343C7) */
+  --brand-accent: #D4F613; /* Electric Neon Lime (#D4F613) */
   
   /* Trust / Escrow */
   --success: #10b981;
