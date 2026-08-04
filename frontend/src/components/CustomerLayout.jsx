@@ -517,7 +517,8 @@ const CustomerLayout = () => {
           <div style={{ width: "320px", height: "100%", backgroundColor: "var(--bg-panel)", borderRight: "1px solid var(--border)", padding: "2.5rem", display: "flex", flexDirection: "column", gap: "1.5rem", boxShadow: "20px 0 40px rgba(0,0,0,0.2)" }} onClick={(e) => e.stopPropagation()}>
             
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-              <Link to="/" onClick={() => setNavOpen(false)} style={{ textDecoration: "none" }}>
+              <Link to="/" onClick={() => setNavOpen(false)} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
+                <img src="/app_icon.png" alt="BediDwa Logo" style={{ width: "34px", height: "34px", borderRadius: "8px", objectFit: "contain" }} />
                 <h2 style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--brand-primary)", margin: 0, cursor: "pointer", letterSpacing: "-0.5px", textTransform: "uppercase" }}>BediDwa</h2>
               </Link>
               <div onClick={() => setNavOpen(false)} style={{ cursor: "pointer", color: "var(--text-secondary)", display: "flex", alignItems: "center", padding: "0.5rem", borderRadius: "50%", backgroundColor: "var(--bg-base)" }}>

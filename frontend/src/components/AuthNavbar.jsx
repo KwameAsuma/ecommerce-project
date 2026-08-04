@@ -26,15 +26,7 @@ const AuthNavbar = () => {
 
         {/* Logo */}
         <Link to="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
-          <div style={{
-            width: 38, height: 38,
-            background: "#0f172a",
-            border: "1px solid rgba(234,179,8,0.45)",
-            borderRadius: 10,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#eab308", fontWeight: 900, fontSize: 18, letterSpacing: "-0.5px",
-            boxShadow: "0 4px 10px rgba(15, 23, 42, 0.2)",
-          }}>T</div>
+          <img src="/app_icon.png" alt="BediDwa Logo" style={{ width: 38, height: 38, borderRadius: 10, objectFit: "contain", boxShadow: "0 4px 10px rgba(15, 23, 42, 0.15)" }} />
           <span style={{ color: "#0f172a", fontWeight: 800, fontSize: 18, letterSpacing: "-0.03em" }}>BediDwa</span>
         </Link>
 

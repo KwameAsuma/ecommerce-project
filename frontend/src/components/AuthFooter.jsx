@@ -58,16 +58,9 @@ const AuthFooter = () => (
 
         {/* Brand column */}
         <div>
-          <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none", marginBottom: 14 }}>
-            <div style={{
-              width: 30, height: 30,
-              background: "linear-gradient(145deg, #1e293b, #0f172a)",
-              border: "1px solid rgba(234,179,8,0.45)",
-              borderRadius: 6,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#eab308", fontWeight: 900, fontSize: 13,
-            }}>T</div>
-            <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>BediDwa</span>
+          <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 14 }}>
+            <img src="/app_icon.png" alt="BediDwa Logo" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "contain" }} />
+            <span style={{ color: "#fff", fontWeight: 800, fontSize: 15 }}>BediDwa</span>
           </Link>
           <p style={{
             color: "rgba(255,255,255,0.3)", fontSize: 11.5,
