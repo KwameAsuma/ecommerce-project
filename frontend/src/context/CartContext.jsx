@@ -1,10 +1,26 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem("bedidwa_cart");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Failed to parse cart from localStorage", e);
+      return [];
+    }
+  });
   const [addedItemModal, setAddedItemModal] = useState(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("bedidwa_cart", JSON.stringify(cartItems));
+    } catch (e) {
+      console.error("Failed to save cart to localStorage", e);
+    }
+  }, [cartItems]);
 
   const addToCart = (product, customQty = 1) => {
     const qtyToAdd = (typeof customQty === "number" && customQty > 0) ? customQty : (product.qty || 1);

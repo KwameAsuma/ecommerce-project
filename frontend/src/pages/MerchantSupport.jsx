@@ -327,7 +327,7 @@ const MerchantSupport = () => {
                 </div>
                 <div>
                   <p className="font-label-md font-bold text-on-surface">Email</p>
-                  <p className="text-on-surface-variant text-xs">support@tradehub.gh</p>
+                  <p className="text-on-surface-variant text-xs">support@bedidwa.gh</p>
                 </div>
               </div>
             </div>

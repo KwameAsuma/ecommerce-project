@@ -5,7 +5,7 @@ const FavoritesContext = createContext();
 export const FavoritesProvider = ({ children }) => {
   const [favorites, setFavorites] = useState(() => {
     try {
-      const stored = localStorage.getItem("tradehub_favorites");
+      const stored = localStorage.getItem("bedidwa_favorites");
       return stored ? JSON.parse(stored) : [];
     } catch (e) {
       return [];
@@ -14,7 +14,7 @@ export const FavoritesProvider = ({ children }) => {
 
   useEffect(() => {
     try {
-      localStorage.setItem("tradehub_favorites", JSON.stringify(favorites));
+      localStorage.setItem("bedidwa_favorites", JSON.stringify(favorites));
     } catch (e) {
       console.error("Could not save favorites", e);
     }

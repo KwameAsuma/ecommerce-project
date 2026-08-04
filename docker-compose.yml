@@ -35,6 +35,7 @@ services:
       - "5001:5000"
     volumes:
       - ./backend:/app
+      - ./backend/uploads:/app/uploads
       - ./test_data:/app/test_data
       - /app/node_modules
     environment:

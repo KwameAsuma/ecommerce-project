@@ -14,11 +14,13 @@ datasource db {
 
 model User {
   id           Int      @id @default(autoincrement())
-  email        String   @unique
+  email        String    @unique
   phone        String?
-  passwordHash String   @map("password_hash")
-  name         String
-  role         String   @default("BUYER")
+  passwordHash    String   @map("password_hash")
+  resetOtp        String?  @map("reset_otp")
+  resetOtpExpires DateTime? @map("reset_otp_expires")
+  name            String
+  role            String   @default("CONSUMER")
   momoNumber   String?  @map("momo_number")
   trustScore      Int      @default(0) @map("trust_score")
   availableBalance Decimal @default(0) @map("available_balance") @db.Decimal(10, 2)
@@ -129,6 +131,7 @@ model Order {
   totalAmount     Decimal  @map("total_amount") @db.Decimal(10, 2)
   status          String   @default("HELD_IN_ESCROW") 
   deliveryAddress String?  @map("delivery_address")
+  deliveryOtp     String?  @map("delivery_otp")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 

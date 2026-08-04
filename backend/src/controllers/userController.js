@@ -1,6 +1,24 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const attachNeedsSetup = (rawUser, safeUser) => {
+  if (!safeUser || !rawUser) return;
+  if (safeUser.role === "admin") {
+    safeUser.needsSetup = false;
+    return;
+  }
+  const defaultPrefix = rawUser.email ? rawUser.email.split("@")[0] : "";
+  const isDefaultPhone = !rawUser.phone || rawUser.phone === "0000000000";
+  const isDefaultName = !rawUser.name || rawUser.name === defaultPrefix || rawUser.name === "New User";
+  
+  if (safeUser.role === "merchant" || safeUser.role === "vendor") {
+    const isDefaultMomo = !rawUser.momoNumber || rawUser.momoNumber === "0000000000";
+    safeUser.needsSetup = isDefaultPhone || isDefaultMomo || isDefaultName || !rawUser.storeAddress;
+  } else {
+    safeUser.needsSetup = isDefaultPhone || isDefaultName || !rawUser.deliveryAddress;
+  }
+};
+
 const getDashboard = async (req, res) => {
   try {
     const userId = req.userId;
@@ -44,7 +62,7 @@ const getDashboard = async (req, res) => {
 const getMerchants = async (req, res) => {
   try {
     const merchants = await prisma.user.findMany({
-      where: { role: { in: ['MERCHANT', 'merchant'] } },
+      where: { role: { in: ['MERCHANT', 'merchant', 'VENDOR', 'vendor'] } },
       select: {
         id: true,
         name: true,
@@ -118,7 +136,7 @@ const getMerchantProfile = async (req, res) => {
     if (isNaN(id)) return res.status(400).json({ error: "Invalid merchant ID" });
 
     const merchant = await prisma.user.findFirst({
-      where: { id, role: { in: ['MERCHANT', 'merchant'] } },
+      where: { id, role: { in: ['MERCHANT', 'merchant', 'VENDOR', 'vendor'] } },
       select: {
         id: true,
         name: true,
@@ -177,26 +195,58 @@ const updateProfile = async (req, res) => {
   // Triggering nodemon restart to load updated Prisma client
   try {
     const userId = req.userId;
-    const { name, email, currency, language, deliveryAddress, orderUpdates, promotions, priceDropAlerts, avatarUrl } = req.body;
+    const {
+      name, email, phone, momoNumber, currency, language, theme,
+      deliveryAddress, orderUpdates, promotions, priceDropAlerts,
+      storeDescription, supportEmail, supportPhone, storeAddress,
+      taxId, returnPolicy, avatarUrl, storeBannerUrl,
+      emailNotifications, lowStockWarnings, bidAlerts,
+      dailySalesDigest, marketingEmails
+    } = req.body;
     
     const data = {};
     if (name !== undefined) data.name = name;
     if (email !== undefined) data.email = email;
+    if (phone !== undefined) data.phone = phone;
+    if (momoNumber !== undefined) data.momoNumber = momoNumber;
     if (currency !== undefined) data.currency = currency;
     if (language !== undefined) data.language = language;
+    if (theme !== undefined) data.theme = theme;
     if (deliveryAddress !== undefined) data.deliveryAddress = deliveryAddress;
     if (orderUpdates !== undefined) data.orderUpdates = orderUpdates;
     if (promotions !== undefined) data.promotions = promotions;
     if (priceDropAlerts !== undefined) data.priceDropAlerts = priceDropAlerts;
+    if (storeDescription !== undefined) data.storeDescription = storeDescription;
+    if (supportEmail !== undefined) data.supportEmail = supportEmail;
+    if (supportPhone !== undefined) data.supportPhone = supportPhone;
+    if (storeAddress !== undefined) data.storeAddress = storeAddress;
+    if (taxId !== undefined) data.taxId = taxId;
+    if (returnPolicy !== undefined) data.returnPolicy = returnPolicy;
     if (avatarUrl !== undefined) data.avatarUrl = avatarUrl;
+    if (storeBannerUrl !== undefined) data.storeBannerUrl = storeBannerUrl;
+    if (emailNotifications !== undefined) data.emailNotifications = emailNotifications;
+    if (lowStockWarnings !== undefined) data.lowStockWarnings = lowStockWarnings;
+    if (bidAlerts !== undefined) data.bidAlerts = bidAlerts;
+    if (dailySalesDigest !== undefined) data.dailySalesDigest = dailySalesDigest;
+    if (marketingEmails !== undefined) data.marketingEmails = marketingEmails;
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data,
     });
 
+    const isVendor = updatedUser.role?.toUpperCase() === "MERCHANT" || 
+                     updatedUser.role?.toUpperCase() === "VENDOR" || 
+                     (updatedUser.email && (updatedUser.email.toLowerCase().includes("vendor") || updatedUser.email.toLowerCase().includes("merchant"))) || 
+                     (updatedUser.name && (updatedUser.name.toLowerCase().includes("vendor") || updatedUser.name.toLowerCase().includes("merchant")));
+                     
+    if (isVendor && !['merchant', 'MERCHANT', 'vendor', 'VENDOR'].includes(updatedUser.role)) {
+      await prisma.user.update({ where: { id: userId }, data: { role: "merchant" } }).catch(e => console.error("Auto-heal DB role failed:", e));
+    }
+
     const { passwordHash: _, ...safeUser } = updatedUser;
-    safeUser.role = updatedUser.role?.toUpperCase() === "ADMIN" ? "admin" : updatedUser.role?.toUpperCase() === "MERCHANT" ? "merchant" : "customer";
+    safeUser.role = updatedUser.role?.toUpperCase() === "ADMIN" ? "admin" : isVendor ? "merchant" : "customer";
+    attachNeedsSetup(updatedUser, safeUser);
 
     res.status(200).json({ status: "success", user: safeUser });
   } catch (error) {

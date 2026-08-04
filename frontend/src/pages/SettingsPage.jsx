@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
-const SETTINGS_KEY = "tradehub_user_preferences";
+const SETTINGS_KEY = "bedidwa_user_preferences";
 
 const defaultPreferences = {
   currency: "GHS",
@@ -385,7 +385,7 @@ const SettingsPage = () => {
             <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "#ef4444", margin: 0 }}>Danger Zone</h3>
           </div>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: "0 0 1.5rem 0", maxWidth: "600px" }}>
-            Permanently delete your account and all associated personal preferences and records from TradeHub. This action is irreversible.
+            Permanently delete your account and all associated personal preferences and records from BediDwa. This action is irreversible.
           </p>
           <button 
             onClick={handleDeleteAccount}

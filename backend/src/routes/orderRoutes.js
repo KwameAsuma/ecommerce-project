@@ -13,6 +13,7 @@ router.post("/:orderId/release-escrow", orderController.releaseEscrow);
 
 // Vendor Routes
 router.get("/vendor", orderController.getVendorOrders);
+router.post("/:id/verify-delivery", orderController.verifyDeliveryAndReleaseEscrow);
 
 // Shared/Status Update Route (Logic handles role checks)
 router.patch("/:orderId/status", orderController.updateOrderStatus);

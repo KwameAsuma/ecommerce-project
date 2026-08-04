@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:22-slim
 
 # Set the working directory
 WORKDIR /app
@@ -15,5 +15,5 @@ COPY . .
 # Expose port 3000 for NGINX
 EXPOSE 3000
 
-# Start the Vite development server
-CMD ["npm", "run", "dev"]
+# Start the Vite development server after ensuring correct native binaries in bind volume
+CMD ["sh", "-c", "npm install && npm run dev"]

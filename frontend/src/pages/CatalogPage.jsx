@@ -53,10 +53,6 @@ const CatalogPage = () => {
 
   const handleFavAddToCart = (e, product) => {
     e.stopPropagation();
-    if (!user) {
-      navigate('/login');
-      return;
-    }
     addToCart(product, 1);
     setFavIds(prev => {
       const next = new Set(prev);

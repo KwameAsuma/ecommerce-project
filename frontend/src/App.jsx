@@ -11,13 +11,13 @@ import NavBar from "./components/NavBar";
 import CatalogPage from "./pages/CatalogPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LiveAuctions from "./pages/LiveAuctions";
 
 import PublicOnlyRoute from "./components/PublicOnlyRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProductDetailsPage from "./pages/ProductDetailsPage";
 import CheckoutPage from "./pages/CheckoutPage";
-import MerchantDashboard from "./pages/MerchantDashboard";
 import MerchantInventory from "./pages/MerchantInventory";
 import MerchantAuctions from "./pages/MerchantAuctions";
 import MerchantEscrow from "./pages/MerchantEscrow";
@@ -25,11 +25,8 @@ import MerchantSettings from "./pages/MerchantSettings";
 import MerchantSupport from "./pages/MerchantSupport";
 import MerchantProductForm from "./pages/MerchantProductForm";
 import MerchantFinances from "./pages/MerchantFinances";
-
-import AdminLayout from "./components/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminOrders from "./pages/admin/AdminOrders";
+import MerchantPersonalProfilePage from "./pages/MerchantPersonalProfilePage";
+import VendorStorePage from "./pages/VendorStorePage";
 
 import EscrowStatus from "./pages/EscrowStatus";
 import CustomerLayout from "./components/CustomerLayout";
@@ -43,20 +40,16 @@ import AllBidsPage from "./pages/AllBidsPage";
 import SettingsPage from "./pages/SettingsPage";
 import { CatalogProvider } from "./context/CatalogContext";
 import { CartProvider } from "./context/CartContext";
+import AccountSetupModal from "./components/AccountSetupModal";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import AdminDashboard from "./pages/AdminDashboard";
 
-import AdminProducts from "./pages/admin/AdminProducts";
-import AdminAuctions from "./pages/admin/AdminAuctions";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 }
-
 
 function App() {
   return (
@@ -65,20 +58,18 @@ function App() {
         <CatalogProvider>
           <Router>
             <ScrollToTop />
+            <AccountSetupModal />
             <Routes>
-              {/* Always Accessible Routes */}
-              {/* Root route is now handled inside CustomerLayout */}
-
-              {/* Guest Only Routes (Redirects if logged in) */}
+              {/* Guest-Only Routes */}
               <Route element={<PublicOnlyRoute />}>
                 <Route path="/login" element={<LoginPage />} />
-                <Route path={import.meta.env.VITE_ADMIN_LOGIN_PATH || "/hidden-admin-xyz"} element={<LoginPage isAdminLogin={true} />} />
+                <Route path={import.meta.env.VITE_ADMIN_LOGIN_PATH || "/hidden-admin-xyz"} element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               </Route>
 
-              {/* Customer Ecosystem (Public + Protected) */}
+              {/* Customer Ecosystem */}
               <Route element={<CustomerLayout />}>
-                {/* Public Catalog & Auctions */}
                 <Route path="/" element={<CatalogPage />} />
                 <Route path="/product/:id" element={<ProductDetailsPage />} />
                 <Route path="/merchants" element={<VerifiedMerchantsPage />} />
@@ -86,7 +77,6 @@ function App() {
                 <Route path="/auctions" element={<AuctionsPage />} />
                 <Route path="/auctions/:id" element={<LiveAuctions />} />
 
-                {/* Protected Customer Features */}
                 <Route element={<ProtectedRoute allowedRole="customer" />}>
                   <Route path="/checkout" element={<CheckoutPage />} />
                   <Route path="/escrow" element={<EscrowStatus />} />
@@ -95,44 +85,33 @@ function App() {
                   <Route path="/profile/bids" element={<AllBidsPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                 </Route>
-                
               </Route>
 
-              {/* Merchant Ecosystem (Isolated) */}
-              <Route 
+              {/* Merchant Ecosystem */}
+              <Route
                 element={
                   <ProtectedRoute allowedRole="merchant">
                     <MerchantLayout />
                   </ProtectedRoute>
                 }
               >
-                <Route path="/merchant" element={<MerchantDashboard />} />
+                <Route path="/merchant" element={<Navigate to="/merchant/finances" replace />} />
                 <Route path="/merchant/inventory" element={<MerchantInventory />} />
                 <Route path="/merchant/auctions" element={<MerchantAuctions />} />
                 <Route path="/merchant/escrow" element={<MerchantEscrow />} />
                 <Route path="/merchant/settings" element={<MerchantSettings />} />
+                <Route path="/merchant/profile" element={<MerchantPersonalProfilePage />} />
                 <Route path="/merchant/support" element={<MerchantSupport />} />
                 <Route path="/merchant/products/new" element={<MerchantProductForm />} />
                 <Route path="/merchant/products/:id/edit" element={<MerchantProductForm />} />
                 <Route path="/merchant/finances" element={<MerchantFinances />} />
+                <Route path="/merchant/store" element={<VendorStorePage />} />
               </Route>
 
               {/* Admin Ecosystem */}
-              <Route 
-                element={
-                  <ProtectedRoute allowedRole="admin">
-                    <AdminLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
-                <Route path="/admin/orders" element={<AdminOrders />} />
-                <Route path="/admin/products" element={<AdminProducts />} />
-                <Route path="/admin/auctions" element={<AdminAuctions />} />
-              </Route>
+              <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
 
-              {/* Catch-all Route: Redirects any unknown or removed paths (like /role) to home */}
+              {/* Catch-all */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Router>

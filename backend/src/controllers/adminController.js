@@ -5,7 +5,22 @@ const prisma = new PrismaClient();
 const getAllUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, availableBalance: true, trustScore: true, createdAt: true }
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        availableBalance: true,
+        trustScore: true,
+        createdAt: true,
+        avatarUrl: true,
+        storeBannerUrl: true,
+        storeDescription: true,
+        storeAddress: true,
+        supportEmail: true,
+        supportPhone: true,
+        momoNumber: true
+      }
     });
     res.json(users);
   } catch (error) {
@@ -48,8 +63,8 @@ const getAllOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       include: {
-        customer: { select: { name: true, email: true } },
-        vendor: { select: { name: true, email: true } },
+        customer: { select: { name: true, email: true, avatarUrl: true } },
+        vendor: { select: { name: true, email: true, avatarUrl: true, storeBannerUrl: true } },
         product: { select: { title: true } }
       },
       orderBy: { createdAt: 'desc' }
@@ -186,7 +201,7 @@ const updateUserWallet = async (req, res) => {
 const getAllProducts = async (req, res) => {
   try {
     const products = await prisma.nativeProduct.findMany({
-      include: { vendor: { select: { name: true, email: true } } },
+      include: { vendor: { select: { name: true, email: true, avatarUrl: true, storeBannerUrl: true } } },
       orderBy: { createdAt: 'desc' }
     });
     res.json(products);
@@ -236,7 +251,7 @@ const editProduct = async (req, res) => {
 const getAllAuctions = async (req, res) => {
   try {
     const auctions = await prisma.auction.findMany({
-      include: { importer: { select: { name: true, email: true } } },
+      include: { importer: { select: { name: true, email: true, avatarUrl: true, storeBannerUrl: true } } },
       orderBy: { createdAt: 'desc' }
     });
     res.json(auctions);

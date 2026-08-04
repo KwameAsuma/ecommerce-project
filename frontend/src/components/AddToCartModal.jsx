@@ -2,10 +2,13 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useCatalog } from "../context/CatalogContext";
+import { useAuth } from "../context/AuthContext";
+import { resolveImageUrl } from "../utils/imageUtils";
 
 const AddToCartModal = () => {
   const { addedItemModal, setAddedItemModal, addToCart, cartTotal, cartCount } = useCart();
   const { allProducts } = useCatalog();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   if (!addedItemModal) return null;
@@ -14,15 +17,19 @@ const AddToCartModal = () => {
 
   const handleCheckout = () => {
     setAddedItemModal(null);
-    navigate("/checkout");
+    // Gate: guests must log in first, then are redirected back to checkout seamlessly
+    if (user) {
+      navigate("/checkout");
+    } else {
+      navigate("/login?redirect=/checkout");
+    }
   };
 
-  const handleGoToCart = () => {
+  const handleContinueShopping = () => {
     setAddedItemModal(null);
-    navigate("/checkout");
   };
 
-  const imgSource = addedItemModal.imageUrl ? (addedItemModal.imageUrl.startsWith('http') ? addedItemModal.imageUrl : `http://localhost:5000${addedItemModal.imageUrl}`) : addedItemModal.image;
+  const imgSource = resolveImageUrl(addedItemModal.image || addedItemModal.imageUrl);
 
   // Filter recommendations: items matching category or region first, then fallback to others, excluding current
   const sameCategory = allProducts ? allProducts.filter(p => p.id !== addedItemModal.id && p.category === addedItemModal.category) : [];
@@ -92,29 +99,43 @@ const AddToCartModal = () => {
         </div>
 
         {/* Top Section: Item Added & Cart Subtotal Panel (Amazon Style) */}
-        <div style={{ padding: "0 2.5rem 2rem 2.5rem", display: "flex", flexWrap: "wrap", gap: "2rem", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #eaeded" }}>
-          
-          {/* Left Area: Product Thumbnail & Confirmation Checkmark */}
-          <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", flex: "1 1 350px" }}>
-            <div style={{ width: "110px", height: "110px", flexShrink: 0, borderRadius: "8px", border: "1px solid #e7e7e7", backgroundColor: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-              <img src={imgSource} alt={addedItemModal.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-            </div>
-
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#067d62", fontSize: "1.35rem", fontWeight: "800", marginBottom: "0.4rem" }}>
-                <div style={{ width: "26px", height: "26px", borderRadius: "50%", backgroundColor: "#067d62", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "16px", fontWeight: "bold" }}>
-                  ✓
-                </div>
-                <span>Added to cart</span>
-              </div>
-              <div style={{ fontSize: "0.92rem", color: "#565959", fontWeight: "600", marginTop: "0.3rem" }}>
-                Size: {addedItemModal.addedQty || 1} Unit{(addedItemModal.addedQty || 1) > 1 ? 's' : ''} (Pack of 1)
-              </div>
-              <div style={{ fontSize: "0.85rem", color: "#007185", fontWeight: "700", marginTop: "0.2rem" }}>
-                {addedItemModal.region ? `Verified ${addedItemModal.region} Origin` : "Ghana TradeHub Fulfilled"}
-              </div>
-            </div>
+        {addedItemModal.isEmpty ? (
+          <div style={{ padding: "3rem 2.5rem", textAlign: "center", borderBottom: "2px solid #eaeded" }}>
+            <span className="material-symbols-outlined text-[52px] text-slate-400 mb-2">shopping_cart</span>
+            <h3 style={{ fontSize: "1.4rem", fontWeight: "900", color: "#0f1111", margin: "0 0 0.5rem 0" }}>Your Cart is Currently Empty</h3>
+            <p style={{ color: "#565959", fontSize: "0.95rem", marginBottom: "1.5rem" }}>Explore our catalog to add export-quality products and verified lots to your cart.</p>
+            <button 
+              onClick={handleClose} 
+              className="amazon-btn-primary" 
+              style={{ padding: "0.75rem 2.5rem", backgroundColor: "#ffd814", border: "1px solid #fcd200", borderRadius: "25px", fontWeight: "800", fontSize: "0.95rem", cursor: "pointer", boxShadow: "0 2px 5px rgba(213,217,217,0.5)" }}
+            >
+              Start Shopping
+            </button>
           </div>
+        ) : (
+          <div style={{ padding: "0 2.5rem 2rem 2.5rem", display: "flex", flexWrap: "wrap", gap: "2rem", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #eaeded" }}>
+            
+            {/* Left Area: Product Thumbnail & Confirmation Checkmark */}
+            <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", flex: "1 1 350px" }}>
+              <div style={{ width: "110px", height: "110px", flexShrink: 0, borderRadius: "8px", border: "1px solid #e7e7e7", backgroundColor: "#f8f9fa", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                <img src={imgSource} alt={addedItemModal.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              </div>
+
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#067d62", fontSize: "1.35rem", fontWeight: "800", marginBottom: "0.4rem" }}>
+                  <div style={{ width: "26px", height: "26px", borderRadius: "50%", backgroundColor: "#067d62", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "16px", fontWeight: "bold" }}>
+                    ✓
+                  </div>
+                  <span>{addedItemModal.isCartView ? "Cart Overview" : "Added to cart"}</span>
+                </div>
+                <div style={{ fontSize: "0.92rem", color: "#565959", fontWeight: "600", marginTop: "0.3rem" }}>
+                  Size: {addedItemModal.addedQty || 1} Unit{(addedItemModal.addedQty || 1) > 1 ? 's' : ''} (Pack of 1)
+                </div>
+                <div style={{ fontSize: "0.85rem", color: "#007185", fontWeight: "700", marginTop: "0.2rem" }}>
+                  {addedItemModal.region ? `Verified ${addedItemModal.region} Origin` : "Ghana BediDwa Fulfilled"}
+                </div>
+              </div>
+            </div>
 
           {/* Right Area: Cart Action Box */}
           <div style={{ flex: "1 1 320px", maxWidth: "400px", backgroundColor: "#fcfcfd", border: "1px solid #d5d9d9", borderRadius: "12px", padding: "1.4rem", display: "flex", flexDirection: "column", gap: "0.8rem", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
@@ -151,7 +172,7 @@ const AddToCartModal = () => {
             </button>
 
             <button 
-              onClick={handleGoToCart}
+              onClick={handleContinueShopping}
               className="amazon-btn-secondary"
               style={{
                 width: "100%",
@@ -170,15 +191,15 @@ const AddToCartModal = () => {
                 alignItems: "center"
               }}
             >
-              Go to Cart
+              Continue Shopping
             </button>
 
             <div style={{ fontSize: "0.75rem", color: "#565959", textAlign: "center", marginTop: "0.3rem" }}>
-              Protected under <strong style={{ color: "#007185" }}>TradeHub Momo Escrow</strong> & Verified Buyer Assurance
+              Protected under <strong style={{ color: "#007185" }}>BediDwa MoMo Escrow</strong> & Verified Buyer Assurance
             </div>
           </div>
-
         </div>
+      )}
 
         {/* Bottom Section: Amazon-style Recommendations Carousel / Grid */}
         {recommendations.length > 0 && (

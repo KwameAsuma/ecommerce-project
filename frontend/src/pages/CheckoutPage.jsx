@@ -15,7 +15,6 @@ const CheckoutPage = () => {
   const { products } = useCatalog();
   const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState("momo");
-  const [walletBalance, setWalletBalance] = useState(0);
   const [deliveryAddress, setDeliveryAddress] = useState(() => localStorage.getItem("defaultDeliveryAddress") || "124 Independence Avenue, Ridge, Accra");
   const [orderComments, setOrderComments] = useState("");
   const [momoNumber, setMomoNumber] = useState("");
@@ -25,21 +24,10 @@ const CheckoutPage = () => {
   const { cartItems, cartTotal, cartCount, clearCart, addToCart, removeFromCart, decreaseQuantity } = useCart();
 
   useEffect(() => {
-    const fetchWallet = async () => {
-      if (user?.id) {
-        try {
-          const res = await api.get(`/finances/${user.id}`);
-          setWalletBalance(res.data.balances.availableBalance || 0);
-        } catch (err) {
-          console.error("Failed to load wallet", err);
-        }
-        if (user.deliveryAddress) {
-          setDeliveryAddress(user.deliveryAddress);
-          localStorage.setItem("defaultDeliveryAddress", user.deliveryAddress);
-        }
-      }
-    };
-    fetchWallet();
+    if (user?.deliveryAddress) {
+      setDeliveryAddress(user.deliveryAddress);
+      localStorage.setItem("defaultDeliveryAddress", user.deliveryAddress);
+    }
   }, [user]);
 
   // Determine which items to checkout (Buy Now vs Cart)
@@ -73,9 +61,6 @@ const CheckoutPage = () => {
       const fullAddress = orderComments.trim() ? `${deliveryAddress} | Comments: ${orderComments}` : deliveryAddress;
       await api.post("/orders", { cartItems: checkoutItems, deliveryAddress: fullAddress, paymentMethod });
       
-      // Simulate payment delay for user experience
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
       // Only clear cart if this was a cart checkout
       if (!buyNowId) {
         clearCart();
@@ -224,23 +209,66 @@ const CheckoutPage = () => {
                 Payment Method
               </h2>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
-                <div onClick={() => setPaymentMethod("momo")} style={{ backgroundColor: paymentMethod === "momo" ? "rgba(245, 158, 11, 0.05)" : "var(--bg-base)", border: paymentMethod === "momo" ? "2px solid var(--brand-accent)" : "1px solid var(--border)", padding: "1.5rem", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", cursor: "pointer", transition: "all 0.2s", position: "relative" }}>
-                  {paymentMethod === "momo" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "10px", right: "10px", color: "var(--brand-accent)", fontSize: "20px" }}>check_circle</span>}
-                  <div style={{ width: "48px", height: "48px", backgroundColor: "#f59e0b", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", color: "white", fontSize: "1.5rem", fontWeight: "800" }}>M</div>
-                  <span style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1rem" }}>MTN MoMo</span>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
+                {/* MTN MoMo */}
+                <div onClick={() => setPaymentMethod("momo")} style={{ backgroundColor: paymentMethod === "momo" ? "rgba(245, 158, 11, 0.08)" : "var(--bg-base)", border: paymentMethod === "momo" ? "2px solid #eab308" : "1px solid var(--border)", padding: "1.5rem 1rem", borderRadius: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", cursor: "pointer", transition: "all 0.2s", position: "relative", boxShadow: paymentMethod === "momo" ? "0 10px 25px -5px rgba(245, 158, 11, 0.2)" : "none" }}>
+                  {paymentMethod === "momo" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "12px", right: "12px", color: "#eab308", fontSize: "22px", fontVariationSettings: "'FILL' 1" }}>check_circle</span>}
+                  
+                  {/* Authentic MoMo Brand Badge */}
+                  <div style={{ width: 76, height: 76, backgroundColor: "#ffcc00", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 6, boxShadow: "0 4px 10px rgba(0,0,0,0.15)", border: "2px solid #ffffff" }}>
+                    <div style={{ background: "#003366", width: 42, height: 36, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 3, position: "relative", overflow: "hidden", borderBottom: "4px solid #ffcc00" }}>
+                      <div style={{ width: 16, height: 16, border: "3px solid #ffcc00", borderRadius: "50%", transform: "rotate(-25deg)", position: "absolute", left: 8, top: 6 }}></div>
+                      <div style={{ width: 18, height: 28, background: "#ffcc00", borderRadius: "20px 0 0 0", position: "absolute", right: -4, top: 4, transform: "rotate(15deg)" }}></div>
+                    </div>
+                    <div style={{ color: "#003366", fontWeight: 900, fontSize: 16, letterSpacing: "-0.5px", lineHeight: 1 }}>MoMo</div>
+                    <div style={{ color: "#003366", fontWeight: 700, fontSize: 8, textTransform: "uppercase", letterSpacing: "0.2px" }}>from MTN</div>
+                  </div>
+
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1.05rem" }}>MTN MoMo</div>
+                    <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontWeight: "600" }}>Instant Escrow Deposit</div>
+                  </div>
                 </div>
                 
-                <div onClick={() => setPaymentMethod("telecel")} style={{ backgroundColor: paymentMethod === "telecel" ? "rgba(239, 68, 68, 0.05)" : "var(--bg-base)", border: paymentMethod === "telecel" ? "2px solid #ef4444" : "1px solid var(--border)", padding: "1.5rem", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", cursor: "pointer", transition: "all 0.2s", position: "relative" }}>
-                  {paymentMethod === "telecel" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "10px", right: "10px", color: "#ef4444", fontSize: "20px" }}>check_circle</span>}
-                  <div style={{ width: "48px", height: "48px", backgroundColor: "#ef4444", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", color: "white", fontSize: "1.5rem", fontWeight: "800" }}>T</div>
-                  <span style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1rem" }}>Telecel Cash</span>
+                {/* Telecel Cash */}
+                <div onClick={() => setPaymentMethod("telecel")} style={{ backgroundColor: paymentMethod === "telecel" ? "rgba(239, 68, 68, 0.08)" : "var(--bg-base)", border: paymentMethod === "telecel" ? "2px solid #ef4444" : "1px solid var(--border)", padding: "1.5rem 1rem", borderRadius: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", cursor: "pointer", transition: "all 0.2s", position: "relative", boxShadow: paymentMethod === "telecel" ? "0 10px 25px -5px rgba(239, 68, 68, 0.2)" : "none" }}>
+                  {paymentMethod === "telecel" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "12px", right: "12px", color: "#ef4444", fontSize: "22px", fontVariationSettings: "'FILL' 1" }}>check_circle</span>}
+                  
+                  {/* Authentic Telecel Cash Badge */}
+                  <div style={{ width: 76, height: 76, backgroundColor: "#e11d48", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 6, boxShadow: "0 4px 10px rgba(0,0,0,0.15)", border: "2px solid #ffffff" }}>
+                    <div style={{ width: 34, height: 34, borderRadius: "50%", border: "4px solid #ffffff", borderTopColor: "transparent", transform: "rotate(45deg)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 2 }}>
+                      <div style={{ width: 16, height: 16, background: "#ffffff", borderRadius: "50%" }}></div>
+                    </div>
+                    <div style={{ color: "#ffffff", fontWeight: 900, fontSize: 14, letterSpacing: "0.5px", textTransform: "uppercase", lineHeight: 1 }}>telecel</div>
+                    <div style={{ color: "#ffffff", fontWeight: 700, fontSize: 9, letterSpacing: "1px", textTransform: "uppercase" }}>cash</div>
+                  </div>
+
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1.05rem" }}>Telecel Cash</div>
+                    <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontWeight: "600" }}>Instant Escrow Deposit</div>
+                  </div>
                 </div>
 
-                <div onClick={() => setPaymentMethod("at")} style={{ backgroundColor: paymentMethod === "at" ? "rgba(37, 99, 235, 0.05)" : "var(--bg-base)", border: paymentMethod === "at" ? "2px solid var(--brand-primary)" : "1px solid var(--border)", padding: "1.5rem", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", cursor: "pointer", transition: "all 0.2s", position: "relative" }}>
-                  {paymentMethod === "at" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "10px", right: "10px", color: "var(--brand-primary)", fontSize: "20px" }}>check_circle</span>}
-                  <div style={{ width: "48px", height: "48px", backgroundColor: "var(--brand-primary)", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", color: "white", fontSize: "1.5rem", fontWeight: "800" }}>A</div>
-                  <span style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1rem" }}>AT Money</span>
+                {/* AirtelTigo Money (AT Money) */}
+                <div onClick={() => setPaymentMethod("at")} style={{ backgroundColor: paymentMethod === "at" ? "rgba(37, 99, 235, 0.08)" : "var(--bg-base)", border: paymentMethod === "at" ? "2px solid #2563eb" : "1px solid var(--border)", padding: "1.5rem 1rem", borderRadius: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", cursor: "pointer", transition: "all 0.2s", position: "relative", boxShadow: paymentMethod === "at" ? "0 10px 25px -5px rgba(37, 99, 235, 0.2)" : "none" }}>
+                  {paymentMethod === "at" && <span className="material-symbols-outlined" style={{ position: "absolute", top: "12px", right: "12px", color: "#2563eb", fontSize: "22px", fontVariationSettings: "'FILL' 1" }}>check_circle</span>}
+                  
+                  {/* Authentic AirtelTigo Money Badge */}
+                  <div style={{ width: 76, height: 76, backgroundColor: "#ffffff", borderRadius: 14, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 6, boxShadow: "0 4px 10px rgba(0,0,0,0.1)", border: "2px solid #cbd5e1", overflow: "hidden", position: "relative" }}>
+                    <div style={{ display: "flex", alignItems: "center", fontWeight: 900, fontSize: 17, letterSpacing: "-0.5px" }}>
+                      <span style={{ color: "#dc2626" }}>airtel</span>
+                      <span style={{ color: "#1e3a8a" }}>tigo</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <span style={{ color: "#1e3a8a", fontWeight: 900, fontSize: 15, letterSpacing: "-0.5px" }}>Money</span>
+                      <div style={{ width: 14, height: 8, borderBottom: "3px solid #1e3a8a", borderRadius: "50%" }}></div>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontWeight: "800", color: "var(--text-primary)", fontSize: "1.05rem" }}>AT Money</div>
+                    <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontWeight: "600" }}>Instant Escrow Deposit</div>
+                  </div>
                 </div>
               </div>
 
@@ -272,7 +300,7 @@ const CheckoutPage = () => {
                 <h3 style={{ margin: 0, fontSize: "1.35rem", fontWeight: "900", color: "#ffffff", letterSpacing: "-0.5px" }}>Order Summary</h3>
                 <p style={{ margin: "0.4rem 0 0 0", color: "rgba(255, 255, 255, 0.88)", fontSize: "0.88rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <span className="material-symbols-outlined text-[18px]" style={{ color: "#4ade80" }}>verified_user</span> 
-                  Protected by TradeHub Escrow
+                  Protected by BediDwa Escrow
                 </p>
               </div>
 

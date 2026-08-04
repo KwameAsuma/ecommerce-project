@@ -4,6 +4,7 @@ import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingOverlay from "../components/LoadingOverlay";
 import ErrorMessage from "../components/ErrorMessage";
+import { resolveImageUrl } from "../utils/imageUtils";
 
 const AuctionsPage = () => {
   const navigate = useNavigate();
@@ -36,9 +37,9 @@ const AuctionsPage = () => {
     if (title.includes("rolex") || title.includes("submariner") || rawUrl.includes("rolex") || rawUrl.includes("google.com/url") || rawUrl.includes("m126610lv")) {
       return "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop";
     }
-    if (auction.imageUrl) {
-      const url = auction.imageUrl.split(',')[0].trim();
-      return url.startsWith('http') ? url : `http://localhost:5000${url}`;
+    if (auction.imageUrl || auction.image) {
+      const url = (auction.imageUrl || auction.image).split(',')[0].trim();
+      return resolveImageUrl(url);
     }
     const id = auction.id || 0;
     return fallbackImages[id % fallbackImages.length];
@@ -137,7 +138,7 @@ const AuctionsPage = () => {
     return () => clearInterval(interval);
   }, [isCarouselPaused, carouselAuctions.length]);
 
-  if (loading) return <LoadingOverlay message="Connecting to TradeHub Auction Engine..." />;
+  if (loading) return <LoadingOverlay message="Connecting to BediDwa Auction Engine..." />;
   if (error) return <ErrorMessage message={error} />;
 
   const heroAuction = carouselAuctions[heroIndex % (carouselAuctions.length || 1)] || auctions[0];
@@ -410,10 +411,7 @@ const AuctionsPage = () => {
                         🕒 {formatTimeLeft(item.endTime)}
                       </div>
                       
-                      {/* Escrow Tag */}
-                      <div style={{ position: "absolute", top: "12px", right: "12px", backgroundColor: "#ffffff", color: "#059669", padding: "0.25rem 0.65rem", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "800", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.08)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                        🛡️ Escrow
-                      </div>
+
                     </div>
 
                     <div style={{ padding: "1.2rem", display: "flex", flexDirection: "column", flexGrow: 1, justifyContent: "space-between" }}>
@@ -457,11 +455,7 @@ const AuctionsPage = () => {
                     <img src={getImageUrl(spotlightLarge)} alt={spotlightLarge.title} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover" }} />
                     <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", background: "linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(17,24,39,0.4) 45%, rgba(17,24,39,0.95) 85%)" }}></div>
 
-                    {/* Top Chips */}
-                    <div style={{ position: "absolute", top: "15px", left: "15px", display: "flex", gap: "0.6rem", zIndex: 5 }}>
-                      <span style={{ backgroundColor: "#fbbf24", color: "#111827", padding: "0.35rem 0.8rem", borderRadius: "20px", fontSize: "0.72rem", fontWeight: "900" }}>Featured Listing</span>
-                      <span style={{ backgroundColor: "#ffffff", color: "#059669", padding: "0.35rem 0.8rem", borderRadius: "20px", fontSize: "0.72rem", fontWeight: "800", border: "1px solid #e2e8f0" }}>🛡️ Escrow Required</span>
-                    </div>
+
 
                     {/* Bottom Content */}
                     <div style={{ position: "relative", zIndex: 5, padding: "2rem" }}>
@@ -546,7 +540,7 @@ const AuctionsPage = () => {
                       <div style={{ position: "relative", height: "190px", backgroundColor: "#f1f5f9" }}>
                         <img src={getImageUrl(item)} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         <div style={{ position: "absolute", top: "12px", right: "12px", backgroundColor: "#ffffff", color: "#4343C7", padding: "0.25rem 0.65rem", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "800", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.06)" }}>
-                          {item.brand || "TradeHub Verified"}
+                          {item.brand || "BediDwa Verified"}
                         </div>
                         <div style={{ position: "absolute", bottom: "12px", left: "12px", backgroundColor: "rgba(17,24,39,0.85)", color: "#ffffff", padding: "0.25rem 0.65rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700" }}>
                           Ends {formatTimeLeft(item.endTime)}

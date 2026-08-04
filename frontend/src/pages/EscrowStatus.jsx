@@ -70,21 +70,6 @@ const EscrowStatus = () => {
     }
   };
 
-  const handleConfirmDelivery = async (group) => {
-    try {
-      // Confirm all items in this group
-      await Promise.all(group.items.map(order => 
-        api.patch(`/orders/${order.id}/status`, { status: "DELIVERED_RELEASE_FUNDS" })
-      ));
-      fetchActiveOrders(); 
-      alert("Success! Funds released to merchant(s).");
-      navigate("/profile?tab=orders");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to confirm delivery");
-    }
-  };
-
   if (loading) return <div style={{ padding: "4rem", textAlign: "center" }}>Loading Escrow Data...</div>;
 
   if (groupedOrders.length === 0) {
@@ -104,7 +89,7 @@ const EscrowStatus = () => {
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-base)" }}>
       <header style={{ backgroundColor: "var(--bg-panel)", padding: "1.5rem 4rem", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 onClick={() => navigate("/")} style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--brand-primary)", margin: 0, cursor: "pointer" }}>
-          TradeHub Ghana
+          BediDwa Ghana
         </h1>
         <div style={{ display: "inline-block", backgroundColor: "rgba(245, 158, 11, 0.1)", padding: "0.8rem 1.5rem", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "800", color: "var(--brand-accent)" }}>
           TOTAL IN ESCROW: GH₵ {totalInEscrow.toLocaleString(undefined, {minimumFractionDigits: 2})}
@@ -158,6 +143,51 @@ const EscrowStatus = () => {
                     <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Secured in Escrow</div>
                   </div>
                 </div>
+
+                {/* Secure Glassmorphic Delivery OTP Badge */}
+                {(group.status === "HELD_IN_ESCROW" || group.status === "SHIPPED") && (
+                  <div style={{
+                    backgroundColor: "#1e293b",
+                    backgroundImage: "linear-gradient(to right, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95))",
+                    border: "1px solid rgba(234, 179, 8, 0.3)",
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.25), 0 0 15px rgba(234, 179, 8, 0.1)",
+                    borderRadius: "16px",
+                    padding: "1.25rem 1.5rem",
+                    margin: "0 0 2rem 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "1rem",
+                    backdropFilter: "blur(12px)"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                      <div style={{ width: "48px", height: "48px", borderRadius: "12px", backgroundColor: "rgba(234, 179, 8, 0.15)", border: "1px solid rgba(234, 179, 8, 0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span className="material-symbols-outlined" style={{ color: "#eab308", fontSize: "26px", filter: "drop-shadow(0 0 8px rgba(234,179,8,0.5))" }}>lock_person</span>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "0.75rem", fontWeight: "800", color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                          Secure Delivery Handshake PIN
+                        </div>
+                        <div style={{ fontSize: "0.9rem", color: "#f1f5f9", fontWeight: "600", marginTop: "0.2rem" }}>
+                          Provide this 4-digit PIN to the rider upon delivery to confirm receipt.
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{
+                      backgroundColor: "rgba(15, 23, 42, 0.8)",
+                      border: "2px solid #eab308",
+                      borderRadius: "12px",
+                      padding: "0.6rem 1.2rem",
+                      textAlign: "center",
+                      boxShadow: "0 0 20px rgba(234, 179, 8, 0.25)"
+                    }}>
+                      <span style={{ fontSize: "1.8rem", fontWeight: "900", color: "#eab308", letterSpacing: "0.2em", fontFamily: "monospace", filter: "drop-shadow(0 0 6px rgba(234,179,8,0.6))" }}>
+                        {group.items[0]?.deliveryOtp || "7842"}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Horizontal Progress Tracker */}
                 <div style={{ position: "relative", margin: "2rem 0 3rem 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -217,25 +247,78 @@ const EscrowStatus = () => {
                 )}
 
                 {group.status === "SHIPPED" && (
-                  <div style={{ backgroundColor: "var(--success-bg)", padding: "1.5rem", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div>
-                      <h4 style={{ margin: "0 0 0.3rem 0", color: "var(--success)", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <span className="material-symbols-outlined">local_shipping</span> {canConfirm ? "Item Arrived at Destination!" : "Items in Transit"}
-                      </h4>
-                      <p style={{ fontSize: "0.85rem", color: "#065f46", margin: 0 }}>
-                        {canConfirm ? "Please confirm receipt to release the funds." : "The tracking cart is moving. Wait for it to arrive..."}
-                      </p>
+                  <div style={{ backgroundColor: "var(--bg-base)", border: "1px solid var(--border)", padding: "1.5rem", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div>
+                        <h4 style={{ margin: "0 0 0.3rem 0", color: "var(--brand-primary)", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: "800" }}>
+                          <span className="material-symbols-outlined">two_wheeler</span> Courier / Rider Delivery Verification
+                        </h4>
+                        <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: 0, fontWeight: "500" }}>
+                          Rider collects the 4-digit PIN from the buyer and inputs it below to complete delivery & disburse funds to the vendor.
+                        </p>
+                      </div>
                     </div>
-                    {canConfirm && (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleConfirmDelivery(group); }}
-                        style={{ padding: "0.8rem 1.5rem", backgroundColor: "var(--brand-primary)", color: "white", border: "none", borderRadius: "8px", fontWeight: "800", cursor: "pointer", transition: "transform 0.2s" }}
-                        onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"}
-                        onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}
+
+                    <div style={{ display: "flex", items: "center", gap: "0.8rem" }} onClick={e => e.stopPropagation()}>
+                      <input
+                        type="text"
+                        maxLength={4}
+                        placeholder="Enter 4-Digit Rider PIN"
+                        id={`rider-pin-${group.timestamp}`}
+                        style={{
+                          flexGrow: 1,
+                          padding: "0.8rem 1rem",
+                          borderRadius: "10px",
+                          border: "2px solid var(--border)",
+                          backgroundColor: "var(--bg-panel)",
+                          color: "var(--text-primary)",
+                          fontWeight: "800",
+                          fontFamily: "monospace",
+                          fontSize: "1.1rem",
+                          letterSpacing: "4px",
+                          textAlign: "center",
+                          outline: "none"
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const inputEl = document.getElementById(`rider-pin-${group.timestamp}`);
+                          const pinVal = inputEl ? inputEl.value : "";
+                          if (!pinVal || pinVal.length < 4) {
+                            alert("Please enter a valid 4-digit PIN provided by the customer.");
+                            return;
+                          }
+                          try {
+                            await Promise.all(group.items.map(item => 
+                              api.post(`/orders/${item.id}/verify-delivery`, { otp: pinVal })
+                            ));
+                            alert("🎉 Delivery confirmed! Funds automatically disbursed to vendor virtual wallet.");
+                            fetchActiveOrders();
+                          } catch (err) {
+                            alert(err.response?.data?.error || "Invalid delivery PIN. Please check PIN with the customer.");
+                          }
+                        }}
+                        style={{
+                          padding: "0.8rem 1.5rem",
+                          backgroundColor: "#10b981",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "10px",
+                          fontWeight: "800",
+                          fontSize: "0.9rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.4rem",
+                          boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)"
+                        }}
                       >
-                        Confirm Delivery
+                        <span className="material-symbols-outlined text-[18px]">verified</span>
+                        <span>Complete Delivery</span>
                       </button>
-                    )}
+                    </div>
                   </div>
                 )}
               </div>

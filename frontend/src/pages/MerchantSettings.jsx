@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { resolveImageUrl } from "../utils/imageUtils";
 
 const MerchantSettings = () => {
   const { user, setUser } = useAuth();
@@ -166,7 +167,7 @@ const MerchantSettings = () => {
                   <div className="flex items-center gap-4">
                     <div className="w-20 h-20 rounded-full bg-surface-container-high border-2 border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
                       {avatarUrl ? (
-                        <img src={`http://localhost:5001${avatarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
+                        <img src={resolveImageUrl(avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-2xl font-bold text-primary">{storeName ? storeName.charAt(0) : "S"}</span>
                       )}
@@ -178,7 +179,7 @@ const MerchantSettings = () => {
                         if (!file) return;
                         const formData = new FormData();
                         formData.append("image", file);
-                        const res = await api.post("/upload/image", formData, { headers: { "Content-Type": "multipart/form-data" } });
+                        const res = await api.post("/upload/image?type=profiles", formData, { headers: { "Content-Type": "multipart/form-data" } });
                         if (res.data.status === "success") setAvatarUrl(res.data.imageUrl);
                       }} />
                     </label>
@@ -190,7 +191,7 @@ const MerchantSettings = () => {
                   <div className="flex flex-col gap-3">
                     <div className="w-full h-20 rounded-xl bg-surface-container-high border-2 border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
                       {storeBannerUrl ? (
-                        <img src={`http://localhost:5001${storeBannerUrl}`} alt="Banner" className="w-full h-full object-cover" />
+                        <img src={resolveImageUrl(storeBannerUrl)} alt="Banner" className="w-full h-full object-cover" />
                       ) : (
                         <span className="material-symbols-outlined text-on-surface-variant/50">panorama</span>
                       )}
@@ -202,7 +203,7 @@ const MerchantSettings = () => {
                         if (!file) return;
                         const formData = new FormData();
                         formData.append("image", file);
-                        const res = await api.post("/upload/image", formData, { headers: { "Content-Type": "multipart/form-data" } });
+                        const res = await api.post("/upload/image?type=profiles", formData, { headers: { "Content-Type": "multipart/form-data" } });
                         if (res.data.status === "success") setStoreBannerUrl(res.data.imageUrl);
                       }} />
                     </label>
@@ -218,7 +219,6 @@ const MerchantSettings = () => {
                     value={storeName}
                     onChange={(e) => setStoreName(e.target.value)}
                     className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface text-sm"
-                    placeholder="Your store name"
                   />
                 </div>
                 <div>
@@ -238,7 +238,6 @@ const MerchantSettings = () => {
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                     maxLength="10"
                     className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface text-sm"
-                    placeholder="0541234567"
                   />
                 </div>
                 <div>
@@ -249,7 +248,6 @@ const MerchantSettings = () => {
                     onChange={(e) => setMomoNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
                     maxLength="10"
                     className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all text-on-surface text-sm"
-                    placeholder="MoMo number for payouts"
                   />
                 </div>
                 <div>
@@ -259,7 +257,6 @@ const MerchantSettings = () => {
                     value={supportEmail}
                     onChange={(e) => setSupportEmail(e.target.value)}
                     className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface text-sm"
-                    placeholder="support@mystore.com"
                   />
                 </div>
                 <div>
@@ -270,7 +267,6 @@ const MerchantSettings = () => {
                     onChange={(e) => setSupportPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                     maxLength="10"
                     className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface text-sm"
-                    placeholder="0541234567"
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -280,7 +276,6 @@ const MerchantSettings = () => {
                     value={storeAddress}
                     onChange={(e) => setStoreAddress(e.target.value)}
                     className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface text-sm"
-                    placeholder="e.g. Makola Market, Accra"
                   />
                 </div>
                 <div>
@@ -290,7 +285,6 @@ const MerchantSettings = () => {
                     value={taxId}
                     onChange={(e) => setTaxId(e.target.value)}
                     className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface text-sm"
-                    placeholder="TIN or Registration Number"
                   />
                 </div>
               </div>
@@ -302,7 +296,6 @@ const MerchantSettings = () => {
                   onChange={(e) => setReturnPolicy(e.target.value)}
                   rows="2"
                   className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface text-sm resize-none"
-                  placeholder="e.g. No returns after 3 days. Must be in original packaging."
                 />
               </div>
 
@@ -313,7 +306,6 @@ const MerchantSettings = () => {
                   onChange={(e) => setStoreDescription(e.target.value)}
                   rows="3"
                   className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface text-sm resize-none"
-                  placeholder="Tell customers about your store..."
                 />
               </div>
 

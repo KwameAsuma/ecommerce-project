@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { useCatalog } from "../context/CatalogContext";
+import { resolveImageUrl } from "../utils/imageUtils";
 
 const VerifiedIcon = () => (
-  <svg width="20" height="20" fill="none" stroke="var(--brand-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="#2563eb" style={{ verticalAlign: "middle", display: "inline-block", flexShrink: 0 }}>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
   </svg>
 );
 
@@ -74,18 +75,18 @@ const MerchantProfilePage = () => {
   return (
     <div style={{ animation: "fadeRoute 0.4s ease-out" }}>
       {/* Store Banner */}
-      <div style={{ width: "100%", height: "200px", backgroundColor: "var(--brand-primary)", borderRadius: "16px", marginBottom: "4rem", position: "relative", backgroundImage: merchant.storeBannerUrl ? `url(http://localhost:5001${merchant.storeBannerUrl})` : "linear-gradient(45deg, var(--brand-primary), var(--brand-blue-dark, #1e3a8a))", backgroundSize: "cover", backgroundPosition: "center" }}>
+      <div style={{ width: "100%", height: "220px", backgroundColor: "var(--brand-primary)", borderRadius: "16px", marginBottom: "4rem", position: "relative", backgroundImage: merchant.storeBannerUrl ? `linear-gradient(90deg, rgba(15,23,42,0.8) 0%, rgba(15,23,42,0.4) 40%, rgba(15,23,42,0) 100%), url(${resolveImageUrl(merchant.storeBannerUrl)})` : "linear-gradient(45deg, var(--brand-primary), var(--brand-blue-dark, #1e3a8a))", backgroundSize: "cover", backgroundPosition: "center" }}>
         
         {/* Profile Image & Name (Overlapping) */}
         <div style={{ position: "absolute", bottom: "-40px", left: "2rem", display: "flex", alignItems: "flex-end", gap: "1.5rem" }}>
           <div style={{ width: "120px", height: "120px", borderRadius: "16px", backgroundColor: "var(--bg-base)", border: "4px solid var(--bg-base)", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "3rem", fontWeight: "bold", color: "var(--brand-primary)", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 10, overflow: "hidden" }}>
-            {merchant.avatarUrl ? <img src={`http://localhost:5001${merchant.avatarUrl}`} alt={merchant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : merchant.name.charAt(0)}
+            {merchant.avatarUrl ? <img src={resolveImageUrl(merchant.avatarUrl)} alt={merchant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : merchant.name.charAt(0)}
           </div>
           <div style={{ paddingBottom: "0.5rem" }}>
-            <h1 style={{ fontSize: "2.5rem", fontWeight: "900", color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <h1 style={{ fontSize: "2.4rem", fontWeight: "900", color: "#ffffff", textShadow: "0 2px 8px rgba(0,0,0,0.9)", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem" }}>
               {merchant.name} <VerifiedIcon />
             </h1>
-            <p style={{ color: "var(--text-secondary)", fontSize: "1rem", margin: "0.2rem 0 0 0", fontWeight: "600" }}>
+            <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", textShadow: "0 1px 4px rgba(0,0,0,0.9)", margin: "0.2rem 0 0 0", fontWeight: "700" }}>
               Official Verified Storefront
             </p>
           </div>
@@ -119,7 +120,7 @@ const MerchantProfilePage = () => {
           <span className="material-symbols-outlined" style={{ fontSize: "2rem", color: "var(--text-muted)" }}>calendar_month</span>
           <div>
             <div style={{ fontSize: "1.1rem", fontWeight: "900", color: "var(--text-primary)" }}>{new Date(merchant.createdAt).getFullYear()}</div>
-            <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Joined TradeHub</div>
+            <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>Joined BediDwa</div>
           </div>
         </div>
       </div>

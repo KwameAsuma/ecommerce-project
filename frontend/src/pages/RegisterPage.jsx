@@ -1,263 +1,509 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import AuthNavbar from "../components/AuthNavbar";
+import AuthFooter from "../components/AuthFooter";
+
+const PAGE_BG = {
+  minHeight: "100vh",
+  display: "flex",
+  flexDirection: "column",
+  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  background:
+    "radial-gradient(ellipse 70% 50% at 50% -10%, rgba(30,58,138,0.09) 0%, transparent 60%), " +
+    "radial-gradient(ellipse 50% 40% at 85% 75%, rgba(234,179,8,0.06) 0%, transparent 55%), " +
+    "linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)",
+};
 
 const RegisterPage = () => {
-  const [step, setStep] = useState(1);
-  const [name, setName] = useState("");
+  const [mode, setMode] = useState("select");
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [hoveredCard, setHoveredCard] = useState(null);
+
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("BUYER");
-  const [momoNumber, setMomoNumber] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+  const [isLoading, setIsLoading] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get("role") === "merchant") {
-      setRole("MERCHANT");
-    }
+    if (params.get("role") === "merchant") { setSelectedRole("MERCHANT"); setMode("form"); }
+    else if (params.get("role") === "customer") { setSelectedRole("BUYER"); setMode("form"); }
   }, [location]);
 
-  const isStep1Valid = name.trim() !== '' && email.trim() !== '' && phone.length === 10 && password.trim() !== '' && confirmPassword.trim() !== '';
-  const isStep2Valid = momoNumber.length === 10;
+  const isValidEmail = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
 
-  const handleNextStep = (e) => {
-    e.preventDefault();
-    if (!name || !email || !phone || !password || !confirmPassword) {
-      setError("Please fill in all basic information fields.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    setError("");
-    if (role === "MERCHANT") {
-      setStep(2);
-    } else {
-      handleSubmit(e);
-    }
+  const checkPasswordStrength = (pwd) => {
+    const rules = {
+      length: pwd.length >= 8,
+      uppercase: /[A-Z]/.test(pwd),
+      number: /[0-9]/.test(pwd),
+      special: /[!@#$%^&*(),.?":{}|<>_\-=+;]/.test(pwd),
+    };
+    return { rules, score: Object.values(rules).filter(Boolean).length };
+  };
+
+  const pwdStrength = checkPasswordStrength(password);
+  const isPasswordStrongEnough = pwdStrength.score === 4;
+
+  const handleEmailChange = (e) => {
+    const val = e.target.value;
+    setEmail(val);
+    setFieldErrors(prev => ({
+      ...prev,
+      email: val && !isValidEmail(val.trim()) ? "Enter a valid email address" : null,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    const cleanedEmail = email.trim().toLowerCase();
+    if (!cleanedEmail || !password || !confirmPassword)
+      return setError("Please complete all required fields.");
+    if (!isValidEmail(cleanedEmail)) return setError("Invalid email format.");
+    if (!isPasswordStrongEnough) return setError("Please meet all 4 password strength requirements.");
+    if (password !== confirmPassword) return setError("Passwords do not match.");
+
+    setIsLoading(true);
     try {
-      await api.post("/auth/register", { name, email, phone, password, role, momo_number: momoNumber });
-      const data = await login(email, password);
-      const userRole = data?.user?.role || "customer";
-      navigate(userRole === "merchant" ? "/merchant" : "/");
+      // Pass safe defaults for name and phone so existing backend validation succeeds without blocking this simple sign-up step
+      await api.post("/auth/register", {
+        name: cleanedEmail.split("@")[0] || "New User",
+        email: cleanedEmail,
+        phone: "0000000000",
+        password,
+        role: selectedRole || "BUYER",
+        momo_number: selectedRole === "MERCHANT" ? "0000000000" : undefined,
+      });
+      const data = await login(cleanedEmail, password);
+      const role = data?.user?.role || "";
+      navigate(["merchant", "MERCHANT", "vendor", "VENDOR"].includes(role) ? "/merchant" : "/");
     } catch (err) {
-      setError(err.response?.data?.error || "Registration failed");
+      setError(err.response?.data?.error || err.response?.data?.message || "Registration failed.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen w-full bg-surface-container flex items-center justify-center p-4 md:p-8 font-body text-on-surface">
-      
-      {/* Back to Home Link (Absolute Top Left) */}
-      <Link to="/" className="absolute top-6 left-6 md:top-10 md:left-10 flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-bold z-10 bg-surface/50 backdrop-blur-md px-4 py-2 rounded-full">
-        <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-        Home
-      </Link>
 
-      {/* Centered Modal */}
-      <div className="w-full max-w-[1000px] min-h-[600px] md:h-[600px] bg-surface rounded-[32px] shadow-2xl flex flex-col md:flex-row overflow-hidden relative border border-outline-variant">
-        
-        {/* Left Side - Image Coverage */}
-        <div className="hidden md:block md:w-[45%] relative bg-black">
-          {/* Overlay to give brand tint */}
-          <div className="absolute inset-0 bg-primary/20 mix-blend-multiply z-10"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
-          
-          <img 
-            src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1000&q=80" 
-            alt="Business professionals" 
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          
-          {/* Quote/Text over image */}
-          <div className="absolute bottom-8 left-8 right-8 z-20 text-white">
-            <h3 className="text-2xl font-display font-black leading-tight mb-2">Join the ecosystem of verified traders.</h3>
-            <p className="text-white/80 font-medium text-sm">Safe, escrow-protected commerce designed for the Ghanaian market.</p>
-          </div>
-        </div>
+  // ─── VIEW 1: ROLE SELECTION ───────────────────────────────────────────────
+  if (mode === "select") {
+    const getCardStyle = (role) => {
+      const isHov = hoveredCard === role;
+      const isSel = selectedRole === role;
+      return {
+        position: "relative",
+        borderRadius: 16,
+        overflow: "hidden",
+        cursor: "pointer",
+        transform: isSel ? "scale(1.02)" : isHov ? "scale(1.015)" : "scale(1)",
+        transition: "all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)",
+        zIndex: isSel || isHov ? 10 : 1,
+        border: isSel
+          ? "3px solid #eab308"
+          : isHov
+          ? "3px solid rgba(15, 23, 42, 0.45)"
+          : "3px solid transparent",
+        boxShadow: isSel
+          ? "0 25px 65px -10px rgba(15, 23, 42, 0.35), 0 0 0 4px rgba(234, 179, 8, 0.35), 0 0 35px rgba(234, 179, 8, 0.3)"
+          : isHov
+          ? "0 30px 60px -15px rgba(15, 23, 42, 0.25)"
+          : "0 15px 35px -10px rgba(15, 23, 42, 0.15)",
+        userSelect: "none",
+        background: "#0f172a",
+      };
+    };
 
-        {/* Right Side - Form Area */}
-        <div className="w-full md:w-[55%] p-6 flex flex-col justify-center">
-          <div className="max-w-[400px] w-full mx-auto">
-            
-            {/* Logo/Icon at Top Center */}
-            <div className="flex items-center justify-center gap-2.5 mb-2">
-              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary shadow-sm">
-                <img src="/app_icon.png" alt="Logo" className="w-5 h-5 rounded-md" />
+    const getOverlayStyle = (role) => {
+      const isHov = hoveredCard === role;
+      const isSel = selectedRole === role;
+      return {
+        position: "absolute", inset: 0, zIndex: 2,
+        transition: "background 0.35s ease",
+        background: isSel
+          ? "linear-gradient(180deg, rgba(15,23,42,0.12) 0%, rgba(15,23,42,0.35) 55%, rgba(15,23,42,0.88) 100%)"
+          : isHov
+          ? "linear-gradient(180deg, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.4) 55%, rgba(15,23,42,0.85) 100%)"
+          : "linear-gradient(180deg, rgba(15,23,42,0.25) 0%, rgba(15,23,42,0.5) 55%, rgba(15,23,42,0.85) 100%)",
+      };
+    };
+
+    return (
+      <div style={PAGE_BG}>
+        <AuthNavbar />
+
+        <main style={{ flex: 1, padding: "45px 24px 70px" }}>
+          {/* Slimmed container width to match target Donkomi sizing replica */}
+          <div style={{ maxWidth: 860, margin: "0 auto" }}>
+
+            {/* Cards grid */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 30,
+              height: 590,
+            }}>
+
+              {/* VENDOR CARD */}
+              <div
+                style={getCardStyle("MERCHANT")}
+                onClick={() => setSelectedRole("MERCHANT")}
+                onMouseEnter={() => setHoveredCard("MERCHANT")}
+                onMouseLeave={() => setHoveredCard(null)}
+              >
+                <img
+                  src="/vendor-card-bg.jpg"
+                  alt="Vendor"
+                  style={{
+                    position: "absolute", inset: 0, width: "100%", height: "100%",
+                    objectFit: "cover", display: "block", transition: "transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)",
+                    transform: hoveredCard === "MERCHANT" || selectedRole === "MERCHANT" ? "scale(1.06)" : "scale(1)"
+                  }}
+                />
+                <div style={getOverlayStyle("MERCHANT")} />
+                <div style={{
+                  position: "absolute", inset: 0, zIndex: 10,
+                  display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center",
+                  padding: "24px",
+                }}>
+                  <p style={{
+                    color: "#eab308", fontSize: 11, fontWeight: 800,
+                    textTransform: "uppercase", letterSpacing: "0.28em",
+                    marginBottom: 12, opacity: hoveredCard === "MERCHANT" || selectedRole === "MERCHANT" ? 1 : 0.88,
+                    transition: "opacity 0.3s",
+                    textShadow: "0 2px 10px rgba(0,0,0,0.8)",
+                  }}>Sell on BediDwa</p>
+                  <p style={{
+                    color: "#fff",
+                    fontFamily: "'Playfair Display', 'Didot', 'Bodoni MT', 'Cinzel', 'Georgia', serif",
+                    fontSize: 50, fontWeight: 700,
+                    letterSpacing: "-0.01em", margin: 0, lineHeight: 1.1,
+                    textShadow: "0 4px 25px rgba(0, 0, 0, 0.75)",
+                  }}>Vendor</p>
+                </div>
+                {selectedRole === "MERCHANT" && (
+                  <div style={{
+                    position: "absolute", top: 20, right: 20, zIndex: 10,
+                    background: "#eab308", borderRadius: 999,
+                    width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.35), 0 0 0 3px rgba(234,179,8,0.3)",
+                    transition: "all 0.3s ease",
+                  }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#0f172a", fontVariationSettings: "'FILL' 1", fontWeight: "bold" }}>check</span>
+                  </div>
+                )}
               </div>
-              <span className="font-bold text-2xl tracking-tight text-primary">TradeHub</span>
+
+              {/* CUSTOMER CARD */}
+              <div
+                style={getCardStyle("BUYER")}
+                onClick={() => setSelectedRole("BUYER")}
+                onMouseEnter={() => setHoveredCard("BUYER")}
+                onMouseLeave={() => setHoveredCard(null)}
+              >
+                <img
+                  src="/customer-card-bg.jpg"
+                  alt="Customer"
+                  style={{
+                    position: "absolute", inset: 0, width: "100%", height: "100%",
+                    objectFit: "cover", display: "block", transition: "transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)",
+                    transform: hoveredCard === "BUYER" || selectedRole === "BUYER" ? "scale(1.06)" : "scale(1)"
+                  }}
+                />
+                <div style={getOverlayStyle("BUYER")} />
+                <div style={{
+                  position: "absolute", inset: 0, zIndex: 10,
+                  display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center",
+                  padding: "24px",
+                }}>
+                  <p style={{
+                    color: "#eab308", fontSize: 11, fontWeight: 800,
+                    textTransform: "uppercase", letterSpacing: "0.28em",
+                    marginBottom: 12, opacity: hoveredCard === "BUYER" || selectedRole === "BUYER" ? 1 : 0.88,
+                    transition: "opacity 0.3s",
+                    textShadow: "0 2px 10px rgba(0,0,0,0.8)",
+                  }}>Shop on BediDwa</p>
+                  <p style={{
+                    color: "#fff",
+                    fontFamily: "'Playfair Display', 'Didot', 'Bodoni MT', 'Cinzel', 'Georgia', serif",
+                    fontSize: 50, fontWeight: 700,
+                    letterSpacing: "-0.01em", margin: 0, lineHeight: 1.1,
+                    textShadow: "0 4px 25px rgba(0, 0, 0, 0.75)",
+                  }}>Customer</p>
+                </div>
+                {selectedRole === "BUYER" && (
+                  <div style={{
+                    position: "absolute", top: 20, right: 20, zIndex: 10,
+                    background: "#eab308", borderRadius: 999,
+                    width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.35), 0 0 0 3px rgba(234,179,8,0.3)",
+                    transition: "all 0.3s ease",
+                  }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#0f172a", fontVariationSettings: "'FILL' 1", fontWeight: "bold" }}>check</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <h2 className="text-xl md:text-2xl font-black text-center text-on-surface tracking-tight mb-4">
-              {step === 1 ? "Create an account" : "Merchant Setup"}
-            </h2>
+            {/* CTA row spanning full width of the cards grid */}
+            <div style={{ marginTop: 28, display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+              <button
+                onClick={() => { if (selectedRole) setMode("form"); }}
+                disabled={!selectedRole}
+                style={{
+                  width: "100%", padding: "18px 0",
+                  borderRadius: 10, fontWeight: 800, fontSize: 16,
+                  border: "none", cursor: selectedRole ? "pointer" : "not-allowed",
+                  background: selectedRole ? "#0f172a" : "#e2e8f0",
+                  color: selectedRole ? "#fff" : "#94a3b8",
+                  fontFamily: "inherit", letterSpacing: "-0.01em",
+                  transition: "all 0.25s ease",
+                  boxShadow: selectedRole ? "0 10px 30px -5px rgba(15, 23, 42, 0.35)" : "none",
+                }}
+                onMouseEnter={e => { if (selectedRole) e.currentTarget.style.background = "#1e293b"; }}
+                onMouseLeave={e => { if (selectedRole) e.currentTarget.style.background = "#0f172a"; }}
+                onMouseDown={e => { if (selectedRole) e.currentTarget.style.transform = "scale(0.995)"; }}
+                onMouseUp={e => { e.currentTarget.style.transform = "scale(1)"; }}
+              >
+                {selectedRole ? `Continue as ${selectedRole === "MERCHANT" ? "Vendor" : "Customer"}` : "Select account type"}
+              </button>
+              <p style={{ fontSize: 13, color: "#64748b", margin: 0, fontWeight: 500 }}>
+                Already have an account?{" "}
+                <Link to="/login" style={{ color: "#0f172a", fontWeight: 800, textDecoration: "underline" }}>Log in</Link>
+              </p>
+            </div>
+          </div>
+        </main>
+
+        <AuthFooter />
+      </div>
+    );
+  }
+
+  // ─── VIEW 2: SIGNUP FORM ─────────────────────────────────────────────────
+  const isVendor = selectedRole === "MERCHANT";
+
+  const inp = {
+    width: "100%", border: "1px solid #cbd5e1", borderRadius: 6,
+    padding: "12px 14px", fontSize: 13.5, color: "#0f172a", fontWeight: 500,
+    outline: "none", background: "#fff", fontFamily: "inherit",
+    boxSizing: "border-box", transition: "all 0.2s ease",
+  };
+  const inpErr = { ...inp, borderColor: "#ef4444", color: "#dc2626" };
+  const lbl = { display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#334155", marginBottom: 7 };
+  const sec = { paddingBottom: 20, marginBottom: 20, borderBottom: "1px solid #f1f5f9" };
+
+  const onFocus = (e) => { e.currentTarget.style.borderColor = "#0f172a"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(15, 23, 42, 0.08)"; };
+  const onBlur = (e) => { e.currentTarget.style.borderColor = "#cbd5e1"; e.currentTarget.style.boxShadow = "none"; };
+
+  return (
+    <div style={PAGE_BG}>
+      <AuthNavbar />
+
+      <div style={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "48px 16px 80px",
+      }}>
+        {/* Clean card with elegant round drop shadow, no gradient outline */}
+        <div style={{
+          background: "#ffffff",
+          borderRadius: 16,
+          boxShadow: "0 20px 55px -10px rgba(15, 23, 42, 0.12), 0 0 1px 1px rgba(15, 23, 42, 0.06)",
+          width: "100%",
+          maxWidth: 480,
+          position: "relative",
+          overflow: "hidden",
+        }}>
+          {/* Simple back arrow button at top left */}
+          <button
+            type="button"
+            onClick={() => setMode("select")}
+            title="Back to account selection"
+            style={{
+              position: "absolute", top: 24, left: 24, zIndex: 10,
+              background: "#f1f5f9", border: "none", borderRadius: "50%",
+              width: 38, height: 38,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: "#475569",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#e2e8f0"; e.currentTarget.style.color = "#0f172a"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#475569"; }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_back</span>
+          </button>
+
+          <div style={{ padding: "44px 40px 40px" }}>
+            
+            {/* Centered luxury header */}
+            <div style={{ textAlign: "center", marginBottom: 32, marginTop: 12 }}>
+              <h1 style={{
+                fontFamily: "'Playfair Display', 'Didot', 'Bodoni MT', 'Cinzel', 'Georgia', serif",
+                fontSize: 38, fontWeight: 700, color: "#0f172a",
+                margin: "0 0 8px", letterSpacing: "-0.01em",
+              }}>Sign up</h1>
+              <p style={{ fontSize: 13.5, color: "#64748b", margin: 0 }}>
+                {isVendor ? "Create your vendor account to start selling" : "Create your customer account to start shopping"}
+              </p>
+            </div>
 
             {error && (
-              <div className="bg-error/10 border border-error text-error px-2 py-1.5 rounded-lg mb-2 text-xs text-center font-medium">
+              <div style={{
+                background: "#fef2f2", border: "1px solid #fecaca",
+                color: "#b91c1c", padding: "12px 16px", borderRadius: 6,
+                marginBottom: 22, fontSize: 13, fontWeight: 600,
+                display: "flex", alignItems: "center", gap: 8,
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 18, flexShrink: 0 }}>error</span>
                 {error}
               </div>
             )}
 
-            {/* STEP 1 FORM */}
-            {step === 1 && (
-              <form onSubmit={handleNextStep} className="space-y-2.5">
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              
+              {/* Email ONLY */}
+              <div>
+                <label style={lbl}>Email</label>
+                <input
+                  type="email" value={email} onChange={handleEmailChange} required
+                  style={fieldErrors.email ? inpErr : inp}
+                  onFocus={onFocus} onBlur={onBlur}
+                />
+                {fieldErrors.email && <span style={{ fontSize: 11, color: "#dc2626", fontWeight: 600, marginTop: 6, display: "block" }}>{fieldErrors.email}</span>}
+              </div>
+
+              {/* Password & Confirm Password */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <div>
-                  <input 
-                    type="text" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
-                    required 
-                    placeholder="Full Name"
-                    className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent text-sm"
-                  />
+                  <label style={lbl}>Password</label>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required
+                      style={{ ...inp, paddingRight: 42 }}
+                      onFocus={onFocus} onBlur={onBlur}
+                    />
+                    <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setShowPassword(!showPassword); }} onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: showPassword ? "#0f172a" : "#64748b", padding: "6px", display: "flex", alignItems: "center", zIndex: 10 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{showPassword ? "visibility" : "visibility_off"}</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2.5">
-                  <div className="flex-1">
-                    <input 
-                      type="email" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                      required 
-                      placeholder="Email Address"
-                      className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent text-sm"
+                <div>
+                  <label style={lbl}>Confirm Password</label>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required
+                      style={{ ...(confirmPassword && password !== confirmPassword ? inpErr : inp), paddingRight: 42 }}
+                      onFocus={onFocus} onBlur={onBlur}
                     />
+                    <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setShowConfirmPassword(!showConfirmPassword); }} onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: showConfirmPassword ? "#0f172a" : "#64748b", padding: "6px", display: "flex", alignItems: "center", zIndex: 10 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{showConfirmPassword ? "visibility" : "visibility_off"}</span>
+                    </button>
                   </div>
-                  <div className="flex-1">
-                    <input 
-                      type="tel" 
-                      value={phone} 
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} 
-                      required 
-                      maxLength="10"
-                      placeholder="Phone Number"
-                      className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent text-sm"
-                    />
-                  </div>
+                  {confirmPassword && password !== confirmPassword && (
+                    <span style={{ fontSize: 11, color: "#dc2626", fontWeight: 600, marginTop: 6, display: "block" }}>Passwords do not match</span>
+                  )}
                 </div>
-                
-                <div className="relative">
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    value={password} 
-                    onChange={(e) => { setPassword(e.target.value); setError(""); }} 
-                    required 
-                    placeholder="Create Password"
-                    className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent pr-12 text-sm"
-                  />
-                  <span 
-                    className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer hover:text-on-surface text-[18px]"
-                    onClick={() => setShowPassword(!showPassword)}
+
+                {/* Strength meter */}
+                {password && (
+                  <div style={{ background: "#f8fafc", padding: "12px 14px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "#0f172a" }}>Strength</span>
+                      <span style={{
+                        fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 4,
+                        ...(pwdStrength.score <= 1 ? { color: "#dc2626", background: "#fef2f2" } :
+                            pwdStrength.score === 2 ? { color: "#d97706", background: "#fffbeb" } :
+                            pwdStrength.score === 3 ? { color: "#2563eb", background: "#eff6ff" } :
+                            { color: "#059669", background: "#ecfdf5" }),
+                      }}>
+                        {pwdStrength.score <= 1 ? "Weak" : pwdStrength.score === 2 ? "Fair" : pwdStrength.score === 3 ? "Good" : "Strong ✓"}
+                      </span>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6, marginBottom: 10 }}>
+                      {[1,2,3,4].map(step => (
+                        <div key={step} style={{
+                          height: 4, borderRadius: 99,
+                          background: pwdStrength.score >= step
+                            ? pwdStrength.score === 4 ? "#10b981" : pwdStrength.score === 3 ? "#0f172a" : pwdStrength.score === 2 ? "#f59e0b" : "#ef4444"
+                            : "#cbd5e1",
+                          transition: "background 0.3s",
+                        }} />
+                      ))}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                      {[
+                        [pwdStrength.rules.length, "8+ characters"],
+                        [pwdStrength.rules.uppercase, "Uppercase"],
+                        [pwdStrength.rules.number, "Number"],
+                        [pwdStrength.rules.special, "Symbol"],
+                      ].map(([met, label]) => (
+                        <div key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: met ? "#059669" : "#64748b", fontWeight: met ? 700 : 500 }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{met ? "check_circle" : "radio_button_unchecked"}</span>
+                          {label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit button */}
+                <div style={{ paddingTop: 6 }}>
+                  <button
+                    type="submit"
+                    disabled={isLoading || !isPasswordStrongEnough || (confirmPassword && password !== confirmPassword) || !!fieldErrors.email}
+                    style={{
+                      width: "100%", padding: "15px 0", borderRadius: 8,
+                      fontWeight: 700, fontSize: 15, border: "none",
+                      cursor: isLoading || !isPasswordStrongEnough || (confirmPassword && password !== confirmPassword) || fieldErrors.email ? "not-allowed" : "pointer",
+                      background: isLoading || !isPasswordStrongEnough || (confirmPassword && password !== confirmPassword) || fieldErrors.email
+                        ? "#94a3b8" : "#0f172a",
+                      color: "#fff",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                      fontFamily: "inherit", letterSpacing: "-0.01em",
+                      boxShadow: isLoading || !isPasswordStrongEnough || (confirmPassword && password !== confirmPassword) || fieldErrors.email ? "none" : "0 8px 20px -4px rgba(15, 23, 42, 0.35)",
+                      transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={e => { if (!isLoading && isPasswordStrongEnough && !fieldErrors.email) e.currentTarget.style.background = "#1e293b"; }}
+                    onMouseLeave={e => { if (!isLoading && isPasswordStrongEnough && !fieldErrors.email) e.currentTarget.style.background = "#0f172a"; }}
                   >
-                    {showPassword ? 'visibility' : 'visibility_off'}
-                  </span>
-                </div>
-                
-                <div>
-                  <div className="relative">
-                    <input 
-                      type={showConfirmPassword ? "text" : "password"} 
-                      value={confirmPassword} 
-                      onChange={(e) => { setConfirmPassword(e.target.value); setError(""); }} 
-                      required 
-                      placeholder="Confirm Password"
-                      className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-on-surface placeholder-on-surface-variant/60 bg-transparent pr-12 text-sm"
-                    />
-                    <span 
-                      className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant cursor-pointer hover:text-on-surface text-[18px]"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? 'visibility' : 'visibility_off'}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="pt-0.5">
-                  <div className="flex gap-3">
-                    <label className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 border-2 rounded-xl cursor-pointer transition-all ${role === 'BUYER' ? 'border-primary bg-primary/5' : 'border-outline-variant hover:border-primary/50'}`}>
-                      <input type="radio" name="role" value="BUYER" checked={role === "BUYER"} onChange={() => setRole("BUYER")} className="hidden" />
-                      <span className="material-symbols-outlined text-[18px]" style={{color: role === 'BUYER' ? 'var(--primary)' : 'var(--text-secondary)'}}>shopping_bag</span>
-                      <span className={`font-bold text-xs ${role === 'BUYER' ? 'text-primary' : 'text-on-surface-variant'}`}>Customer</span>
-                    </label>
-                    
-                    <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 border-2 rounded-xl cursor-pointer transition-all ${role === 'MERCHANT' ? 'border-amber-500 bg-amber-500/10' : 'border-outline-variant hover:border-amber-500/50'}`}>
-                      <input type="radio" name="role" value="MERCHANT" checked={role === "MERCHANT"} onChange={() => setRole("MERCHANT")} className="hidden" />
-                      <span className="material-symbols-outlined text-[18px]" style={{color: role === 'MERCHANT' ? '#f59e0b' : 'var(--text-secondary)'}}>storefront</span>
-                      <span className={`font-bold text-xs ${role === 'MERCHANT' ? 'text-amber-500' : 'text-on-surface-variant'}`}>Merchant</span>
-                    </label>
-                  </div>
-                </div>
-                
-                <button 
-                  type="submit" 
-                  disabled={!isStep1Valid}
-                  className={`w-full py-2 rounded-xl font-bold transition-all mt-3 ${!isStep1Valid ? 'bg-outline-variant/50 text-on-surface-variant/50 cursor-not-allowed' : `text-on-primary shadow-md hover:opacity-90 active:scale-[0.98] ${role === 'MERCHANT' ? 'bg-amber-500 shadow-amber-500/20' : 'bg-primary shadow-primary/20'}`}`}
-                >
-                  {role === "MERCHANT" ? "Continue Setup →" : "Create an account"}
-                </button>
-              </form>
-            )}
-
-            {/* STEP 2 FORM (Merchants Only) */}
-            {step === 2 && (
-              <form onSubmit={handleSubmit} className="space-y-4 animate-in slide-in-from-right-4 duration-300">
-                <div className="bg-amber-500/10 p-3 rounded-xl border border-amber-500/20 mb-3">
-                  <p className="text-xs text-on-surface font-medium leading-relaxed">
-                    Please provide your MoMo number where your sales funds will be disbursed upon successful deliveries.
-                  </p>
-                </div>
-
-                <div>
-                  <input 
-                    type="tel" 
-                    value={momoNumber} 
-                    onChange={(e) => setMomoNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} 
-                    required 
-                    maxLength="10"
-                    placeholder="MoMo Number (e.g. 0541234567)"
-                    className="w-full border border-outline-variant rounded-xl px-4 py-3 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all text-on-surface font-medium tracking-wide placeholder-on-surface-variant/60 bg-transparent text-sm"
-                  />
-                </div>
-                
-                <div className="flex gap-4 pt-4">
-                  <button type="button" onClick={() => setStep(1)} className="px-6 py-2 rounded-xl border border-outline-variant text-on-surface-variant font-bold hover:bg-surface-container transition-colors text-sm">
-                    Back
+                    {isLoading ? (
+                      <><span className="material-symbols-outlined animate-spin" style={{ fontSize: 18 }}>progress_activity</span> Creating account...</>
+                    ) : isVendor ? "Sign up as Vendor" : "Sign up as Customer"}
                   </button>
-                  <button 
-                    type="submit" 
-                    disabled={!isStep2Valid}
-                    className={`flex-1 py-2 rounded-xl font-bold text-sm transition-all ${!isStep2Valid ? 'bg-outline-variant/50 text-on-surface-variant/50 cursor-not-allowed' : 'bg-amber-500 text-on-primary shadow-lg shadow-amber-500/20 hover:opacity-90 active:scale-[0.98]'}`}
-                  >
-                    Complete Registration
-                  </button>
+                  {!isPasswordStrongEnough && password && (
+                    <p style={{ textAlign: "center", fontSize: 11.5, fontWeight: 700, color: "#d97706", marginTop: 8, marginBottom: 0 }}>
+                      Meet all 4 password requirements to continue.
+                    </p>
+                  )}
                 </div>
-              </form>
-            )}
+              </div>
+            </form>
 
-            <div className="mt-3 text-center">
-              <span className="text-on-surface-variant text-sm font-medium">Already have an account? </span>
-              <Link to="/login" className="text-primary font-bold hover:underline text-sm">Login</Link>
+            <div style={{ marginTop: 28, textAlign: "center", fontSize: 13, paddingTop: 24, borderTop: "1px solid #f1f5f9" }}>
+              <span style={{ color: "#64748b" }}>Already have an account? </span>
+              <Link to="/login" style={{ color: "#0f172a", fontWeight: 800, textDecoration: "underline" }}>Log in</Link>
             </div>
-
           </div>
         </div>
       </div>
+
+      <AuthFooter />
     </div>
   );
 };

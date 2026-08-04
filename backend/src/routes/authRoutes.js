@@ -5,6 +5,8 @@ const {
   getMe,
   logoutUser,
   changePassword,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware"); // Import middleware
 const { validateRegister, validateLogin } = require("../middleware/validators");
@@ -17,4 +19,8 @@ router.post("/logout", logoutUser);
 router.get("/me", protect, getMe); // Protected route to check live sessions
 router.patch("/password", protect, changePassword); // Change password (authenticated)
 
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
+
 module.exports = router;
+

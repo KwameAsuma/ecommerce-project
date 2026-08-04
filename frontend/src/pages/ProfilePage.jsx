@@ -207,7 +207,7 @@ const ProfilePage = () => {
             {user?.name || "Kwame Asuma"}
           </h2>
           <p style={{ color: "var(--text-secondary)", margin: "0 0 1.5rem 0", fontSize: "0.9rem" }}>
-            {user?.email || "kwame.asuma@tradehub.com"}
+            {user?.email || "kwame.asuma@bedidwa.com"}
           </p>
           
           <div style={{ width: "100%", padding: "1rem", backgroundColor: "var(--bg-base)", borderRadius: "8px", border: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
+import { resolveImageUrl } from "../utils/imageUtils";
 
 const getStatusBadge = (auction) => {
   const now = new Date();
@@ -37,13 +38,22 @@ const MerchantAuctions = () => {
   const [newTitle, setNewTitle] = useState("");
   const [newBasePrice, setNewBasePrice] = useState("");
   const [newEndTime, setNewEndTime] = useState("");
-  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newImageUrl, setNewImageUrl] = useState("");    // comma-sep saved /uploads/ paths
+  const [imagePreviewUrls, setImagePreviewUrls] = useState([]); // local blob URLs for instant preview
   const [newBrand, setNewBrand] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newCondition, setNewCondition] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
+
+  // Clean up blob preview URLs when component unmounts or modal closes
+  const blobUrlsRef = useRef([]);
+  useEffect(() => {
+    return () => {
+      blobUrlsRef.current.forEach(u => URL.revokeObjectURL(u));
+    };
+  }, []);
 
   useEffect(() => {
     fetchAuctions();
@@ -65,31 +75,50 @@ const MerchantAuctions = () => {
     e.preventDefault();
     setCreateError("");
     if (!newTitle.trim() || !newBasePrice || !newEndTime) {
-      setCreateError("All fields are required.");
+      setCreateError("Please complete all required fields (Title, Base Price, End Time).");
       return;
     }
+
+    const parsedDate = new Date(newEndTime);
+    if (isNaN(parsedDate.getTime())) {
+      setCreateError("Please select a valid auction end date and time.");
+      return;
+    }
+
     setCreating(true);
     try {
-      await api.post("/auctions", {
-        title: newTitle,
+      const payload = {
+        title: newTitle.trim(),
         basePrice: parseFloat(newBasePrice),
-        endTime: new Date(newEndTime).toISOString(),
-        imageUrl: newImageUrl || null,
-        brand: newBrand || null,
-        description: newDescription || null,
-        condition: newCondition || null,
-      });
+        endTime: parsedDate.toISOString(),
+      };
+      if (newImageUrl?.trim()) payload.imageUrl = newImageUrl.trim();
+      if (newBrand?.trim()) payload.brand = newBrand.trim();
+      if (newDescription?.trim()) payload.description = newDescription.trim();
+      if (newCondition?.trim()) payload.condition = newCondition.trim();
+
+      await api.post("/auctions", payload);
       setShowCreateModal(false);
       setNewTitle("");
       setNewBasePrice("");
       setNewEndTime("");
       setNewImageUrl("");
+      // Revoke and clear blob preview URLs
+      blobUrlsRef.current.forEach(u => URL.revokeObjectURL(u));
+      blobUrlsRef.current = [];
+      setImagePreviewUrls([]);
       setNewBrand("");
       setNewDescription("");
       setNewCondition("");
       fetchAuctions();
     } catch (err) {
-      const errorMsg = err.response?.data?.errors?.[0]?.msg || err.response?.data?.error || "Failed to create auction.";
+      const errorsList = err.response?.data?.errors;
+      let errorMsg = "Failed to create auction.";
+      if (Array.isArray(errorsList) && errorsList.length > 0) {
+        errorMsg = errorsList.map(e => e.msg).filter(Boolean).join(". ");
+      } else if (err.response?.data?.error) {
+        errorMsg = err.response.data.error;
+      }
       setCreateError(errorMsg);
     } finally {
       setCreating(false);
@@ -224,13 +253,29 @@ const MerchantAuctions = () => {
                   <React.Fragment key={auction.id}>
                     <tr className="hover:bg-surface-container-low transition-colors group">
                       <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                            {auction.title.charAt(0)}
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#4343C7] font-black text-lg overflow-hidden border border-slate-200/80 shadow-xs flex-shrink-0 group-hover:shadow-md transition-all duration-300 relative">
+                            {(auction.imageUrl || auction.image_url) ? (
+                              <img 
+                                src={resolveImageUrl(auction.imageUrl || auction.image_url)} 
+                                alt={auction.title} 
+                                className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <span className="font-serif">{auction.title?.charAt(0)?.toUpperCase()}</span>
+                            )}
                           </div>
-                          <div>
-                            <p className="font-label-md font-bold text-on-surface group-hover:text-primary transition-colors">{auction.title}</p>
-                            <p className="text-[11px] text-on-surface-variant mt-0.5">AUC-{auction.id}</p>
+                          <div className="flex flex-col">
+                            <p className="font-bold text-sm text-slate-900 group-hover:text-[#4343C7] transition-colors tracking-tight">{auction.title}</p>
+                            <p className="text-[11px] font-semibold text-slate-500 mt-1 flex items-center gap-2">
+                              <span>AUC-{auction.id}</span>
+                              {auction.brand && (
+                                <>
+                                  <span className="w-1 h-1 rounded-full bg-slate-300" />
+                                  <span className="text-[#4343C7]">{auction.brand}</span>
+                                </>
+                              )}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -320,9 +365,9 @@ const MerchantAuctions = () => {
       {/* Create Auction Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-surface rounded-3xl shadow-2xl w-full max-w-lg border border-outline-variant overflow-hidden">
+          <div className="bg-surface rounded-3xl shadow-2xl w-full max-w-lg border border-outline-variant max-h-[90vh] flex flex-col overflow-hidden">
             {/* Modal Header */}
-            <div className="p-6 border-b border-outline-variant flex items-center justify-between">
+            <div className="p-6 border-b border-outline-variant flex items-center justify-between flex-shrink-0">
               <div>
                 <h3 className="text-xl font-bold text-on-surface">Create New Auction</h3>
                 <p className="text-on-surface-variant text-sm mt-1">Set a title, base price, and end time for your auction.</p>
@@ -333,7 +378,7 @@ const MerchantAuctions = () => {
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleCreateAuction} className="p-6 space-y-4">
+            <form onSubmit={handleCreateAuction} className="p-6 space-y-4 overflow-y-auto flex-1">
               {createError && (
                 <div className="bg-error/10 border border-error text-error px-4 py-3 rounded-xl text-sm font-medium">{createError}</div>
               )}
@@ -341,10 +386,17 @@ const MerchantAuctions = () => {
               <div className="flex flex-col gap-4">
                 <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Auction Images</label>
                 <div className="flex overflow-x-auto whitespace-nowrap pb-2 gap-4">
-                  {newImageUrl ? (
-                    newImageUrl.split(',').map((url, i) => (
+                  {/* Show local blob previews immediately while uploading, then saved URLs */}
+                  {imagePreviewUrls.length > 0 ? (
+                    imagePreviewUrls.map((blobUrl, i) => (
+                      <div key={`preview-${i}`} className="w-20 h-20 bg-surface-container-high rounded-xl border border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <img src={blobUrl} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    ))
+                  ) : newImageUrl ? (
+                    newImageUrl.split(',').filter(Boolean).map((url, i) => (
                       <div key={i} className="w-20 h-20 bg-surface-container-high rounded-xl border border-outline-variant flex items-center justify-center overflow-hidden flex-shrink-0">
-                        <img src={url.startsWith('http') ? url : `http://localhost:5001${url}`} alt="Auction Preview" className="w-full h-full object-cover" />
+                        <img src={resolveImageUrl(url.trim())} alt="Auction Preview" className="w-full h-full object-cover" />
                       </div>
                     ))
                   ) : (
@@ -366,15 +418,20 @@ const MerchantAuctions = () => {
                       onChange={async (e) => {
                         const files = Array.from(e.target.files);
                         if (files.length === 0) return;
+
+                        // Step 1: Instantly show local blob previews so the user sees what they picked
+                        const newBlobUrls = files.map(f => URL.createObjectURL(f));
+                        blobUrlsRef.current = [...blobUrlsRef.current, ...newBlobUrls];
+                        setImagePreviewUrls(prev => [...prev, ...newBlobUrls]);
+
+                        // Step 2: Upload files to backend in the background
                         setImageUploading(true);
                         setCreateError("");
-                        
                         try {
                           const uploadedUrls = [];
                           for (const file of files) {
                             const formDataPayload = new FormData();
                             formDataPayload.append("image", file);
-                            
                             const res = await api.post("/upload/image", formDataPayload, {
                               headers: { "Content-Type": "multipart/form-data" }
                             });
@@ -397,7 +454,13 @@ const MerchantAuctions = () => {
                   {newImageUrl && (
                     <button 
                       type="button" 
-                      onClick={() => setNewImageUrl("")}
+                      onClick={() => {
+                        setNewImageUrl("");
+                        // Revoke blob preview URLs on manual clear
+                        blobUrlsRef.current.forEach(u => URL.revokeObjectURL(u));
+                        blobUrlsRef.current = [];
+                        setImagePreviewUrls([]);
+                      }}
                       className="ml-4 text-sm font-bold text-error hover:underline"
                     >
                       Clear

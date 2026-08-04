@@ -37,8 +37,8 @@ const NavBar = ({ theme, toggleTheme }) => {
     >
       <div style={{ display: "flex", alignItems: "center" }}>
         <Link to="/" style={{ textDecoration: "none", color: isDark ? "#f8fafc" : "#1e3a8a", fontWeight: 800, fontSize: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <img src="/app_icon.png" alt="TradeHub Logo" style={{ width: "32px", height: "32px", borderRadius: "6px" }} />
-          TradeHub
+          <img src="/app_icon.png" alt="BediDwa Logo" style={{ width: "32px", height: "32px", borderRadius: "6px" }} />
+          BediDwa
         </Link>
       </div>
 

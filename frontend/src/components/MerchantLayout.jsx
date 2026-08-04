@@ -3,12 +3,18 @@ import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 
+const resolveImageUrl = (url) => {
+  if (!url) return null;
+  const firstUrl = typeof url === "string" ? url.split(",")[0].trim() : url;
+  return firstUrl; // Gracefully handle both absolute Unsplash images and relative Ngrok/Multer uploads
+};
+
 const MerchantLayout = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [isPinned, setIsPinned] = useState(true);
+  const [isPinned, setIsPinned] = useState(true); // Default pinned for clean layout stability
   const [isHovered, setIsHovered] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -20,14 +26,14 @@ const MerchantLayout = () => {
   useEffect(() => {
     if (user?.id) {
       api.get("/orders/vendor").then(res => {
-        setOrders(res.data.orders || []);
+        setOrders(res.data?.orders || []);
       }).catch(err => console.error("Failed to fetch merchant orders for search:", err));
     }
   }, [user]);
 
   const getOrderSuggestions = () => {
     if (!localSearchQuery.trim()) {
-      return orders.slice(0, 3); // Recent 3 orders
+      return orders.slice(0, 3);
     }
     const query = localSearchQuery.toLowerCase();
     
@@ -49,7 +55,6 @@ const MerchantLayout = () => {
   const suggestions = getOrderSuggestions();
 
   const hoverTimeoutRef = useRef(null);
-
   const isExpanded = isPinned || isHovered;
 
   useEffect(() => {
@@ -62,7 +67,7 @@ const MerchantLayout = () => {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     hoverTimeoutRef.current = setTimeout(() => {
       setIsHovered(true);
-    }, 150); // 150ms delay
+    }, 150);
   };
 
   const handleMouseLeave = () => {
@@ -71,7 +76,7 @@ const MerchantLayout = () => {
   };
 
   const handleLogout = async () => {
-    if (window.confirm("Are you sure you want to log out?")) {
+    if (window.confirm("Are you sure you want to log out from the Merchant Platform?")) {
       try {
         await logout();
         navigate('/login');
@@ -84,22 +89,137 @@ const MerchantLayout = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="bg-surface text-on-surface font-body-md selection:bg-secondary-container min-h-screen flex flex-col relative">
-      {/* TopNavBar */}
-      <header className="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline w-full h-16 flex justify-between items-center px-margin-desktop sticky top-0 z-40">
-        <div className="flex items-center gap-4">
-          <Link to="/merchant" className="no-underline">
-            <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary tracking-tight cursor-pointer flex items-baseline gap-2">
-              TradeHub <span className="text-sm font-normal text-tertiary">Merchant Platform</span>
-            </h1>
+    <div className="bg-slate-50 text-slate-800 font-sans h-screen overflow-hidden flex selection:bg-[#4343C7] selection:text-white">
+      
+      {/* ─── Side Navbar (Apple Liquid Glass & Catalog Blue) ─── */}
+      <aside 
+        onMouseLeave={handleMouseLeave}
+        className={`hidden md:flex flex-col h-full ${isExpanded ? 'w-[270px]' : 'w-[84px]'} bg-white border-r border-slate-200 p-4 flex-shrink-0 z-30 transition-all duration-300 shadow-[2px_0_20px_rgb(0,0,0,0.02)]`}
+      >
+        {/* ─── Top Brand Anchor (BediDwa Logo & Portal Header) ─── */}
+        <div className="h-16 flex items-center px-2 mb-4 border-b border-slate-100">
+          <Link 
+            to="/merchant/finances"
+            onClick={() => setIsPinned(true)}
+            className={`flex items-center gap-3 cursor-pointer group w-full no-underline ${!isExpanded && 'justify-center'}`}
+            title="Go to Merchant Dashboard Home"
+          >
+            <div className="w-10 h-10 bg-gradient-to-tr from-[#4343C7] to-[#5151df] rounded-xl flex items-center justify-center p-1.5 flex-shrink-0 shadow-lg shadow-[#4343C7]/25 border border-white/30 group-hover:scale-105 transition-all duration-300">
+              <img 
+                src="/app_icon.png" 
+                alt="BediDwa" 
+                className="w-full h-full object-contain pointer-events-none filter drop-shadow-sm"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+              />
+            </div>
+            {isExpanded && (
+              <div className="flex flex-col overflow-hidden">
+                <span className="font-extrabold text-lg text-[#4343C7] tracking-tight leading-none flex items-baseline group-hover:text-[#3131a8] transition-colors">
+                  Bedi<span className="text-[#D4F613] drop-shadow-sm">Dwa</span>
+                </span>
+                <span className="text-[9px] font-extrabold tracking-widest text-slate-400 uppercase mt-1 group-hover:text-slate-500 transition-colors">
+                  Merchant Suite
+                </span>
+              </div>
+            )}
           </Link>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center bg-surface-container-low border border-outline-variant rounded-xl px-4 py-1.5 w-80 focus-within:border-primary transition-colors relative">
-            <span className="material-symbols-outlined text-on-surface-variant text-body-md" data-icon="search">search</span>
+        
+        <nav className="flex-1 space-y-1.5">
+          {[
+            { path: "/merchant/finances", label: "Finances & Hub", icon: "bar_chart" },
+            { path: "/merchant/inventory", label: "Inventory Directory", icon: "inventory_2" },
+            { path: "/merchant/store", label: "My Storefront", icon: "storefront" },
+            { path: "/merchant/auctions", label: "Live Auctions", icon: "gavel" },
+            { path: "/merchant/escrow", label: "Escrow Payouts", icon: "payments" },
+          ].map(link => {
+            const active = isActive(link.path) || (link.path === "/merchant/finances" && location.pathname === "/merchant");
+            return (
+              <Link 
+                key={link.path}
+                to={link.path} 
+                onMouseEnter={handleMouseEnter}
+                onClick={() => setIsPinned(true)}
+                className={`flex items-center ${isExpanded ? 'gap-3.5 px-5' : 'justify-center'} py-3.5 rounded-2xl text-[15px] transition-all whitespace-nowrap overflow-hidden duration-200 ${
+                  active 
+                    ? 'bg-[#4343C7] text-white font-black shadow-md shadow-[#4343C7]/25' 
+                    : 'text-slate-700 font-bold hover:bg-[#4343C7]/10 hover:text-[#4343C7]'
+                }`} 
+                title={!isExpanded ? link.label : undefined}
+              >
+                <span className={`material-symbols-outlined text-[22px] ${active ? 'text-[#D4F613]' : ''}`}>{link.icon}</span>
+                {isExpanded && <span>{link.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+        
+        {/* Add New Product */}
+        <button 
+          onMouseEnter={handleMouseEnter}
+          onClick={() => {
+            setIsPinned(true);
+            navigate("/merchant/products/new");
+          }} 
+          className={`mt-4 w-full bg-[#4343C7] hover:bg-[#3232a8] text-white py-4 px-5 rounded-2xl text-[14px] font-black uppercase tracking-wider flex items-center justify-center ${isExpanded ? 'gap-2.5' : ''} shadow-xl shadow-[#4343C7]/35 border border-[#D4F613]/60 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap overflow-hidden cursor-pointer group`} 
+          title={!isExpanded ? "Add New Product" : undefined}
+        >
+          <span className="material-symbols-outlined text-[24px] font-black text-[#D4F613] group-hover:rotate-90 transition-transform duration-300">add_circle</span>
+          {isExpanded && <span>Add New Product</span>}
+        </button>
+        
+        <div className="mt-4 pt-4 border-t border-slate-100 overflow-hidden">
+          <button 
+            onMouseEnter={handleMouseEnter}
+            onClick={handleLogout} 
+            className={`w-full flex items-center ${isExpanded ? 'gap-3 px-5' : 'justify-center'} py-3 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-2xl text-[14px] font-bold transition-all whitespace-nowrap overflow-hidden cursor-pointer`} 
+            title={!isExpanded ? "Sign Out" : undefined}
+          >
+            <span className="material-symbols-outlined text-[20px]">logout</span>
+            {isExpanded && <span>Sign Out</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* ─── Right Column: Navbar + Scrollable Content ─── */}
+      <div className="flex flex-col flex-1 h-full overflow-hidden">
+        
+        {/* ─── Top Navbar (Apple Liquid Glass Finish) ─── */}
+        <header className="bg-white/95 backdrop-blur-2xl border-b border-slate-200/80 w-full flex-shrink-0 flex justify-between items-center px-6 md:px-8 z-40 shadow-[0_2px_15px_rgb(0,0,0,0.02)]" style={{ height: "72px" }}>
+        <div className="flex items-center gap-4">
+          {/* Apple Liquid Glass Storefront Capsule */}
+          <div 
+            onClick={() => navigate("/merchant/store")}
+            className="flex items-center gap-3 bg-slate-100/90 hover:bg-slate-200/70 border border-slate-200/80 rounded-full pl-2 pr-4 py-1.5 shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),_0_1px_4px_rgba(0,0,0,0.03)] transition-all duration-200 cursor-pointer group"
+            title="View Your Public Storefront"
+          >
+            <div className="w-7 h-7 rounded-full bg-[#4343C7] text-[#D4F613] font-black text-xs flex items-center justify-center overflow-hidden border border-white shadow-xs group-hover:scale-105 transition-transform flex-shrink-0">
+              {user?.avatarUrl ? (
+                <img src={resolveImageUrl(user.avatarUrl)} alt="Store" className="w-full h-full object-cover" />
+              ) : (
+                user?.name ? user.name.charAt(0).toUpperCase() : "S"
+              )}
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="font-bold text-xs sm:text-sm text-slate-800 tracking-tight truncate max-w-[150px] sm:max-w-[220px] group-hover:text-[#4343C7] transition-colors">
+                {user?.name || "Verified Storefront"}
+              </span>
+              <span className="w-[1px] h-3.5 bg-slate-300 hidden sm:block"></span>
+              <span className="hidden sm:flex items-center gap-1.5 text-[11px] font-extrabold text-emerald-700 bg-emerald-50/90 border border-emerald-200/80 px-2.5 py-0.5 rounded-full shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Verified Seller
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 md:gap-6">
+          {/* Spotlight Quick Search */}
+          <div className="hidden md:flex items-center bg-slate-100/90 border border-slate-200/80 rounded-full px-4 py-2 w-72 focus-within:w-96 focus-within:border-[#4343C7]/60 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#4343C7]/10 focus-within:shadow-md transition-all duration-300 relative shadow-2xs">
+            <span className="material-symbols-outlined text-slate-400 text-xl">search</span>
             <input 
-              className="bg-transparent border-none focus:ring-0 text-label-md w-full ml-2 placeholder:text-on-surface-variant outline-none" 
-              placeholder="Search orders..." 
+              className="bg-transparent border-none focus:ring-0 text-xs text-slate-800 w-full ml-2 placeholder:text-slate-400 outline-none font-semibold" 
+              placeholder="Search store orders or clients..." 
               type="text" 
               value={localSearchQuery}
               onChange={(e) => setLocalSearchQuery(e.target.value)}
@@ -107,12 +227,12 @@ const MerchantLayout = () => {
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
             />
             {isSearchFocused && (
-              <div className="absolute top-[110%] left-0 w-full bg-surface-container-lowest rounded-xl border border-outline-variant shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                {!localSearchQuery.trim() && <div className="px-4 py-2 text-label-sm font-bold text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">Recent Orders</div>}
+              <div className="absolute top-[120%] left-0 w-full bg-white/95 backdrop-blur-xl rounded-2xl border border-slate-200/80 shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                {!localSearchQuery.trim() && <div className="px-4 py-2.5 text-[10px] font-black text-[#4343C7] uppercase tracking-wider border-b border-slate-100 flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px]">history</span> Recent Orders</div>}
                 
                 {localSearchQuery.trim() && suggestions.length === 0 && (
-                  <div className="px-4 py-6 text-body-md text-on-surface-variant text-center">
-                    Oops, we do not have the order you are looking for at the moment.
+                  <div className="px-4 py-6 text-xs text-slate-500 text-center font-medium">
+                    No orders matching that code in repository.
                   </div>
                 )}
 
@@ -122,17 +242,16 @@ const MerchantLayout = () => {
                     onClick={() => {
                       setLocalSearchQuery("");
                       setIsSearchFocused(false);
-                      // Navigate to order detail if a page exists, or generic orders page
                       navigate("/merchant");
                     }}
-                    className="px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-surface-container-low transition-colors border-b border-outline-variant last:border-b-0"
+                    className="px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-slate-50 transition-colors border-b border-slate-100/80 last:border-b-0"
                   >
-                    <span className="material-symbols-outlined text-on-surface-variant text-body-lg">
+                    <span className="material-symbols-outlined text-slate-400 text-base">
                       {localSearchQuery.trim() ? "search" : "history"}
                     </span>
                     <div className="flex flex-col">
-                      <span className="text-body-md font-bold text-on-surface">Order #{order.id}</span>
-                      <span className="text-label-sm text-on-surface-variant line-clamp-1">
+                      <span className="text-xs font-extrabold text-slate-900">Order #{order.id}</span>
+                      <span className="text-[11px] text-slate-500 line-clamp-1 font-medium">
                         {order.product?.name || "Product"} • {order.customer?.name || "Customer"}
                       </span>
                     </div>
@@ -141,253 +260,112 @@ const MerchantLayout = () => {
               </div>
             )}
           </div>
-          <div className="flex items-center gap-4 relative">
+
+          <div className="flex items-center gap-2 relative">
             
             {/* Notifications Toggle */}
             <button 
               onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); setIsProfileOpen(false); }}
-              className="relative material-symbols-outlined text-on-surface-variant hover:bg-surface-container transition-colors p-2 rounded-full cursor-pointer" 
-              data-icon="notifications"
+              className="relative material-symbols-outlined text-slate-600 hover:text-[#4343C7] hover:bg-slate-100/80 transition-all p-2 rounded-full cursor-pointer w-10 h-10 flex items-center justify-center" 
+              title="Notifications"
             >
               notifications
-              <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface"></div>
+              <div className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-white animate-pulse" />
             </button>
 
             {/* Notifications Dropdown */}
             {isNotificationsOpen && (
-              <div className="absolute top-12 right-12 w-80 bg-surface-container-lowest border border-outline-variant shadow-lg rounded-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="px-4 py-3 border-b border-outline-variant bg-surface-container flex justify-between items-center">
-                  <span className="font-bold text-label-md">Notifications</span>
-                  <button className="text-primary text-[12px] hover:underline font-bold">Mark all read</button>
+              <div className="absolute top-14 right-12 w-80 bg-white/95 backdrop-blur-xl border border-slate-200/80 shadow-2xl rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/80 flex justify-between items-center">
+                  <span className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">Notifications</span>
+                  <button className="text-[#4343C7] text-[11px] hover:underline font-bold">Mark all read</button>
                 </div>
                 <div className="max-h-[300px] overflow-y-auto">
-                  <div className="px-4 py-3 border-b border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors border-l-4 border-l-error">
-                    <p className="font-label-md font-bold text-on-surface">Auction ending soon</p>
-                    <p className="text-label-sm text-on-surface-variant mt-1">Gold Coast Pendant auction is reaching its peak.</p>
-                  </div>
-                  <div className="px-4 py-3 hover:bg-surface-container-low cursor-pointer transition-colors border-l-4 border-l-primary">
-                    <p className="font-label-md font-bold text-on-surface">Shipments pending</p>
-                    <p className="text-label-sm text-on-surface-variant mt-1">Verify pick-up for Order #GH-9021.</p>
+                  <div className="px-4 py-3.5 border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors border-l-4 border-l-[#4343C7]">
+                    <p className="text-xs font-extrabold text-slate-900">New escrow verification</p>
+                    <p className="text-[11px] text-slate-500 mt-0.5 font-medium">Your catalog inventory matches have been verified by BediDwa authority.</p>
                   </div>
                 </div>
               </div>
             )}
 
-            <button onClick={() => navigate("/merchant/support")} className="material-symbols-outlined text-on-surface-variant hover:bg-surface-container transition-colors p-2 rounded-full cursor-pointer" data-icon="help">help</button>
+            <button 
+              onClick={() => navigate("/merchant/support")} 
+              className="material-symbols-outlined text-slate-600 hover:text-[#4343C7] hover:bg-slate-100/80 transition-all p-2 rounded-full cursor-pointer w-10 h-10 flex items-center justify-center" 
+              title="Merchant Support & Help Desk"
+            >
+              help
+            </button>
             
-            {/* Profile Toggle */}
+            {/* Profile Toggle Avatar */}
             <div 
               onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotificationsOpen(false); }}
-              className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-outline-variant cursor-pointer hover:opacity-80 transition-opacity"
+              className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4343C7] to-[#2b2b96] flex items-center justify-center overflow-hidden border-2 border-white ring-2 ring-slate-200 hover:ring-[#4343C7] cursor-pointer hover:scale-105 transition-all shadow-md ml-1"
             >
               {user?.avatarUrl ? (
-                <img className="w-full h-full object-cover pointer-events-none" alt="Merchant Profile" src={`http://localhost:5001${user.avatarUrl}`}/>
+                <img className="w-full h-full object-cover pointer-events-none" alt="Profile" src={resolveImageUrl(user.avatarUrl)} />
               ) : (
-                <span className="font-bold text-sm text-primary">{user?.name ? user.name.charAt(0).toUpperCase() : "M"}</span>
+                <span className="font-black text-xs text-[#D4F613] font-serif">{user?.name ? user.name.charAt(0).toUpperCase() : "M"}</span>
               )}
             </div>
 
             {/* Profile Dropdown */}
             {isProfileOpen && (
-              <div className="absolute top-12 right-0 w-48 bg-surface-container-lowest border border-outline-variant shadow-lg rounded-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="px-4 py-3 border-b border-outline-variant">
-                  <p className="font-bold text-label-md text-on-surface">{user?.name || "Ghana Merchant"}</p>
-                  <p className="text-label-sm text-on-surface-variant">{user?.email || "seller@tradehub.com"}</p>
+              <div className="absolute top-14 right-0 w-60 bg-white/95 backdrop-blur-xl border border-slate-200/80 shadow-2xl rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/70">
+                  <p className="font-black text-sm text-slate-900 truncate">{user?.name || "BediDwa Vendor"}</p>
+                  <p className="text-[11px] text-slate-500 truncate mt-0.5 font-medium">{user?.email || "seller@bedidwa.com"}</p>
                 </div>
-                <div className="py-1">
-                  <button onClick={() => { setIsProfileOpen(false); navigate("/profile"); }} className="w-full text-left px-4 py-2 text-label-md text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[18px]">person</span> My Profile
+                <div className="py-2">
+                  <button onClick={() => { setIsProfileOpen(false); navigate("/merchant/profile"); }} className="w-full text-left px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-3 cursor-pointer">
+                    <span className="material-symbols-outlined text-base text-[#4343C7]">person</span> My Personal Profile
                   </button>
-                  <button onClick={() => { setIsProfileOpen(false); navigate("/merchant/settings"); }} className="w-full text-left px-4 py-2 text-label-md text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[18px]">manage_accounts</span> Store Settings
+                  <button onClick={() => { setIsProfileOpen(false); navigate("/merchant/settings"); }} className="w-full text-left px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-3 cursor-pointer">
+                    <span className="material-symbols-outlined text-base text-[#4343C7]">manage_accounts</span> Store Configuration
                   </button>
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-label-md text-error hover:bg-error-container transition-colors flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[18px]">logout</span> Sign Out
+                  <div className="h-px bg-slate-100 my-1.5" />
+                  <button onClick={handleLogout} className="w-full text-left px-5 py-2.5 text-xs font-extrabold text-rose-600 hover:bg-rose-50 transition-colors flex items-center gap-3 cursor-pointer">
+                    <span className="material-symbols-outlined text-base">logout</span> Sign Out of Portal
                   </button>
                 </div>
               </div>
             )}
           </div>
         </div>
-      </header>
+        </header>
 
-      <div className="flex flex-1 relative">
-        {/* SideNavBar */}
-        <aside 
-          onMouseLeave={handleMouseLeave}
-          className={`hidden md:flex flex-col h-[calc(100vh-64px)] ${isExpanded ? 'w-[280px]' : 'w-[80px]'} bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline p-4 sticky top-16 z-30 transition-all duration-300`}
-        >
-          <div className={`flex items-center ${isExpanded ? 'justify-between' : 'justify-center'} mb-8 px-2`}>
-            <div 
-              onClick={() => setIsPinned(true)}
-              className="flex items-center gap-3 cursor-pointer"
-              title="Pin Sidebar"
-            >
-              <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-on-secondary font-bold font-headline-md flex-shrink-0 overflow-hidden">
-                {user?.avatarUrl ? (
-                  <img src={`http://localhost:5001${user.avatarUrl}`} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  user?.name ? user.name.charAt(0).toUpperCase() : "M"
-                )}
-              </div>
-              {isExpanded && (
-                <div>
-                  <p className="font-headline-md text-label-md font-extrabold text-on-surface whitespace-nowrap">{user?.name || "Ghana Merchant"}</p>
-                  <p className="font-label-sm text-label-sm text-on-surface-variant">Verified Seller</p>
-                </div>
-              )}
-            </div>
-            {isExpanded && (
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsPinned(false);
-                  setIsHovered(false);
-                }} 
-                className="text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-full transition-colors flex items-center justify-center cursor-pointer"
-                title="Collapse Sidebar"
-              >
-                <span className="material-symbols-outlined">chevron_left</span>
-              </button>
-            )}
-          </div>
-          
-          <nav className="flex-1 space-y-1">
-            <Link 
-              to="/merchant" 
-              onMouseEnter={handleMouseEnter}
-              onClick={() => setIsPinned(true)}
-              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
-              title={!isExpanded ? "Command Center" : undefined}
-            >
-              <span className={`material-symbols-outlined ${isActive('/merchant') ? 'active-nav-item' : ''}`} data-icon="dashboard">dashboard</span>
-              {isExpanded && <span>Command Center</span>}
-            </Link>
-            <Link 
-              to="/merchant/inventory" 
-              onMouseEnter={handleMouseEnter}
-              onClick={() => setIsPinned(true)}
-              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant/inventory') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
-              title={!isExpanded ? "Inventory" : undefined}
-            >
-              <span className={`material-symbols-outlined ${isActive('/merchant/inventory') ? 'active-nav-item' : ''}`} data-icon="inventory_2">inventory_2</span>
-              {isExpanded && <span>Inventory</span>}
-            </Link>
-            <Link 
-              to="/merchant/auctions" 
-              onMouseEnter={handleMouseEnter}
-              onClick={() => setIsPinned(true)}
-              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant/auctions') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
-              title={!isExpanded ? "Auctions" : undefined}
-            >
-              <span className={`material-symbols-outlined ${isActive('/merchant/auctions') ? 'active-nav-item' : ''}`} data-icon="gavel">gavel</span>
-              {isExpanded && <span>Auctions</span>}
-            </Link>
-            <Link 
-              to="/merchant/escrow" 
-              onMouseEnter={handleMouseEnter}
-              onClick={() => setIsPinned(true)}
-              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant/escrow') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
-              title={!isExpanded ? "Escrow Payouts" : undefined}
-            >
-              <span className={`material-symbols-outlined ${isActive('/merchant/escrow') ? 'active-nav-item' : ''}`} data-icon="payments">payments</span>
-              {isExpanded && <span>Escrow Payouts</span>}
-            </Link>
-            <Link 
-              to="/merchant/settings" 
-              onMouseEnter={handleMouseEnter}
-              onClick={() => setIsPinned(true)}
-              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant/settings') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
-              title={!isExpanded ? "Settings" : undefined}
-            >
-              <span className={`material-symbols-outlined ${isActive('/merchant/settings') ? 'active-nav-item' : ''}`} data-icon="settings">settings</span>
-              {isExpanded && <span>Settings</span>}
-            </Link>
-          </nav>
-          
-          <button 
-            onMouseEnter={handleMouseEnter}
-            onClick={() => {
-              setIsPinned(true);
-              navigate("/merchant/products/new");
-            }} 
-            className={`mt-4 w-full bg-primary text-on-primary py-3 rounded-xl font-label-md flex items-center justify-center ${isExpanded ? 'gap-2' : ''} hover:opacity-90 transition-all whitespace-nowrap overflow-hidden active:scale-[0.98]`} 
-            title={!isExpanded ? "Add New Product" : undefined}
-          >
-            <span className="material-symbols-outlined text-[20px]" data-icon="add">add</span>
-            {isExpanded && <span>Add New Product</span>}
-          </button>
-          
-          <div className="mt-auto pt-4 border-t border-outline-variant space-y-1 overflow-hidden">
-            <Link 
-              to="/merchant/support" 
-              onMouseEnter={handleMouseEnter}
-              onClick={() => setIsPinned(true)}
-              className={`flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden ${isActive('/merchant/support') ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:bg-surface-container-high'}`} 
-              title={!isExpanded ? "Support" : undefined}
-            >
-              <span className={`material-symbols-outlined ${isActive('/merchant/support') ? 'active-nav-item' : ''}`} data-icon="support_agent">support_agent</span>
-              {isExpanded && <span>Support</span>}
-            </Link>
-            <button 
-              onMouseEnter={handleMouseEnter}
-              onClick={handleLogout} 
-              className={`w-full flex items-center ${isExpanded ? 'gap-3' : 'justify-center'} px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg font-label-md transition-all whitespace-nowrap overflow-hidden`} 
-              title={!isExpanded ? "Sign Out" : undefined}
-            >
-              <span className="material-symbols-outlined" data-icon="logout">logout</span>
-              {isExpanded && <span>Sign Out</span>}
-            </button>
-          </div>
-        </aside>
-
-        {/* Main Content Area */}
+        {/* ─── Main Content Area ─── */}
         <main 
-          className="flex-1 bg-surface p-margin-desktop overflow-x-hidden relative"
+          className="flex-1 overflow-y-auto overflow-x-hidden relative p-6 lg:p-8"
           onClick={() => { setIsNotificationsOpen(false); setIsProfileOpen(false); }}
         >
           <Outlet />
         </main>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-surface-container-lowest dark:bg-on-surface border-t border-outline-variant dark:border-outline w-full py-unit mt-auto z-30">
-        <div className="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-container-max mx-auto h-16">
-          <div className="font-label-md text-label-md font-bold text-on-surface-variant">
-            © 2024 TradeHub Merchant Hub.
-          </div>
-          <div className="flex gap-6 mt-4 md:mt-0">
-            <Link to="#" className="text-on-surface-variant hover:text-primary font-label-sm transition-colors">Terms of Service</Link>
-            <Link to="#" className="text-on-surface-variant hover:text-primary font-label-sm transition-colors">Privacy Policy</Link>
-            <Link to="/merchant/support" className="text-on-surface-variant hover:text-primary font-label-sm transition-colors">Seller Support</Link>
-            <Link to="#" className="text-on-surface-variant hover:text-primary font-label-sm transition-colors">Escrow Rules</Link>
-          </div>
-        </div>
-      </footer>
-
-      {/* Mobile Nav Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant h-16 flex items-center justify-around px-4 z-50">
-        <Link to="/merchant" className={`flex flex-col items-center gap-1 ${isActive('/merchant') ? 'text-primary' : 'text-on-surface-variant'}`}>
-          <span className={`material-symbols-outlined ${isActive('/merchant') ? 'active-nav-item' : ''}`} data-icon="dashboard">dashboard</span>
-          <span className="text-[10px] font-label-sm">Home</span>
+      {/* ─── Mobile Nav Bar ─── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-200 h-16 flex items-center justify-around px-4 z-50 shadow-lg">
+        <Link to="/merchant" className={`flex flex-col items-center gap-1 ${isActive('/merchant') ? 'text-[#4343C7]' : 'text-slate-500'}`}>
+          <span className="material-symbols-outlined text-xl">dashboard</span>
+          <span className="text-[10px] font-bold">Home</span>
         </Link>
-        <Link to="/merchant/inventory" className={`flex flex-col items-center gap-1 ${isActive('/merchant/inventory') ? 'text-primary' : 'text-on-surface-variant'}`}>
-          <span className={`material-symbols-outlined ${isActive('/merchant/inventory') ? 'active-nav-item' : ''}`} data-icon="inventory_2">inventory_2</span>
-          <span className="text-[10px] font-label-sm">Items</span>
+        <Link to="/merchant/inventory" className={`flex flex-col items-center gap-1 ${isActive('/merchant/inventory') ? 'text-[#4343C7]' : 'text-slate-500'}`}>
+          <span className="material-symbols-outlined text-xl">inventory_2</span>
+          <span className="text-[10px] font-bold">Items</span>
         </Link>
-        <button onClick={() => navigate("/merchant/products/new")} className="flex flex-col items-center gap-1 text-on-surface-variant">
-          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white -mt-8 shadow-lg">
-            <span className="material-symbols-outlined" data-icon="add">add</span>
+        <button onClick={() => navigate("/merchant/products/new")} className="flex flex-col items-center gap-1 text-white">
+          <div className="w-11 h-11 bg-[#4343C7] rounded-full flex items-center justify-center -mt-6 shadow-lg border-2 border-[#D4F613]">
+            <span className="material-symbols-outlined text-xl text-[#D4F613]">add</span>
           </div>
-          <span className="text-[10px] font-label-sm">Sell</span>
+          <span className="text-[10px] font-bold text-[#4343C7]">Sell</span>
         </button>
-        <Link to="/merchant/escrow" className={`flex flex-col items-center gap-1 ${isActive('/merchant/escrow') ? 'text-primary' : 'text-on-surface-variant'}`}>
-          <span className={`material-symbols-outlined ${isActive('/merchant/escrow') ? 'active-nav-item' : ''}`} data-icon="payments">payments</span>
-          <span className="text-[10px] font-label-sm">Payouts</span>
+        <Link to="/merchant/store" className={`flex flex-col items-center gap-1 ${isActive('/merchant/store') ? 'text-[#4343C7]' : 'text-slate-500'}`}>
+          <span className="material-symbols-outlined text-xl">storefront</span>
+          <span className="text-[10px] font-bold">Store</span>
         </Link>
-        <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-on-surface-variant">
-          <span className="material-symbols-outlined" data-icon="logout">logout</span>
-          <span className="text-[10px] font-label-sm">Logout</span>
+        <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-slate-500 hover:text-rose-600">
+          <span className="material-symbols-outlined text-xl">logout</span>
+          <span className="text-[10px] font-bold">Exit</span>
         </button>
       </nav>
     </div>

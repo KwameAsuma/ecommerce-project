@@ -35,11 +35,11 @@ const getFinances = async (req, res) => {
   }
 };
 
-// Process MoMo Withdrawal
+// Process MoMo Withdrawal & Custom Payouts
 const withdrawFunds = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { amount } = req.body;
+    const { amount, paymentMethod, accountNumber, accountName } = req.body;
 
     if (!amount || isNaN(amount) || Number(amount) <= 0) {
       return res.status(400).json({ error: 'Invalid amount' });
@@ -68,13 +68,14 @@ const withdrawFunds = async (req, res) => {
         data: {
           availableBalance: {
             decrement: withdrawalAmount
-          }
+          },
+          ...(accountNumber ? { momoNumber: accountNumber } : {}) // Keep default updated if provided
         }
       }),
       prisma.transaction.create({
         data: {
           userId: parseInt(userId),
-          type: 'MoMo Withdrawal',
+          type: paymentMethod ? `Payout (${paymentMethod}: ${accountNumber || ''})` : 'MoMo Withdrawal',
           amount: -withdrawalAmount,
           status: 'Completed'
         }

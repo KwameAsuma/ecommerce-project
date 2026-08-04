@@ -5,6 +5,7 @@ import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingOverlay from "../components/LoadingOverlay";
 import ErrorMessage from "../components/ErrorMessage";
+import { resolveImageUrl } from "../utils/imageUtils";
 
 const LiveAuctions = () => {
   const { id } = useParams();
@@ -34,10 +35,9 @@ const LiveAuctions = () => {
     if (title.includes("rolex") || title.includes("submariner") || rawUrl.includes("rolex") || rawUrl.includes("google.com/url") || rawUrl.includes("m126610lv")) {
       return ["https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop"];
     }
-    if (auction.imageUrl) {
-      const urls = auction.imageUrl.split(',').map(u => {
-        const url = u.trim();
-        return url.startsWith('http') ? url : `http://localhost:5000${url}`;
+    if (auction.imageUrl || auction.image) {
+      const urls = (auction.imageUrl || auction.image).split(',').map(u => {
+        return resolveImageUrl(u.trim());
       }).filter(Boolean);
       return urls.length ? urls : fallbackImages;
     }
@@ -145,15 +145,10 @@ const LiveAuctions = () => {
   const titleStr = String(auction.title || auction.name || "");
   const isTech = titleStr.toLowerCase().includes("macbook") || titleStr.toLowerCase().includes("ipad") || titleStr.toLowerCase().includes("sony");
 
-  const specPillars = isTech ? [
-    { label: "PROCESSOR", value: "M3 Max Chip" },
-    { label: "UNIFIED RAM", value: "36GB LPDDR5x" },
-    { label: "BATTERY HEALTH", value: "100% (24 Cycles)" },
-    { label: "WARRANTY", value: "Active (Feb 2026)" }
-  ] : [
-    { label: "BRAND / MAKER", value: auction.brand || "TradeHub Heritage" },
-    { label: "ORIGIN & BUILD", value: "Ghana Export / Authentic" },
-    { label: "INSPECTION GRADE", value: auction.condition || "Grade A+ Certified" },
+  const specPillars = [
+    { label: "BRAND / MAKER", value: auction.brand || "BediDwa Verified" },
+    { label: "CONDITION", value: auction.condition || "Certified Authentic" },
+    { label: "STARTING BASE", value: `GH₵ ${parseFloat(auction.basePrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}` },
     { label: "ESCROW STATUS", value: "100% Fully Protected" }
   ];
 
@@ -224,7 +219,7 @@ const LiveAuctions = () => {
                 {auction.title}
               </h1>
               <p style={{ color: "#4b5563", fontSize: "1.05rem", lineHeight: "1.6", margin: 0, fontWeight: "500" }}>
-                {auction.description || "16-inch, 14-core CPU, 30-core GPU, 36GB Unified Memory, 1TB SSD Storage. Space Black finish. Pristine condition with original packaging and official warranty remaining."}
+                {auction.description || `Official verified auction listing for ${auction.title}. Fully inspected and certified by BediDwa logistics prior to auction release.`}
               </p>
             </div>
 
@@ -272,15 +267,16 @@ const LiveAuctions = () => {
               <div style={{ color: "#4b5563", fontSize: "0.95rem", lineHeight: "1.7", fontWeight: "500" }}>
                 {selectedTab === "description" && (
                   <div>
-                    <h4 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#111827", margin: "0 0 0.8rem 0" }}>Unleash Pro Power</h4>
+                    <h4 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#111827", margin: "0 0 0.8rem 0" }}>Product Specifications & Details</h4>
                     <p style={{ marginBottom: "1.2rem" }}>
-                      The M3 Max chip brings massive performance for the most demanding workflows. Featuring a 14-core CPU and 30-core GPU, it's built for everything from hardware-accelerated ray tracing to massive 3D rendering projects.
+                      {auction.description || `Verified listing for ${auction.title}. Every item listed on the BediDwa Auction Engine is physically verified prior to bidding.`}
                     </p>
                     <ul style={{ listStyleType: "disc", paddingLeft: "1.5rem", display: "flex", flexDirection: "column", gap: "0.5rem", color: "#4b5563" }}>
-                      <li>Space Black anodized finish reduces fingerprints.</li>
-                      <li>MagSafe 3, three Thunderbolt 4 ports, SDXC card slot, and HDMI port.</li>
-                      <li>Backlit Magic Keyboard with Touch ID.</li>
-                      <li>Six-speaker sound system with force-cancelling woofers.</li>
+                      <li><strong>Item Title:</strong> {auction.title}</li>
+                      {auction.brand && <li><strong>Brand / Manufacturer:</strong> {auction.brand}</li>}
+                      {auction.condition && <li><strong>Item Condition:</strong> {auction.condition}</li>}
+                      <li><strong>Starting Base Price:</strong> GH₵ {parseFloat(auction.basePrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</li>
+                      <li><strong>Escrow Protection:</strong> Funds held securely in Mobile Money Escrow until physical delivery inspection.</li>
                     </ul>
                   </div>
                 )}
@@ -376,7 +372,7 @@ const LiveAuctions = () => {
                       </div>
                     </div>
                     <div style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: "1.5rem" }}>
-                      Min. Increment: GHS 100. TradeHub fee: GHS 25 (applied on win).
+                      Min. Increment: GHS 100. BediDwa fee: GHS 25 (applied on win).
                     </div>
                     
                     <button
@@ -444,7 +440,7 @@ const LiveAuctions = () => {
               <div style={{ padding: "1.2rem", backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "16px", display: "flex", gap: "1rem", alignItems: "start" }}>
                 <span className="material-symbols-outlined text-[24px]" style={{ color: "#1d4ed8", flexShrink: 0 }}>verified</span>
                 <div>
-                  <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#1e3a8a", marginBottom: "0.2rem" }}>TradeHub Guarantee</div>
+                  <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#1e3a8a", marginBottom: "0.2rem" }}>BediDwa Guarantee</div>
                   <div style={{ fontSize: "0.78rem", color: "#1e40af", lineHeight: "1.4", fontWeight: "500" }}>100% Money-back if item isn't exactly as described.</div>
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import ReviewModal from "../components/ReviewModal";
+import { resolveImageUrl } from "../utils/imageUtils";
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
@@ -38,10 +39,6 @@ const ProductDetailsPage = () => {
   }, [product]);
 
   const handleAddToCart = () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
     addToCart({ ...product, qty: quantity }, quantity);
     setShowAddedPopup(true);
     setTimeout(() => setShowAddedPopup(false), 3500);
@@ -49,7 +46,7 @@ const ProductDetailsPage = () => {
 
   const handleBuyNow = () => {
     if (!user) {
-      navigate('/login');
+      navigate('/login?redirect=/checkout');
       return;
     }
     navigate(`/checkout?buyNow=${product.id}&qty=${quantity}`);
@@ -72,8 +69,15 @@ const ProductDetailsPage = () => {
     );
   }
 
-  const isRolex = ((product.name || product.title || "").toLowerCase().includes("rolex") || (product.name || product.title || "").toLowerCase().includes("submariner") || (product.imageUrl || product.image || "").toLowerCase().includes("rolex") || (product.imageUrl || product.image || "").toLowerCase().includes("google.com/url"));
-  const imgSource = isRolex ? "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop" : (product.imageUrl ? (product.imageUrl.startsWith('http') ? product.imageUrl : `http://localhost:5000${product.imageUrl}`) : product.image);
+  // product.image is already fully resolved by CatalogContext (uses window.location.origin for uploads)
+  // Rolex override in case the product somehow bypasses the context resolver
+  const isRolex = ((product.name || product.title || "").toLowerCase().includes("rolex") ||
+    (product.name || product.title || "").toLowerCase().includes("submariner") ||
+    (product.imageUrl || product.image || "").toLowerCase().includes("rolex") ||
+    (product.imageUrl || product.image || "").toLowerCase().includes("google.com/url"));
+  const imgSource = isRolex
+    ? "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop"
+    : (product.image || resolveImageUrl(product.imageUrl));
 
   return (
     <div style={{ maxWidth: "1150px", margin: "0 auto", padding: "1.5rem 1rem 3rem 1rem" }}>
@@ -103,12 +107,12 @@ const ProductDetailsPage = () => {
               <div>
                 <h3 style={{ margin: "0 0 0.2rem 0", fontSize: "1.1rem", color: "var(--text-primary)", fontWeight: "800" }}>{product.merchant}</h3>
                 <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#10b981", display: "flex", alignItems: "center", gap: "0.2rem" }}>
-                  <span className="material-symbols-outlined text-[14px]">verified</span> TradeHub Verified Seller
+                  <span className="material-symbols-outlined text-[14px]">verified</span> BediDwa Verified Seller
                 </span>
               </div>
             </div>
             <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: "1.45", margin: "0 0 1rem 0" }}>
-              Direct fulfillment from {product.region || "Ghana"}. Protected under TradeHub Momo Escrow protocols.
+              Direct fulfillment from {product.region || "Ghana"}. Protected under BediDwa Momo Escrow protocols.
             </p>
             <button 
               onClick={() => navigate('/merchants')}

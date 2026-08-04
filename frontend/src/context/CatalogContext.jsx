@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import api from "../services/api";
+import { resolveImageUrl } from "../utils/imageUtils";
 
 const CatalogContext = createContext();
 
@@ -24,21 +25,34 @@ export const CatalogProvider = ({ children }) => {
         const liveProducts = res.data.products || res.data || [];
         
         // Map database products to the rich structure expected by the frontend
-        const formatted = liveProducts.map(p => ({
-          id: String(p.id), // ensure string for router matching if needed
-          name: p.title,
-          category: p.category || "Uncategorized",
-          price: parseFloat(p.price),
-          region: "Greater Accra",
-          trustScore: p.vendor?.trustScore || 85,
-          rating: p.rating || 4.8,
-          reviews: p._count?.reviews || p.reviews?.length || 0,
-          merchant: p.vendor?.name || "Verified Merchant",
-          vendorId: p.vendor?.id || p.vendorId || p.vendor_id,
-          image: (((p.title || p.name || "").toLowerCase().includes("rolex")) || ((p.title || p.name || "").toLowerCase().includes("submariner")) || ((p.imageUrl || "").toLowerCase().includes("rolex")) || ((p.imageUrl || "").toLowerCase().includes("google.com/url")) || ((p.imageUrl || "").toLowerCase().includes("m126610lv"))) ? "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop" : (p.imageUrl ? (p.imageUrl.startsWith('http') ? p.imageUrl : `http://localhost:5001${p.imageUrl}`) : "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&w=600&q=80"),
-          tags: (p.stockCount > 0 || p.stock_count > 0) ? ["In Stock"] : ["Out of Stock"],
-          description: p.description || "No description provided."
-        }));
+        const formatted = liveProducts.map(p => {
+          const rawImageUrl = p.imageUrl || "";
+          // Rolex override — replace known broken/fake URLs with a real watch photo
+          const isRolex = (p.title || p.name || "").toLowerCase().includes("rolex") ||
+            (p.title || p.name || "").toLowerCase().includes("submariner") ||
+            rawImageUrl.toLowerCase().includes("rolex") ||
+            rawImageUrl.toLowerCase().includes("google.com/url") ||
+            rawImageUrl.toLowerCase().includes("m126610lv");
+          const resolvedImage = isRolex
+            ? "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1000&auto=format&fit=crop"
+            : resolveImageUrl(rawImageUrl);
+          return {
+            id: String(p.id),
+            name: p.title,
+            category: p.category || "Uncategorized",
+            price: parseFloat(p.price),
+            region: "Greater Accra",
+            trustScore: p.vendor?.trustScore || 85,
+            rating: p.rating || 4.8,
+            reviews: p._count?.reviews || p.reviews?.length || 0,
+            merchant: p.vendor?.name || "Verified Merchant",
+            vendorId: p.vendor?.id || p.vendorId || p.vendor_id,
+            image: resolvedImage,       // fully-resolved URL safe for <img src>
+            imageUrl: rawImageUrl,      // raw relative path for downstream components
+            tags: (p.stockCount > 0 || p.stock_count > 0) ? ["In Stock"] : ["Out of Stock"],
+            description: p.description || "No description provided."
+          };
+        });
         
         setProducts(formatted);
       } catch (err) {
@@ -134,6 +148,14 @@ export const CatalogProvider = ({ children }) => {
       }
       if (!match && target === "culinary exports") {
         match = pCat.includes("agri") || pCat.includes("spices") || pCat.includes("botanical") || pCat.includes("health") || pName.includes("coffee") || pName.includes("sobolo") || pName.includes("moringa") || pName.includes("shea") || pName.includes("cashew") || pName.includes("pepper");
+      }
+      // "Electronics" pill matches both "Electronics" and "Refurbished Electronics"
+      if (!match && target === "electronics") {
+        match = pCat.includes("electronic") || pCat.includes("tech");
+      }
+      // "Food & Beverages" pill — belt-and-suspenders match for the exact DB category string
+      if (!match && target === "food & beverages") {
+        match = pCat.includes("food") || pCat.includes("beverage") || pCat.includes("drink");
       }
       if (!match) return false;
     }

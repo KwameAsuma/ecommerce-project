@@ -124,7 +124,7 @@
 }
 
 body {
-  /* TradeHub E-Commerce Corporate Palette - Clean Light Theme */
+  /* BediDwa E-Commerce Corporate Palette - Clean Light Theme */
   --bg-base: #e2e8f0; /* Slightly darker pearl gray as requested */
   --bg-panel: #ffffff;
 
@@ -272,3 +272,30 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Spinner for auth loading states */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 0.9s linear infinite;
+  display: inline-block;
+}
+
+/* Auth footer grid \u2014 responsive */
+@media (max-width: 860px) {
+  .auth-footer-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 28px !important;
+  }
+}
+@media (max-width: 520px) {
+  .auth-footer-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .auth-nav-links {
+    display: none !important;
+  }
+}
+

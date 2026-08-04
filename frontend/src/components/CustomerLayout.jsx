@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Link, Outlet, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCatalog } from "../context/CatalogContext";
 import { useCart } from "../context/CartContext";
+import { resolveImageUrl } from "../utils/imageUtils";
+import AddToCartModal from "./AddToCartModal";
 
 const CustomerLayout = () => {
   const { user, logout } = useAuth();
   const { filters, updateFilter, allProducts, smartMatch } = useCatalog();
+
+  if (user && ['merchant', 'MERCHANT', 'vendor', 'VENDOR'].includes(user.role)) {
+    return <Navigate to="/merchant" replace />;
+  }
   
   const [localSearchQuery, setLocalSearchQuery] = useState(filters.searchQuery || "");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -60,7 +66,7 @@ const CustomerLayout = () => {
   };
 
   const suggestions = getAutocompleteSuggestions();
-  const { cartCount } = useCart();
+  const { cartCount, cartItems, setAddedItemModal } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -209,11 +215,11 @@ const CustomerLayout = () => {
           <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "12px" }}>
             <img 
               src="/app_icon.png" 
-              alt="TradeHub Logo Icon" 
+              alt="BediDwa Logo Icon" 
               style={{ width: "40px", height: "40px", borderRadius: "10px", objectFit: "contain", backgroundColor: "rgba(255,255,255,0.1)", padding: "2px", border: "1.5px solid #D4F613", boxShadow: "0 0 15px rgba(212, 246, 19, 0.45)" }} 
             />
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontSize: "1.35rem", fontWeight: "900", color: "#ffffff", letterSpacing: "-0.5px", lineHeight: "1" }}>Trade<span style={{ color: "#D4F613" }}>Hub</span></span>
+              <span style={{ fontSize: "1.35rem", fontWeight: "900", color: "#ffffff", letterSpacing: "-0.5px", lineHeight: "1" }}>Bedi<span style={{ color: "#D4F613" }}>Dwa</span></span>
             </div>
           </Link>
         </div>
@@ -458,15 +464,29 @@ const CustomerLayout = () => {
           </div>
         </div>        {/* Right: Icons / Auth */}
         <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-            <div className="custom-tooltip-container" style={{ cursor: "pointer", position: "relative", color: "#ffffff", display: "flex", alignItems: "center", transition: "color 0.2s" }} onMouseOver={e=>e.currentTarget.style.color="var(--brand-accent)"} onMouseOut={e=>e.currentTarget.style.color="#ffffff"} onClick={() => navigate("/checkout")}>
-            <span className="material-symbols-outlined text-[26px]">shopping_cart</span>
-            {cartCount > 0 && (
-              <span style={{ position: "absolute", top: -6, right: -10, backgroundColor: "var(--brand-accent)", color: "#000000", fontSize: "0.72rem", fontWeight: "900", width: "19px", height: "19px", display: "flex", justifyContent: "center", alignItems: "center", borderRadius: "50%", boxShadow: "0 2px 6px rgba(0,0,0,0.4)" }}>
-                {cartCount}
-              </span>
-            )}
-            <span className="custom-tooltip">View Cart</span>
-          </div>
+            <div 
+              className="custom-tooltip-container" 
+              style={{ cursor: "pointer", position: "relative", color: "#ffffff", display: "flex", alignItems: "center", transition: "color 0.2s" }} 
+              onMouseOver={e=>e.currentTarget.style.color="var(--brand-accent)"} 
+              onMouseOut={e=>e.currentTarget.style.color="#ffffff"} 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (cartItems && cartItems.length > 0) {
+                  const latestItem = cartItems[cartItems.length - 1];
+                  setAddedItemModal({ ...latestItem, isCartView: true });
+                } else {
+                  setAddedItemModal({ isEmpty: true });
+                }
+              }}
+            >
+              <span className="material-symbols-outlined text-[26px]">shopping_cart</span>
+              {cartCount > 0 && (
+                <span style={{ position: "absolute", top: -6, right: -10, backgroundColor: "var(--brand-accent)", color: "#000000", fontSize: "0.72rem", fontWeight: "900", width: "19px", height: "19px", display: "flex", justifyContent: "center", alignItems: "center", borderRadius: "50%", boxShadow: "0 2px 6px rgba(0,0,0,0.4)", pointerEvents: "none" }}>
+                  {cartCount}
+                </span>
+              )}
+              <span className="custom-tooltip" style={{ pointerEvents: "none" }}>{user ? "View Cart" : "View Cart"}</span>
+            </div>
           
           {user ? (
             <>
@@ -498,7 +518,7 @@ const CustomerLayout = () => {
             
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
               <Link to="/" onClick={() => setNavOpen(false)} style={{ textDecoration: "none" }}>
-                <h2 style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--brand-primary)", margin: 0, cursor: "pointer", letterSpacing: "-0.5px", textTransform: "uppercase" }}>TradeHub</h2>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: "900", color: "var(--brand-primary)", margin: 0, cursor: "pointer", letterSpacing: "-0.5px", textTransform: "uppercase" }}>BediDwa</h2>
               </Link>
               <div onClick={() => setNavOpen(false)} style={{ cursor: "pointer", color: "var(--text-secondary)", display: "flex", alignItems: "center", padding: "0.5rem", borderRadius: "50%", backgroundColor: "var(--bg-base)" }}>
                 <span className="material-symbols-outlined">close</span>
@@ -518,17 +538,14 @@ const CustomerLayout = () => {
                 <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive("/merchants") ? "'FILL' 1" : "'FILL' 0" }}>verified_user</span>
                 Verified Merchants
               </Link>
-              <Link to="/escrow" onClick={() => setNavOpen(false)} style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "1rem 1.2rem", borderRadius: "12px", textDecoration: "none", backgroundColor: isActive("/escrow") ? "var(--brand-primary)" : "transparent", color: isActive("/escrow") ? "#fff" : "var(--text-primary)", fontWeight: "600", transition: "all 0.2s" }} onMouseOver={e=>{if(!isActive("/escrow")) e.currentTarget.style.backgroundColor="var(--bg-base)"}} onMouseOut={e=>{if(!isActive("/escrow")) e.currentTarget.style.backgroundColor="transparent"}}>
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive("/escrow") ? "'FILL' 1" : "'FILL' 0" }}>shield</span>
-                Escrow Center
-              </Link>
+
             </div>
 
             {user && (
               <div style={{ marginTop: "auto", paddingTop: "2rem", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "1rem" }}>
                 <div style={{ width: "40px", height: "40px", borderRadius: "50%", backgroundColor: "var(--brand-primary)", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", fontSize: "1.2rem", overflow: "hidden" }}>
                   {user.avatarUrl ? (
-                    <img src={`http://localhost:5001${user.avatarUrl}`} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={resolveImageUrl(user.avatarUrl)} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
                     user.name ? user.name.charAt(0).toUpperCase() : "U"
                   )}
@@ -550,6 +567,9 @@ const CustomerLayout = () => {
           <Outlet />
         </div>
       </main>
+
+      {/* Global AddToCartModal mounted for all customer pages */}
+      <AddToCartModal />
     </div>
   );
 };

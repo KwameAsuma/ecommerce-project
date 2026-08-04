@@ -11,7 +11,6 @@ const handleValidation = (req, res, next) => {
 exports.validateRegister = [
   body("email").isEmail().withMessage("Valid email is required"),
   body("password").isLength({ min: 6 }).withMessage("Password must be 6+ chars"),
-  body("name").notEmpty().withMessage("Name is required"),
   handleValidation,
 ];
 
@@ -35,12 +34,13 @@ exports.validateProductUpdate = [
 ];
 
 exports.validateAuctionCreate = [
-  body("title").notEmpty().withMessage("title is required"),
-  body("basePrice").isFloat({ gt: 0 }).withMessage("basePrice must be positive"),
-  body("endTime").isISO8601().withMessage("endTime must be ISO8601 timestamp"),
-  body("brand").optional().isString(),
-  body("description").optional().isString(),
-  body("condition").optional().isString(),
+  body("title").trim().notEmpty().withMessage("Auction title is required"),
+  body("basePrice").isFloat({ gt: 0 }).withMessage("Base price must be a positive number"),
+  body("endTime").isISO8601().withMessage("Auction end time must be a valid date and time"),
+  body("imageUrl").optional({ checkFalsy: true, nullable: true }).isString(),
+  body("brand").optional({ checkFalsy: true, nullable: true }).isString(),
+  body("description").optional({ checkFalsy: true, nullable: true }).isString(),
+  body("condition").optional({ checkFalsy: true, nullable: true }).isString(),
   handleValidation,
 ];
 

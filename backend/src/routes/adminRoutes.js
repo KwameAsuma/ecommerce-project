@@ -1,6 +1,6 @@
 const express = require("express");
 const { protect } = require("../middleware/authMiddleware");
-const { adminCheck } = require("../middleware/adminMiddleware");
+const { isAdmin } = require("../middleware/adminMiddleware");
 const {
   getAllUsers,
   deleteUser,
@@ -24,7 +24,7 @@ const router = express.Router();
 
 // All routes require user to be logged in AND be an admin
 router.use(protect);
-router.use(adminCheck);
+router.use(isAdmin);
 
 router.get("/users", getAllUsers);
 router.delete("/users/:id", deleteUser);
